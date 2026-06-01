@@ -29,7 +29,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# V0 source folders (reference only)
-prompt 1/
-prompt 2/
-Prompt 3/
+# Claude Code
+.claude/
+
+# V0 export folders
+emt-staffing-marketplace-personnel-page/
