@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono, Playfair_Display } from "next/font/google"
 import { ShellWrapper } from "@/components/layout/ShellWrapper"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import "./globals.css"
 
 const inter = Inter({
@@ -35,7 +36,9 @@ export default function RootLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} ${playfair.variable} bg-background`}
     >
       <body className="font-sans antialiased bg-background text-foreground min-h-screen flex flex-col">
-        <ShellWrapper>{children}</ShellWrapper>
+        <TooltipProvider>
+          <ShellWrapper>{children}</ShellWrapper>
+        </TooltipProvider>
       </body>
     </html>
   )

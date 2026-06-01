@@ -1,7 +1,25 @@
 "use client"
 
-import { Search, ChevronDown } from "lucide-react"
+import { Search, Grid3X3, List } from "lucide-react"
 import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+const SORT_OPTIONS = [
+  { value: "recommended", label: "Recommended" },
+  { value: "rating-desc", label: "Highest Rated" },
+  { value: "experience-desc", label: "Most Experienced" },
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "reviews-desc", label: "Most Reviews" },
+]
 
 interface SearchHeaderProps {
   resultCount: number
@@ -18,88 +36,61 @@ export function SearchHeader({
   sortBy,
   onSortChange,
 }: SearchHeaderProps) {
-  const [sortOpen, setSortOpen] = useState(false)
-
-  const sortOptions = [
-    { value: "experience-desc", label: "Experience (High to Low)" },
-    { value: "experience-asc", label: "Experience (Low to High)" },
-    { value: "name-asc", label: "Name (A-Z)" },
-    { value: "name-desc", label: "Name (Z-A)" },
-    { value: "availability", label: "Availability" },
-  ]
-
-  const currentSort = sortOptions.find((opt) => opt.value === sortBy)
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
 
   return (
-    <div className="border-b border-border bg-card">
-      <div className="flex items-center gap-6 p-5">
-        {/* Search Bar */}
-        <div className="relative flex-1 max-w-md">
+    <div className="bg-card border-b border-border">
+      <div className="flex items-center gap-4 p-5">
+        {/* Search */}
+        <div className="relative flex-1 max-w-xl">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
+          <Input
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by name or certification..."
-            className="w-full bg-input border border-border pl-10 pr-4 py-2.5 font-sans text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+            placeholder="Search EMTs by name, certification, or specialty..."
+            className="pl-9 rounded-full"
           />
         </div>
 
-        {/* Result Count */}
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-sm text-primary tabular-nums font-semibold">
-            {resultCount}
-          </span>
-          <span className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
-            Personnel Available
-          </span>
+        {/* Result count */}
+        <div className="flex items-center gap-2 px-4">
+          <span className="text-2xl font-bold text-foreground">{resultCount}</span>
+          <span className="text-sm text-muted-foreground">professionals available</span>
         </div>
 
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Sort Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setSortOpen(!sortOpen)}
-            className="flex items-center gap-2 border border-border bg-input px-4 py-2.5 hover:border-muted-foreground transition-colors"
+        {/* View toggle */}
+        <div className="flex items-center border border-border rounded-lg overflow-hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-9 w-9 rounded-none ${viewMode === "grid" ? "bg-secondary text-foreground" : "text-muted-foreground"}`}
+            onClick={() => setViewMode("grid")}
           >
-            <span className="font-sans text-xs uppercase tracking-wider text-muted-foreground">
-              Sort:
-            </span>
-            <span className="font-sans text-sm text-foreground">{currentSort?.label}</span>
-            <ChevronDown
-              className={`h-4 w-4 text-muted-foreground transition-transform ${sortOpen ? "rotate-180" : ""}`}
-            />
-          </button>
-
-          {sortOpen && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setSortOpen(false)}
-              />
-              <div className="absolute right-0 top-full mt-1 z-20 min-w-[200px] border border-border bg-popover">
-                {sortOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => {
-                      onSortChange(option.value)
-                      setSortOpen(false)
-                    }}
-                    className={`w-full text-left px-4 py-2.5 font-sans text-sm transition-colors ${
-                      sortBy === option.value
-                        ? "bg-primary/10 text-primary"
-                        : "text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+            <Grid3X3 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-9 w-9 rounded-none ${viewMode === "list" ? "bg-secondary text-foreground" : "text-muted-foreground"}`}
+            onClick={() => setViewMode("list")}
+          >
+            <List className="h-4 w-4" />
+          </Button>
         </div>
+
+        {/* Sort */}
+        <Select value={sortBy} onValueChange={onSortChange}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Sort by…" />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   )

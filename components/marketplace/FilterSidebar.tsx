@@ -1,103 +1,135 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp, Sliders } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
+import { Badge } from "@/components/ui/badge"
 
-interface FilterSectionProps {
+// ── Types ────────────────────────────────────────────────────────────────────
+
+export interface FilterState {
+  location: string
+  radius: number
+  certifications: { "EMT-B": boolean; "EMT-P": boolean; "First Responder": boolean }
+  availability: { "available-now": boolean; "this-weekend": boolean; "this-month": boolean }
+  eventTypes: {
+    concerts: boolean
+    sports: boolean
+    festivals: boolean
+    corporate: boolean
+    "film-tv": boolean
+    private: boolean
+  }
+  minYearsExperience: number
+  priceRange: [number, number]
+}
+
+export const DEFAULT_FILTERS: FilterState = {
+  location: "",
+  radius: 50,
+  certifications: { "EMT-B": false, "EMT-P": false, "First Responder": false },
+  availability: { "available-now": false, "this-weekend": false, "this-month": false },
+  eventTypes: { concerts: false, sports: false, festivals: false, corporate: false, "film-tv": false, private: false },
+  minYearsExperience: 0,
+  priceRange: [25, 150],
+}
+
+// ── Sub-components ───────────────────────────────────────────────────────────
+
+function FilterSection({
+  title,
+  children,
+  defaultOpen = true,
+}: {
   title: string
   children: React.ReactNode
   defaultOpen?: boolean
-}
-
-function FilterSection({ title, children, defaultOpen = true }: FilterSectionProps) {
+}) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
-
   return (
-    <div className="border-b border-border">
+    <div className="border-b border-border py-4">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full py-4 text-left"
+        className="flex items-center justify-between w-full text-left group"
       >
-        <span className="font-sans text-xs font-semibold uppercase tracking-wider text-foreground">
-          {title}
-        </span>
+        <span className="font-semibold text-sm text-foreground">{title}</span>
         {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          <ChevronUp className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
         )}
       </button>
-      {isOpen && <div className="pb-4">{children}</div>}
+      <div
+        className={`overflow-hidden transition-all duration-300 ${
+          isOpen ? "max-h-96 opacity-100 mt-3" : "max-h-0 opacity-0"
+        }`}
+      >
+        {children}
+      </div>
     </div>
   )
 }
 
-interface CheckboxFilterProps {
+function CheckboxFilter({
+  id,
+  label,
+  count,
+  checked,
+  onCheckedChange,
+}: {
+  id: string
   label: string
   count?: number
   checked: boolean
-  onChange: (checked: boolean) => void
-}
-
-function CheckboxFilter({ label, count, checked, onChange }: CheckboxFilterProps) {
+  onCheckedChange: (checked: boolean) => void
+}) {
   return (
-    <label className="flex items-center gap-3 py-1.5 cursor-pointer group">
-      <div
-        className={`h-4 w-4 border flex items-center justify-center transition-colors ${
-          checked ? "border-primary bg-primary" : "border-border bg-transparent"
-        }`}
+    <div className="flex items-center gap-3 py-2">
+      <Checkbox id={id} checked={checked} onCheckedChange={onCheckedChange} />
+      <Label
+        htmlFor={id}
+        className="flex-1 text-sm text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
       >
-        {checked && (
-          <svg className="h-2.5 w-2.5 text-primary-foreground" fill="currentColor" viewBox="0 0 12 12">
-            <path d="M10.28 2.28L4 8.56 1.72 6.28a.75.75 0 00-1.06 1.06l3 3a.75.75 0 001.06 0l7-7a.75.75 0 10-1.06-1.06z" />
-          </svg>
-        )}
-      </div>
-      <span className="font-sans text-sm text-muted-foreground group-hover:text-foreground transition-colors">
         {label}
-      </span>
+      </Label>
       {count !== undefined && (
-        <span className="ml-auto font-mono text-xs text-muted-foreground tabular-nums">
+        <Badge variant="secondary" className="text-xs px-2 py-0.5 rounded-full">
           {count}
-        </span>
+        </Badge>
       )}
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="sr-only"
-      />
-    </label>
+    </div>
   )
 }
 
-interface SliderFilterProps {
+function SliderFilter({
+  label,
+  value,
+  min,
+  max,
+  unit,
+  onChange,
+}: {
   label: string
   value: number
   min: number
   max: number
   unit: string
   onChange: (value: number) => void
-}
-
-function SliderFilter({ label, value, min, max, unit, onChange }: SliderFilterProps) {
+}) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <span className="font-sans text-sm text-muted-foreground">{label}</span>
-        <span className="font-mono text-sm text-foreground tabular-nums">
+        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className="text-sm font-semibold text-foreground">
           {value} {unit}
         </span>
       </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-1 bg-border appearance-none cursor-pointer accent-primary [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:bg-primary [&::-moz-range-thumb]:h-3 [&::-moz-range-thumb]:w-3 [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-0"
-      />
-      <div className="flex justify-between text-xs font-mono text-muted-foreground">
+      <Slider min={min} max={max} step={1} value={[value]} onValueChange={([val]) => onChange(val)} />
+      <div className="flex justify-between text-xs text-muted-foreground">
         <span>{min}</span>
         <span>{max}</span>
       </div>
@@ -105,29 +137,7 @@ function SliderFilter({ label, value, min, max, unit, onChange }: SliderFilterPr
   )
 }
 
-export interface FilterState {
-  location: string
-  radius: number
-  certifications: {
-    "EMT-B": boolean
-    "EMT-P": boolean
-    "First Responder": boolean
-  }
-  availability: {
-    "available-now": boolean
-    "this-weekend": boolean
-    "this-month": boolean
-  }
-  eventTypes: {
-    "concerts": boolean
-    "sports": boolean
-    "festivals": boolean
-    "corporate": boolean
-    "film-tv": boolean
-    "private": boolean
-  }
-  minYearsExperience: number
-}
+// ── Main component ───────────────────────────────────────────────────────────
 
 interface FilterSidebarProps {
   filters: FilterState
@@ -135,48 +145,45 @@ interface FilterSidebarProps {
 }
 
 export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) {
-  const updateCertification = (key: keyof FilterState["certifications"], value: boolean) => {
-    onFiltersChange({
-      ...filters,
-      certifications: { ...filters.certifications, [key]: value },
-    })
-  }
+  const updateCertification = (key: keyof FilterState["certifications"], value: boolean) =>
+    onFiltersChange({ ...filters, certifications: { ...filters.certifications, [key]: value } })
 
-  const updateAvailability = (key: keyof FilterState["availability"], value: boolean) => {
-    onFiltersChange({
-      ...filters,
-      availability: { ...filters.availability, [key]: value },
-    })
-  }
+  const updateAvailability = (key: keyof FilterState["availability"], value: boolean) =>
+    onFiltersChange({ ...filters, availability: { ...filters.availability, [key]: value } })
 
-  const updateEventType = (key: keyof FilterState["eventTypes"], value: boolean) => {
-    onFiltersChange({
-      ...filters,
-      eventTypes: { ...filters.eventTypes, [key]: value },
-    })
-  }
+  const updateEventType = (key: keyof FilterState["eventTypes"], value: boolean) =>
+    onFiltersChange({ ...filters, eventTypes: { ...filters.eventTypes, [key]: value } })
+
+  const activeFilterCount = [
+    ...Object.values(filters.certifications),
+    ...Object.values(filters.availability),
+    ...Object.values(filters.eventTypes),
+    filters.minYearsExperience > 0,
+    filters.radius !== 50,
+  ].filter(Boolean).length
 
   return (
-    <aside className="w-72 shrink-0 border-r border-border bg-sidebar">
-      <div className="p-5 border-b border-border">
-        <h2 className="font-sans text-sm font-bold uppercase tracking-wider text-foreground">
-          Filters
-        </h2>
+    <aside className="w-72 shrink-0 bg-sidebar border-r border-border">
+      <div className="p-5 border-b border-border flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Sliders className="h-4 w-4 text-foreground" />
+          <h2 className="font-semibold text-foreground">Filters</h2>
+        </div>
+        {activeFilterCount > 0 && (
+          <Badge className="text-xs font-semibold">{activeFilterCount}</Badge>
+        )}
       </div>
 
-      <div className="p-5">
-        {/* Location */}
+      <div className="p-5 overflow-y-auto max-h-[calc(100vh-180px)]">
         <FilterSection title="Location">
           <div className="flex flex-col gap-4">
-            <input
-              type="text"
+            <Input
               value={filters.location}
               onChange={(e) => onFiltersChange({ ...filters, location: e.target.value })}
               placeholder="City or ZIP code"
-              className="w-full bg-input border border-border px-3 py-2 font-sans text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
             />
             <SliderFilter
-              label="Radius"
+              label="Service Radius"
               value={filters.radius}
               min={5}
               max={100}
@@ -186,98 +193,28 @@ export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) 
           </div>
         </FilterSection>
 
-        {/* Certification Level */}
-        <FilterSection title="Certification">
-          <div className="flex flex-col">
-            <CheckboxFilter
-              label="EMT-B"
-              count={8}
-              checked={filters.certifications["EMT-B"]}
-              onChange={(checked) => updateCertification("EMT-B", checked)}
-            />
-            <CheckboxFilter
-              label="EMT-P (Paramedic)"
-              count={4}
-              checked={filters.certifications["EMT-P"]}
-              onChange={(checked) => updateCertification("EMT-P", checked)}
-            />
-            <CheckboxFilter
-              label="First Responder"
-              count={2}
-              checked={filters.certifications["First Responder"]}
-              onChange={(checked) => updateCertification("First Responder", checked)}
-            />
-          </div>
+        <FilterSection title="Certification Level">
+          <CheckboxFilter id="cert-emtb" label="EMT-Basic (EMT-B)" count={8} checked={filters.certifications["EMT-B"]} onCheckedChange={(v) => updateCertification("EMT-B", v)} />
+          <CheckboxFilter id="cert-emtp" label="Paramedic (EMT-P)" count={4} checked={filters.certifications["EMT-P"]} onCheckedChange={(v) => updateCertification("EMT-P", v)} />
+          <CheckboxFilter id="cert-fr" label="First Responder" count={2} checked={filters.certifications["First Responder"]} onCheckedChange={(v) => updateCertification("First Responder", v)} />
         </FilterSection>
 
-        {/* Availability */}
         <FilterSection title="Availability">
-          <div className="flex flex-col">
-            <CheckboxFilter
-              label="Available Now"
-              count={6}
-              checked={filters.availability["available-now"]}
-              onChange={(checked) => updateAvailability("available-now", checked)}
-            />
-            <CheckboxFilter
-              label="This Weekend"
-              count={11}
-              checked={filters.availability["this-weekend"]}
-              onChange={(checked) => updateAvailability("this-weekend", checked)}
-            />
-            <CheckboxFilter
-              label="This Month"
-              count={14}
-              checked={filters.availability["this-month"]}
-              onChange={(checked) => updateAvailability("this-month", checked)}
-            />
-          </div>
+          <CheckboxFilter id="avail-now" label="Available Now" count={6} checked={filters.availability["available-now"]} onCheckedChange={(v) => updateAvailability("available-now", v)} />
+          <CheckboxFilter id="avail-weekend" label="This Weekend" count={11} checked={filters.availability["this-weekend"]} onCheckedChange={(v) => updateAvailability("this-weekend", v)} />
+          <CheckboxFilter id="avail-month" label="This Month" count={14} checked={filters.availability["this-month"]} onCheckedChange={(v) => updateAvailability("this-month", v)} />
         </FilterSection>
 
-        {/* Event Type Experience */}
         <FilterSection title="Event Experience">
-          <div className="flex flex-col">
-            <CheckboxFilter
-              label="Concerts"
-              count={9}
-              checked={filters.eventTypes.concerts}
-              onChange={(checked) => updateEventType("concerts", checked)}
-            />
-            <CheckboxFilter
-              label="Sports Events"
-              count={7}
-              checked={filters.eventTypes.sports}
-              onChange={(checked) => updateEventType("sports", checked)}
-            />
-            <CheckboxFilter
-              label="Festivals"
-              count={5}
-              checked={filters.eventTypes.festivals}
-              onChange={(checked) => updateEventType("festivals", checked)}
-            />
-            <CheckboxFilter
-              label="Corporate Events"
-              count={8}
-              checked={filters.eventTypes.corporate}
-              onChange={(checked) => updateEventType("corporate", checked)}
-            />
-            <CheckboxFilter
-              label="Film & TV"
-              count={3}
-              checked={filters.eventTypes["film-tv"]}
-              onChange={(checked) => updateEventType("film-tv", checked)}
-            />
-            <CheckboxFilter
-              label="Private Events"
-              count={6}
-              checked={filters.eventTypes.private}
-              onChange={(checked) => updateEventType("private", checked)}
-            />
-          </div>
+          <CheckboxFilter id="evt-concerts" label="Concerts & Music" count={9} checked={filters.eventTypes.concerts} onCheckedChange={(v) => updateEventType("concerts", v)} />
+          <CheckboxFilter id="evt-sports" label="Sports Events" count={7} checked={filters.eventTypes.sports} onCheckedChange={(v) => updateEventType("sports", v)} />
+          <CheckboxFilter id="evt-festivals" label="Festivals" count={5} checked={filters.eventTypes.festivals} onCheckedChange={(v) => updateEventType("festivals", v)} />
+          <CheckboxFilter id="evt-corporate" label="Corporate Events" count={8} checked={filters.eventTypes.corporate} onCheckedChange={(v) => updateEventType("corporate", v)} />
+          <CheckboxFilter id="evt-film" label="Film & TV Production" count={3} checked={filters.eventTypes["film-tv"]} onCheckedChange={(v) => updateEventType("film-tv", v)} />
+          <CheckboxFilter id="evt-private" label="Private Events" count={6} checked={filters.eventTypes.private} onCheckedChange={(v) => updateEventType("private", v)} />
         </FilterSection>
 
-        {/* Minimum Experience */}
-        <FilterSection title="Experience">
+        <FilterSection title="Experience Level">
           <SliderFilter
             label="Minimum Years"
             value={filters.minYearsExperience}
@@ -289,30 +226,10 @@ export function FilterSidebar({ filters, onFiltersChange }: FilterSidebarProps) 
         </FilterSection>
       </div>
 
-      {/* Reset Button */}
       <div className="p-5 border-t border-border">
-        <button
-          onClick={() =>
-            onFiltersChange({
-              location: "",
-              radius: 25,
-              certifications: { "EMT-B": false, "EMT-P": false, "First Responder": false },
-              availability: { "available-now": false, "this-weekend": false, "this-month": false },
-              eventTypes: {
-                concerts: false,
-                sports: false,
-                festivals: false,
-                corporate: false,
-                "film-tv": false,
-                private: false,
-              },
-              minYearsExperience: 0,
-            })
-          }
-          className="w-full py-2.5 border border-border text-xs font-sans font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-        >
-          Reset Filters
-        </button>
+        <Button variant="outline" className="w-full" onClick={() => onFiltersChange(DEFAULT_FILTERS)}>
+          Clear All Filters
+        </Button>
       </div>
     </aside>
   )
