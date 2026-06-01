@@ -1,19 +1,18 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono, Playfair_Display } from "next/font/google"
+import { Inter, JetBrains_Mono, Playfair_Display } from "next/font/google"
 import { ShellWrapper } from "@/components/layout/ShellWrapper"
 import "./globals.css"
 
-const geist = Geist({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-geist-sans",
+  variable: "--font-inter",
 })
 
-const geistMono = Geist_Mono({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  variable: "--font-geist-mono",
+  variable: "--font-mono",
 })
 
-// Required by Prompt 2 results page for event name heading
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
@@ -33,7 +32,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geist.variable} ${geistMono.variable} ${playfair.variable} bg-background`}
+      className={`${inter.variable} ${jetbrainsMono.variable} ${playfair.variable} bg-background`}
     >
       <body className="font-sans antialiased bg-background text-foreground min-h-screen flex flex-col">
         <ShellWrapper>{children}</ShellWrapper>
