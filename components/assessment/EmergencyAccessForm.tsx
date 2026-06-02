@@ -2,6 +2,7 @@
 
 import { ChevronDown } from "lucide-react"
 import type { AssessmentFormData } from "@/types/assessment"
+import { Button } from "@/components/ui/button"
 
 interface EmergencyAccessFormProps {
   formData: AssessmentFormData
@@ -94,23 +95,8 @@ export function EmergencyAccessForm({ formData, onChange, onNext, onBack }: Emer
 
         <div className="border-t border-border px-10 py-6">
           <div className="flex items-center justify-between">
-            <button
-              onClick={onBack}
-              className="h-10 px-6 text-sm font-medium border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={onNext}
-              disabled={!isValid}
-              className={`h-10 px-6 text-sm font-medium border transition-colors ${
-                isValid
-                  ? "bg-foreground text-background border-foreground hover:bg-foreground/90"
-                  : "bg-muted text-muted-foreground border-border cursor-not-allowed"
-              }`}
-            >
-              Submit Assessment
-            </button>
+            <Button variant="outline" onClick={onBack}>Back</Button>
+            <Button onClick={onNext} disabled={!isValid}>Submit Assessment</Button>
           </div>
         </div>
       </div>

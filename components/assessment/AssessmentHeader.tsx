@@ -1,33 +1,31 @@
 "use client"
 
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+
 export function AssessmentHeader() {
   return (
     <header className="h-14 border-b border-border bg-surface flex items-center justify-between px-6">
-      <div className="flex items-center gap-6">
-        {/* Logo */}
+      <div className="flex items-center gap-5">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 border border-foreground flex items-center justify-center">
             <div className="w-2 h-2 bg-foreground" />
           </div>
-          <span className="font-mono text-sm font-medium tracking-tight">STANDBY</span>
+          <span className="font-mono text-sm font-semibold tracking-tight">STANDBY</span>
         </div>
 
-        {/* Nav Divider */}
-        <div className="h-4 w-px bg-border" />
+        <Separator orientation="vertical" className="h-4" />
 
-        {/* Current Section */}
-        <span className="text-sm text-muted-foreground">
-          Medical Risk Assessment
-        </span>
+        <span className="text-sm text-muted-foreground">Medical Risk Assessment</span>
       </div>
 
       <div className="flex items-center gap-4">
-        <span className="text-xs font-mono text-muted-foreground">
-          NEW ASSESSMENT
+        <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+          New Assessment
         </span>
-        <button className="h-8 px-3 text-xs font-mono border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors">
+        <Button variant="outline" size="sm" className="font-mono text-xs">
           Save Draft
-        </button>
+        </Button>
       </div>
     </header>
   )

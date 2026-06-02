@@ -1,5 +1,9 @@
 import Link from "next/link"
 import { ArrowLeft, Shield, MapPin, Clock } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 
 // Mock data — will be replaced by Supabase fetch
 const emtData: Record<number, {
@@ -39,77 +43,81 @@ export default async function EMTProfilePage({
 
   if (!emt) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-xs font-mono text-accent uppercase tracking-widest mb-3">404</div>
-          <p className="text-muted-foreground font-mono text-sm mb-6">EMT profile not found.</p>
-          <Link
-            href="/marketplace"
-            className="border border-border px-4 py-2 text-xs font-mono text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-          >
-            Back to Marketplace
-          </Link>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <span className="text-xs font-mono text-primary uppercase tracking-widest">404</span>
+          <p className="text-muted-foreground text-sm">EMT profile not found.</p>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/marketplace">Back to Marketplace</Link>
+          </Button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-border bg-surface px-8 py-5 flex items-center gap-4">
-        <Link
-          href="/marketplace"
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Personnel
-        </Link>
-        <div className="h-4 w-px bg-border" />
+    <div className="flex-1 flex flex-col">
+      {/* Breadcrumb header */}
+      <div className="border-b border-border bg-surface/80 px-8 py-4 flex items-center gap-3 shrink-0">
+        <Button asChild variant="ghost" size="sm" className="text-muted-foreground gap-1.5 -ml-2">
+          <Link href="/marketplace">
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Personnel
+          </Link>
+        </Button>
+        <Separator orientation="vertical" className="h-4" />
         <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
           EMT Profile
         </span>
       </div>
 
-      <div className="max-w-4xl mx-auto px-8 py-12">
-        {/* Name + cert */}
-        <div className="mb-10">
-          <div className="flex items-center gap-4 mb-3">
-            <span className="bg-primary text-primary-foreground font-mono text-xs px-3 py-1 uppercase tracking-wider">
+      <div className="max-w-4xl mx-auto w-full px-8 py-10 space-y-6">
+        {/* Name + badges */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <Badge className="font-mono text-xs tracking-wider uppercase">
               {emt.certification}
-            </span>
-            <span className={`font-mono text-xs uppercase tracking-wider ${emt.available ? "text-emerald-500" : "text-muted-foreground"}`}>
+            </Badge>
+            <Badge
+              variant="outline"
+              className={
+                emt.available
+                  ? "font-mono text-xs border-risk-low text-risk-low bg-risk-low/10"
+                  : "font-mono text-xs text-muted-foreground"
+              }
+            >
               {emt.available ? "Available" : "Unavailable"}
-            </span>
+            </Badge>
           </div>
           <h1 className="text-4xl font-semibold tracking-tight">{emt.name}</h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-border mb-8">
-          <div className="bg-background px-8 py-6">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
+        {/* Stats row */}
+        <div className="grid grid-cols-3 border border-border divide-x divide-border">
+          <div className="px-6 py-5">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
               Experience
-            </div>
+            </p>
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-muted-foreground" />
-              <span className="font-mono text-2xl">{emt.yearsExperience}</span>
+              <span className="font-mono text-2xl font-bold">{emt.yearsExperience}</span>
               <span className="text-sm text-muted-foreground">years</span>
             </div>
           </div>
-          <div className="bg-background px-8 py-6">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
+          <div className="px-6 py-5">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
               Service Radius
-            </div>
+            </p>
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-muted-foreground" />
-              <span className="font-mono text-2xl">{emt.radiusMiles}</span>
+              <span className="font-mono text-2xl font-bold">{emt.radiusMiles}</span>
               <span className="text-sm text-muted-foreground">miles</span>
             </div>
           </div>
-          <div className="bg-background px-8 py-6">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
+          <div className="px-6 py-5">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
               Availability
-            </div>
+            </p>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-muted-foreground" />
               <span className="font-mono text-sm">
@@ -119,55 +127,45 @@ export default async function EMTProfilePage({
           </div>
         </div>
 
-        {/* Bio */}
-        <div className="border border-border mb-8">
-          <div className="border-b border-border px-8 py-4">
-            <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+        {/* Background */}
+        <Card>
+          <CardHeader className="pb-0">
+            <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
               Background
             </span>
-          </div>
-          <div className="px-8 py-6">
+          </CardHeader>
+          <CardContent className="pt-3">
             <p className="text-foreground/90 leading-relaxed">{emt.bio}</p>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Event Types */}
-        <div className="border border-border mb-10">
-          <div className="border-b border-border px-8 py-4">
-            <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+        <Card>
+          <CardHeader className="pb-0">
+            <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
               Event Type Experience
             </span>
-          </div>
-          <div className="px-8 py-6 flex flex-wrap gap-2">
+          </CardHeader>
+          <CardContent className="pt-3 flex flex-wrap gap-2">
             {emt.eventTypes.map((type) => (
-              <span
-                key={type}
-                className="border border-border px-3 py-1.5 text-xs font-mono text-muted-foreground uppercase tracking-wider"
-              >
+              <Badge key={type} variant="secondary" className="font-mono text-xs uppercase tracking-wider">
                 {type}
-              </span>
+              </Badge>
             ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* CTA */}
-        <div className="flex items-center gap-4">
-          <button
+        <div className="flex items-center gap-3">
+          <Button
             disabled={!emt.available}
-            className={`h-11 px-8 text-sm font-mono uppercase tracking-wider border transition-colors ${
-              emt.available
-                ? "bg-accent text-white border-accent hover:bg-accent/90"
-                : "bg-muted text-muted-foreground border-border cursor-not-allowed"
-            }`}
+            className="font-mono text-xs tracking-wider uppercase px-8"
           >
             {emt.available ? "Request This EMT" : "Currently Unavailable"}
-          </button>
-          <Link
-            href="/marketplace"
-            className="h-11 px-6 border border-border text-sm font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground hover:border-foreground transition-colors flex items-center"
-          >
-            Browse More Personnel
-          </Link>
+          </Button>
+          <Button asChild variant="outline" className="font-mono text-xs tracking-wider uppercase">
+            <Link href="/marketplace">Browse More Personnel</Link>
+          </Button>
         </div>
       </div>
     </div>

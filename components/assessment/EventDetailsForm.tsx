@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronDown } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface FormData {
   eventName: string
@@ -126,19 +127,9 @@ export function EventDetailsForm({ formData, onChange, onNext }: EventDetailsFor
             <span className="text-xs font-mono text-muted-foreground">
               All fields required
             </span>
-            <button
-              onClick={onNext}
-              disabled={!isValid}
-              className={`
-                h-10 px-6 text-sm font-medium border transition-colors
-                ${isValid
-                  ? "bg-foreground text-background border-foreground hover:bg-foreground/90"
-                  : "bg-muted text-muted-foreground border-border cursor-not-allowed"
-                }
-              `}
-            >
+            <Button onClick={onNext} disabled={!isValid}>
               Continue to Step 2
-            </button>
+            </Button>
           </div>
         </div>
       </div>
