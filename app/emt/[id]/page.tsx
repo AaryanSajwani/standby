@@ -1,9 +1,10 @@
 import Link from "next/link"
 import { ArrowLeft, Shield, MapPin, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 
 // Mock data — will be replaced by Supabase fetch
 const emtData: Record<number, {
@@ -47,9 +48,9 @@ export default async function EMTProfilePage({
         <div className="text-center space-y-4">
           <span className="text-xs font-mono text-primary uppercase tracking-widest">404</span>
           <p className="text-muted-foreground text-sm">EMT profile not found.</p>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/marketplace">Back to Marketplace</Link>
-          </Button>
+          <Link href="/marketplace" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            Back to Marketplace
+          </Link>
         </div>
       </div>
     )
@@ -59,12 +60,10 @@ export default async function EMTProfilePage({
     <div className="flex-1 flex flex-col">
       {/* Breadcrumb header */}
       <div className="border-b border-border bg-surface/80 px-8 py-4 flex items-center gap-3 shrink-0">
-        <Button asChild variant="ghost" size="sm" className="text-muted-foreground gap-1.5 -ml-2">
-          <Link href="/marketplace">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Personnel
-          </Link>
-        </Button>
+        <Link href="/marketplace" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-muted-foreground gap-1.5 -ml-2")}>
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Personnel
+        </Link>
         <Separator orientation="vertical" className="h-4" />
         <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
           EMT Profile
@@ -163,9 +162,9 @@ export default async function EMTProfilePage({
           >
             {emt.available ? "Request This EMT" : "Currently Unavailable"}
           </Button>
-          <Button asChild variant="outline" className="font-mono text-xs tracking-wider uppercase">
-            <Link href="/marketplace">Browse More Personnel</Link>
-          </Button>
+          <Link href="/marketplace" className={cn(buttonVariants({ variant: "outline" }), "font-mono text-xs tracking-wider uppercase")}>
+            Browse More Personnel
+          </Link>
         </div>
       </div>
     </div>

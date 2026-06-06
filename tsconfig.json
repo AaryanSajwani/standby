@@ -25,5 +25,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "prompt 1", "prompt 2", "Prompt 3"]
+  "exclude": ["node_modules", "prompt 1", "prompt 2", "Prompt 3", "pointer-ai-landing-page"]
 }

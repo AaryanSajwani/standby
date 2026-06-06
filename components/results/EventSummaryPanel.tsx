@@ -1,9 +1,10 @@
 import Link from "next/link"
 import { Calendar, Users, Activity } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
+import { cn } from "@/lib/utils"
 
 interface EventSummaryPanelProps {
   eventName: string
@@ -96,9 +97,9 @@ export function EventSummaryPanel({
         <Button className="w-full font-mono text-xs tracking-wider uppercase">
           Save Report
         </Button>
-        <Button asChild variant="outline" className="w-full font-mono text-xs tracking-wider uppercase">
-          <Link href="/assess">Start New Assessment</Link>
-        </Button>
+        <Link href="/assess" className={cn(buttonVariants({ variant: "outline" }), "w-full font-mono text-xs tracking-wider uppercase")}>
+          Start New Assessment
+        </Link>
       </CardContent>
     </Card>
   )

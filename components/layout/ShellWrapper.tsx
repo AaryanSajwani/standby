@@ -3,8 +3,8 @@
 import { usePathname } from "next/navigation"
 import { NavBar } from "./NavBar"
 
-// Routes that have their own internal navigation (assessment wizard, results)
-const STANDALONE_ROUTES = ["/assess", "/results"]
+// Routes that have their own internal navigation
+const STANDALONE_ROUTES = ["/", "/assess", "/results"]
 
 export function ShellWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

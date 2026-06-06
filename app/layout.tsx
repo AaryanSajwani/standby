@@ -1,22 +1,17 @@
 import type { Metadata } from "next"
-import { Inter, JetBrains_Mono, Playfair_Display } from "next/font/google"
+import { Geist, Geist_Mono } from "next/font/google"
 import { ShellWrapper } from "@/components/layout/ShellWrapper"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import "./globals.css"
 
-const inter = Inter({
+const geist = Geist({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-geist",
 })
 
-const jetbrainsMono = JetBrains_Mono({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-})
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
 })
 
 export const metadata: Metadata = {
@@ -33,7 +28,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} ${playfair.variable} bg-background`}
+      className={`${geist.variable} ${geistMono.variable} bg-background`}
     >
       <body className="font-sans antialiased bg-background text-foreground min-h-screen flex flex-col">
         <TooltipProvider>

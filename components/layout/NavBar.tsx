@@ -3,8 +3,9 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 
 const NAV_LINKS = [
   { href: "/",            label: "Dashboard"  },
@@ -59,12 +60,10 @@ export function NavBar() {
 
         <Separator orientation="vertical" className="h-4" />
 
-        <Button asChild size="sm">
-          <Link href="/assess">
-            <Plus className="w-3.5 h-3.5" />
-            New Assessment
-          </Link>
-        </Button>
+        <Link href="/assess" className={cn(buttonVariants({ size: "sm" }))}>
+          <Plus className="w-3.5 h-3.5" />
+          New Assessment
+        </Link>
       </div>
     </header>
   )

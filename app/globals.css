@@ -47,6 +47,8 @@
   --risk-critical: #E8404A;
   --accent-functional: #E8404A;
   --accent-signal: #E8404A;
+  --primary-light: #F87171;
+  --primary-dark: #B91C1C;
 }
 
 .dark {
@@ -85,8 +87,8 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
-  --font-mono: var(--font-mono), 'JetBrains Mono', monospace;
+  --font-sans: var(--font-geist), 'Geist', system-ui, sans-serif;
+  --font-mono: var(--font-mono), 'Geist Mono', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -132,6 +134,8 @@
   --color-risk-critical: var(--risk-critical);
   --color-accent-functional: var(--accent-functional);
   --color-accent-signal: var(--accent-signal);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
 }
 
 @layer base {
