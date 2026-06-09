@@ -2,7 +2,6 @@ import React from "react"
 import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { LandingHeader } from "./landing-header"
 
 export function LandingHero() {
   return (
@@ -44,13 +43,8 @@ export function LandingHero() {
         <div className="absolute" style={{ top: 333, left: 231, width: 36, height: 36, background: "#E8404A08" }} />
       </div>
 
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-20">
-        <LandingHeader />
-      </div>
-
       {/* Hero Content */}
-      <div className="relative z-10 space-y-4 md:space-y-5 lg:space-y-6 mb-6 md:mb-8 lg:mb-10 max-w-md md:max-w-[520px] lg:max-w-[620px] mt-16 md:mt-[120px] lg:mt-[160px] px-4 text-left">
+      <div className="relative z-10 space-y-4 md:space-y-5 lg:space-y-6 mb-6 md:mb-8 lg:mb-10 max-w-md md:max-w-[520px] lg:max-w-[620px] mt-12 md:mt-20 lg:mt-28 px-4 text-left">
         <div className="inline-flex items-center gap-2 border border-primary/30 bg-primary/5 rounded-full px-3 py-1">
           <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
           <span className="text-xs font-mono text-primary tracking-widest uppercase">Event Medical Risk Platform</span>

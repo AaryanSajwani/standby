@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { AssessmentHeader } from "./AssessmentHeader"
 import { StepIndicator } from "./StepIndicator"
 import { EventDetailsForm } from "./EventDetailsForm"
 import { VenueConditionsForm } from "./VenueConditionsForm"
@@ -55,8 +54,6 @@ export function AssessmentIntakeForm() {
 
   return (
     <div className="flex-1 flex flex-col">
-      <AssessmentHeader />
-
       {/* Step Progress Bar */}
       <div className="border-b border-border bg-surface px-6 py-4 shrink-0">
         <div className="flex items-center justify-between">
