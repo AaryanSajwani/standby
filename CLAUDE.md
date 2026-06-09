@@ -50,10 +50,11 @@ npm run lint    # ESLint
 
 ## Dangerous Areas
 
-**Vercel deploys — do not debug Hobby-plan author failures.**
-Deploys run through Aaryan's Vercel account. Tanay's commits fail the Hobby-plan
-single-author check and show as failed deployments. This is expected — it is not a
-code or config bug. Do not investigate or attempt to fix these failures.
+**Vercel deploys — repo is private, requires explicit GitHub app access.**
+Deploys run through Aaryan's Vercel account connected to a private GitHub repo.
+If deployments fail after a push: the fix is in GitHub, not the code.
+Aaryan must go to GitHub → Settings → Applications → Vercel → Configure → grant
+access to the `standby` repo. Do not attempt to debug failed deploys in code.
 
 **Supabase keys — never expose service keys client-side.**
 `lib/supabase.ts` uses only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
