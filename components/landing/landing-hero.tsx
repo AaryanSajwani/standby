@@ -55,12 +55,17 @@ export function LandingHero() {
         <p className="text-muted-foreground text-base md:text-base lg:text-lg font-medium leading-relaxed">
           Standby turns event details into a defensible medical risk score, staffing configuration, and matched EMT roster — in one workflow.
         </p>
-        <div className="flex items-center gap-3 pt-1">
-          <Link href="/assess" className={cn(buttonVariants(), "rounded-full px-6 font-medium shadow-lg shadow-primary/20")}>
-            Start Assessment
-          </Link>
-          <Link href="/personnel" className={cn(buttonVariants({ variant: "outline" }), "rounded-full px-6 font-medium")}>
-            Browse Personnel
+        <div className="flex flex-col gap-3 pt-1">
+          <div className="flex items-center gap-3">
+            <Link href="/assess" className={cn(buttonVariants(), "rounded-full px-6 font-medium shadow-lg shadow-primary/20")}>
+              Start Assessment
+            </Link>
+            <Link href="/personnel" className={cn(buttonVariants({ variant: "outline" }), "rounded-full px-6 font-medium")}>
+              Browse Personnel
+            </Link>
+          </div>
+          <Link href="/emt-dashboard" className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wide w-fit">
+            I&apos;m an EMT — view your dashboard →
           </Link>
         </div>
       </div>
