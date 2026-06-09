@@ -38,7 +38,7 @@ const CARDS = [
     Component: RiskScoringIllustration,
   },
   {
-    title: "EMT Marketplace.",
+    title: "Personnel marketplace.",
     description: "Browse 340+ certified professionals matched to your event.",
     Component: EMTMarketplaceIllustration,
   },

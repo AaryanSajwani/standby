@@ -16,9 +16,14 @@ const FAQ_DATA = [
       "Our AI evaluates over 30 risk factors — including expected attendance, venue type, event duration, proximity to trauma centers, historical patient presentation rates for similar events, and more. It outputs a 0–100 risk score with a full breakdown of contributing factors, so you can justify every staffing decision.",
   },
   {
-    question: "How do I find and book EMTs through the marketplace?",
+    question: "How do I find and book an EMT?",
     answer:
-      "Browse certified EMTs filtered by certification level (EMT-B, AEMT, Paramedic), experience, location, and event-type specialization. You can send a staffing request directly to any provider. Professional and Enterprise plans unlock direct booking and messaging.",
+      "Browse certified EMTs on the Personnel page, filtered by certification level, experience, location, and event-type specialization. Each profile shows the EMT's posted hourly rate, event history, and availability. Send a booking request directly — no intermediary, no agency markup.",
+  },
+  {
+    question: "How much does it cost?",
+    answer:
+      "Standby is free to use. Running an assessment, getting a staffing recommendation, and browsing matched EMTs costs nothing. You pay your EMT directly at their posted hourly rate, which typically ranges from $35–45/hr for First Responders, $50–70/hr for EMT-Basics, and $85–135/hr for Paramedics — a fraction of traditional agency standby packages.",
   },
   {
     question: "What's included in the compliance report?",
