@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import Image from "next/image"
 import { Plus } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
 const NAV_LINKS = [
-  { href: "/",            label: "Dashboard"  },
+  { href: "/",            label: "Home"       },
   { href: "/assess",      label: "Assessment" },
   { href: "/marketplace", label: "Personnel"  },
   { href: "/events",      label: "Events"     },
@@ -21,11 +22,15 @@ export function NavBar() {
   return (
     <header className="h-14 border-b border-border bg-surface/80 backdrop-blur-sm flex items-center justify-between px-6 shrink-0 sticky top-0 z-40">
       <div className="flex items-center gap-5">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-6 h-6 border border-foreground flex items-center justify-center group-hover:border-primary transition-colors">
-            <div className="w-2 h-2 bg-foreground group-hover:bg-primary transition-colors" />
-          </div>
-          <span className="font-mono text-sm font-semibold tracking-tight">STANDBY</span>
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/standby-logo.png"
+            alt="Standby"
+            width={96}
+            height={32}
+            className="h-8 w-auto object-contain"
+            priority
+          />
         </Link>
 
         <Separator orientation="vertical" className="h-4" />

@@ -35,3 +35,8 @@ next-env.d.ts
 # V0 export folders
 emt-staffing-marketplace-personnel-page/
 .vercel
+
+# Private project files (context only, not for repo)
+Standby Logo.png
+Standby_Product_Blueprint.md
+Standby - Startup Overview.pdf
