@@ -48,7 +48,7 @@ export default async function EMTProfilePage({
         <div className="text-center space-y-4">
           <span className="text-xs font-mono text-primary uppercase tracking-widest">404</span>
           <p className="text-muted-foreground text-sm">EMT profile not found.</p>
-          <Link href="/marketplace" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+          <Link href="/personnel" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
             Back to Marketplace
           </Link>
         </div>
@@ -60,7 +60,7 @@ export default async function EMTProfilePage({
     <div className="flex-1 flex flex-col">
       {/* Breadcrumb header */}
       <div className="border-b border-border bg-surface/80 px-8 py-4 flex items-center gap-3 shrink-0">
-        <Link href="/marketplace" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-muted-foreground gap-1.5 -ml-2")}>
+        <Link href="/personnel" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-muted-foreground gap-1.5 -ml-2")}>
           <ArrowLeft className="w-3.5 h-3.5" />
           Personnel
         </Link>
@@ -162,7 +162,7 @@ export default async function EMTProfilePage({
           >
             {emt.available ? "Request This EMT" : "Currently Unavailable"}
           </Button>
-          <Link href="/marketplace" className={cn(buttonVariants({ variant: "outline" }), "font-mono text-xs tracking-wider uppercase")}>
+          <Link href="/personnel" className={cn(buttonVariants({ variant: "outline" }), "font-mono text-xs tracking-wider uppercase")}>
             Browse More Personnel
           </Link>
         </div>

@@ -1,9 +1,9 @@
 import StaffingMarketplace from "@/components/marketplace/StaffingMarketplace"
 
 export const metadata = {
-  title: "Personnel Marketplace — Standby",
+  title: "Personnel — Standby",
 }
 
-export default function MarketplacePage() {
+export default function PersonnelPage() {
   return <StaffingMarketplace />
 }

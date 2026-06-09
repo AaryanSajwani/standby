@@ -59,7 +59,7 @@ export function LandingHero() {
           <Link href="/assess" className={cn(buttonVariants(), "rounded-full px-6 font-medium shadow-lg shadow-primary/20")}>
             Start Assessment
           </Link>
-          <Link href="/marketplace" className={cn(buttonVariants({ variant: "outline" }), "rounded-full px-6 font-medium")}>
+          <Link href="/personnel" className={cn(buttonVariants({ variant: "outline" }), "rounded-full px-6 font-medium")}>
             Browse Personnel
           </Link>
         </div>

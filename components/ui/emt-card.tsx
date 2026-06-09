@@ -1,11 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { MapPin, Star, Heart } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 interface EMTCardProps {
+  id: number
   name: string
   certification: "EMT-B" | "EMT-P" | "First Responder"
   yearsExperience: number
@@ -26,6 +28,7 @@ const certificationVariant: Record<string, string> = {
 }
 
 export function EMTCard({
+  id,
   name,
   certification,
   yearsExperience,
@@ -143,8 +146,8 @@ export function EMTCard({
               isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
             }`}
           >
-            <Button className="w-full" variant="secondary">
-              View Profile
+            <Button render={<Link href={`/emt/${id}`} />} className="w-full" variant="secondary">
+              View profile
             </Button>
           </div>
         </div>
