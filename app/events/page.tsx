@@ -25,11 +25,13 @@ export default async function EventsPage() {
 
   if (!user) redirect("/auth?role=organizer&next=/events")
 
-  const { data: rawBookings } = await supabase
+  const { data: rawBookings, error } = await supabase
     .from("bookings")
     .select(`${BOOKING_COLUMNS}, emt:profiles!bookings_emt_id_fkey ( full_name )`)
     .eq("organizer_id", user.id)
     .order("created_at", { ascending: false })
+
+  if (error) console.error("[/events] bookings query failed:", error.message)
 
   const bookings = (rawBookings ?? []).map((row) =>
     mapBooking(row as unknown as RawBooking, joinedFullName(row.emt) ?? "EMT")

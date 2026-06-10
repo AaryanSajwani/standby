@@ -50,12 +50,13 @@ async function getEmt(id: string): Promise<EMTProfile | null> {
   // public see verified rows (and owners their own), but credential PII
   // (license_number etc.) must never be selected here.
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("emt_profiles")
     .select(`${EMT_PUBLIC_COLUMNS}, profiles!inner ( full_name )`)
     .eq("user_id", id)
     .maybeSingle()
 
+  if (error) console.error("[/emt/[id]] emt_profiles query failed:", error.message)
   if (!data) return null
 
   return {

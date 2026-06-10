@@ -11,11 +11,14 @@ export const dynamic = "force-dynamic"
 export default async function PersonnelPage() {
   const supabase = await createClient()
 
-  const { data: rawEmts } = await supabase
+  const { data: rawEmts, error } = await supabase
     .from("emt_profiles")
     .select(`${EMT_PUBLIC_COLUMNS}, profiles!inner ( full_name )`)
     .eq("verified", true)
     .order("created_at", { ascending: false })
+
+  // A failed query must not masquerade as "no verified EMTs yet"
+  if (error) console.error("[/personnel] emt_profiles query failed:", error.message)
 
   const verifiedEmts: EMTCardProps[] = (rawEmts ?? []).map((row) => {
     const fullName = joinedFullName(row.profiles) ?? "Unknown EMT"

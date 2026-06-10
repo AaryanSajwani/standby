@@ -23,11 +23,13 @@ export default async function EMTDashboardPage() {
 
   if (!emtProfile) redirect("/onboarding/emt")
 
-  const { data: rawBookings } = await supabase
+  const { data: rawBookings, error } = await supabase
     .from("bookings")
     .select(`${BOOKING_COLUMNS}, organizer:profiles!bookings_organizer_id_fkey ( full_name )`)
     .eq("emt_id", user.id)
     .order("created_at", { ascending: false })
+
+  if (error) console.error("[/emt-dashboard] bookings query failed:", error.message)
 
   const bookings = (rawBookings ?? []).map((row) =>
     mapBooking(row as unknown as RawBooking, joinedFullName(row.organizer) ?? "Organizer")
