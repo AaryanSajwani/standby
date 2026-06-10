@@ -1,10 +1,10 @@
-import Link from "next/link"
-import { Calendar, Users, Activity } from "lucide-react"
+import { Calendar, Users, Activity, Check } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
-import { cn } from "@/lib/utils"
+
+export type SaveState = "idle" | "saving" | "saved" | "error"
 
 interface EventSummaryPanelProps {
   eventName: string
@@ -16,6 +16,10 @@ interface EventSummaryPanelProps {
     environmental: number
     activity: number
   }
+  onSaveReport?: () => void
+  saveState?: SaveState
+  saveDisabled?: boolean
+  onStartNew?: () => void
 }
 
 function RiskBar({ value, label }: { value: number; label: string }) {
@@ -36,6 +40,10 @@ export function EventSummaryPanel({
   eventDate,
   attendance,
   riskFactors,
+  onSaveReport,
+  saveState = "idle",
+  saveDisabled = false,
+  onStartNew,
 }: EventSummaryPanelProps) {
   return (
     <Card className="flex flex-col">
@@ -94,12 +102,34 @@ export function EventSummaryPanel({
 
       {/* Actions */}
       <CardContent className="pt-4 space-y-2">
-        <Button className="w-full font-mono text-xs tracking-wider uppercase">
-          Save Report
+        <Button
+          className="w-full font-mono text-xs tracking-wider uppercase"
+          onClick={onSaveReport}
+          disabled={saveDisabled || saveState === "saving" || saveState === "saved"}
+        >
+          {saveState === "saved" ? (
+            <>
+              <Check className="w-3.5 h-3.5 mr-1.5" />
+              Report saved
+            </>
+          ) : saveState === "saving" ? (
+            "Saving…"
+          ) : (
+            "Save Report"
+          )}
         </Button>
-        <Link href="/assess" className={cn(buttonVariants({ variant: "outline" }), "w-full font-mono text-xs tracking-wider uppercase")}>
+        {saveState === "error" && (
+          <p className="font-mono text-xs text-destructive text-center">
+            Could not save — try again.
+          </p>
+        )}
+        <Button
+          variant="outline"
+          className="w-full font-mono text-xs tracking-wider uppercase"
+          onClick={onStartNew}
+        >
           Start New Assessment
-        </Link>
+        </Button>
       </CardContent>
     </Card>
   )

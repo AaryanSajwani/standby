@@ -8,7 +8,19 @@ export const metadata = { title: "Personnel — Standby" }
 // Never statically cache — newly verified EMTs must appear immediately
 export const dynamic = "force-dynamic"
 
-export default async function PersonnelPage() {
+const VALID_CERT_FILTERS = ["EMT-B", "EMT-P", "First Responder"]
+
+export default async function PersonnelPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cert?: string }>
+}) {
+  const { cert } = await searchParams
+  const initialCertLevels = (cert ?? "")
+    .split(",")
+    .map((c) => c.trim())
+    .filter((c) => VALID_CERT_FILTERS.includes(c))
+
   const supabase = await createClient()
 
   const { data: rawEmts, error } = await supabase
@@ -35,5 +47,5 @@ export default async function PersonnelPage() {
     }
   })
 
-  return <StaffingMarketplace verifiedEmts={verifiedEmts} />
+  return <StaffingMarketplace verifiedEmts={verifiedEmts} initialCertLevels={initialCertLevels} />
 }

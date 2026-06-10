@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { StepIndicator } from "./StepIndicator"
 import { EventDetailsForm } from "./EventDetailsForm"
@@ -10,6 +10,7 @@ import { MedicalResourcesForm } from "./MedicalResourcesForm"
 import { EmergencyAccessForm } from "./EmergencyAccessForm"
 import { RiskProfilePanel } from "./RiskProfilePanel"
 import { EMPTY_FORM_DATA, type AssessmentFormData } from "@/types/assessment"
+import { ASSESSMENT_FORM_KEY, ASSESSMENT_STEP_KEY } from "@/lib/assessment"
 
 const STEP_LABELS = [
   "Event Details",
@@ -23,6 +24,28 @@ export function AssessmentIntakeForm() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<AssessmentFormData>(EMPTY_FORM_DATA)
+  const [hydrated, setHydrated] = useState(false)
+
+  // Rehydrate in-progress state — survives the /auth round-trip during Save Report
+  useEffect(() => {
+    try {
+      const savedForm = sessionStorage.getItem(ASSESSMENT_FORM_KEY)
+      if (savedForm) setFormData({ ...EMPTY_FORM_DATA, ...JSON.parse(savedForm) })
+      const savedStep = parseInt(sessionStorage.getItem(ASSESSMENT_STEP_KEY) ?? "")
+      if (savedStep >= 1 && savedStep <= 5) setCurrentStep(savedStep)
+    } catch {
+      // corrupt storage — start fresh
+    }
+    setHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!hydrated) return
+    try {
+      sessionStorage.setItem(ASSESSMENT_FORM_KEY, JSON.stringify(formData))
+      sessionStorage.setItem(ASSESSMENT_STEP_KEY, String(currentStep))
+    } catch {}
+  }, [formData, currentStep, hydrated])
 
   const handleFormChange = (data: Partial<AssessmentFormData>) => {
     setFormData((prev) => ({ ...prev, ...data }))

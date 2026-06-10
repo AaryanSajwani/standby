@@ -9,6 +9,7 @@ interface EMTProfileCardProps {
   yearsExperience: number
   radiusMiles: number
   available: boolean
+  onRequestStaffing?: () => void
 }
 
 export function EMTProfileCard({
@@ -17,6 +18,7 @@ export function EMTProfileCard({
   yearsExperience,
   radiusMiles,
   available,
+  onRequestStaffing,
 }: EMTProfileCardProps) {
   return (
     <Card className="flex flex-col h-full">
@@ -56,6 +58,7 @@ export function EMTProfileCard({
 
         <Button
           disabled={!available}
+          onClick={onRequestStaffing}
           className="mt-5 w-full font-mono text-xs tracking-wider uppercase"
           size="sm"
         >

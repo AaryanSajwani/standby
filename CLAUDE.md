@@ -18,10 +18,11 @@ Two-sided marketplace connecting event organizers with EMTs. Core flow: organize
 
 ```
 app/
-  assess/          Multi-step intake form (AssessmentIntakeForm)
+  assess/          Multi-step intake form — state persists to sessionStorage (survives auth bounce)
   auth/            Sign-in page (Google OAuth + email magic link)
     callback/      OAuth code exchange route handler
-  results/         Risk score + staffing recommendation + EMT profile cards
+  results/         Risk report computed client-side from sessionStorage via lib/assessment.ts;
+                   Save Report (auth-gated insert to assessments), Request Staffing (prefill + /personnel?cert=)
   emt/[id]/        EMT profile detail + booking request form (UUID ids = real, numeric = mock)
   emt-dashboard/   EMT booking dashboard — real data, accept/decline, availability toggle (protected)
   personnel/       EMT search/filter UI — verified emt_profiles, mock fallback (force-dynamic)
@@ -39,6 +40,9 @@ lib/
     client.ts      Browser client (createBrowserClient from @supabase/ssr)
     server.ts      Server/RSC client (createServerClient, reads Next.js cookies())
   supabase.ts      Legacy anon client — unused, kept for reference
+  assessment.ts    Risk scoring engine, sessionStorage keys, BookingPrefill type
+  bookings.ts      BOOKING_COLUMNS allowlist, Booking mapper, date formatting
+  emt.ts           CERT_DISPLAY, EMT_PUBLIC_COLUMNS allowlist, joinedFullName
   utils.ts         cn() Tailwind merge helper
 proxy.ts           Next.js 16 proxy (session refresh + route protection)
 types/

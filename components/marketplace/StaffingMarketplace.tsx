@@ -29,13 +29,22 @@ const MOCK_EMT_DATA: EMTCardProps[] = [
 interface StaffingMarketplaceProps {
   /** Verified EMTs fetched server-side. Empty array = fall back to mock data. */
   verifiedEmts?: EMTCardProps[]
+  /** Cert levels to pre-check in the filter sidebar (from ?cert= on /personnel). */
+  initialCertLevels?: string[]
 }
 
-export default function StaffingMarketplace({ verifiedEmts = [] }: StaffingMarketplaceProps) {
+export default function StaffingMarketplace({ verifiedEmts = [], initialCertLevels = [] }: StaffingMarketplaceProps) {
   const isMockFallback = verifiedEmts.length === 0
   const baseData = isMockFallback ? MOCK_EMT_DATA : verifiedEmts
 
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
+  const [filters, setFilters] = useState<FilterState>(() => {
+    if (initialCertLevels.length === 0) return DEFAULT_FILTERS
+    const certifications = { ...DEFAULT_FILTERS.certifications }
+    for (const cert of initialCertLevels) {
+      if (cert in certifications) certifications[cert as keyof typeof certifications] = true
+    }
+    return { ...DEFAULT_FILTERS, certifications }
+  })
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState("recommended")
 

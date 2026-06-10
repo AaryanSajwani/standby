@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ChevronDown, Check } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { BOOKING_PREFILL_KEY, type BookingPrefill } from "@/lib/assessment"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
@@ -40,6 +41,24 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
   const [duration, setDuration] = useState("")
   const [notes, setNotes] = useState("")
 
+  // Prefill from a completed assessment (set by Request Staffing on /results)
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(BOOKING_PREFILL_KEY)
+      if (!raw) return
+      const p = JSON.parse(raw) as Partial<BookingPrefill>
+      if (p.eventName) setEventName(p.eventName)
+      if (p.eventType && EVENT_TYPES.includes(p.eventType)) setEventType(p.eventType)
+      if (p.eventDate) setEventDate(p.eventDate)
+      if (p.location) setLocation(p.location)
+      if (p.attendance) setAttendance(p.attendance)
+      if (p.durationHours) setDuration(p.durationHours)
+      if (p.notes) setNotes(p.notes)
+      if (viewerId && available) setOpen(true)
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const durationNum = Number(duration)
   const estimatedTotal = durationNum > 0 ? Math.round(durationNum * hourlyRate) : 0
 
@@ -75,6 +94,9 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
       setSubmitting(false)
       return
     }
+    try {
+      sessionStorage.removeItem(BOOKING_PREFILL_KEY)
+    } catch {}
     setSent(true)
   }
 
