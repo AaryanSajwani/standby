@@ -1,9 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
 import StaffingMarketplace from "@/components/marketplace/StaffingMarketplace"
 import type { EMTCardProps } from "@/components/ui/emt-card"
-import { CERT_DISPLAY, EMT_PUBLIC_COLUMNS } from "@/lib/emt"
+import { CERT_DISPLAY, EMT_PUBLIC_COLUMNS, joinedFullName } from "@/lib/emt"
 
 export const metadata = { title: "Personnel — Standby" }
+
+// Never statically cache — newly verified EMTs must appear immediately
+export const dynamic = "force-dynamic"
 
 export default async function PersonnelPage() {
   const supabase = await createClient()
@@ -15,8 +18,7 @@ export default async function PersonnelPage() {
     .order("created_at", { ascending: false })
 
   const verifiedEmts: EMTCardProps[] = (rawEmts ?? []).map((row) => {
-    const profile = row.profiles as { full_name: string | null } | null
-    const fullName = profile?.full_name ?? "Unknown EMT"
+    const fullName = joinedFullName(row.profiles) ?? "Unknown EMT"
 
     return {
       id:            row.user_id,

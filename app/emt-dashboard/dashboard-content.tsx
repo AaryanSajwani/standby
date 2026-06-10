@@ -2,136 +2,38 @@
 
 import { useState } from "react"
 import { Calendar, MapPin, Users, Clock, Check, X, AlertTriangle } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-
-type RequestStatus = "pending" | "accepted" | "declined"
-
-interface EventRequest {
-  id: number
-  eventName: string
-  eventType: string
-  organizer: string
-  date: string
-  location: string
-  attendance: number
-  durationHours: number
-  riskLevel: "LOW" | "MODERATE" | "HIGH"
-  certRequired: string
-  hourlyRate: number
-  status: RequestStatus
-  notes: string
-}
-
-const MOCK_REQUESTS: EventRequest[] = [
-  {
-    id: 1,
-    eventName: "Lakeview Summer Festival",
-    eventType: "Outdoor festival",
-    organizer: "Chicago Events Co.",
-    date: "Jul 12, 2026",
-    location: "Chicago, IL",
-    attendance: 800,
-    durationHours: 8,
-    riskLevel: "MODERATE",
-    certRequired: "EMT-Basic",
-    hourlyRate: 65,
-    status: "pending",
-    notes: "Two-stage outdoor festival. AED stations on site. Nearest hospital 3.2 mi. Arrive 45 min before doors.",
-  },
-  {
-    id: 2,
-    eventName: "Corporate Leadership Summit",
-    eventType: "Corporate event",
-    organizer: "Apex Group",
-    date: "Jul 19, 2026",
-    location: "Downtown Chicago, IL",
-    attendance: 300,
-    durationHours: 6,
-    riskLevel: "LOW",
-    certRequired: "EMT-Basic",
-    hourlyRate: 55,
-    status: "pending",
-    notes: "Indoor conference. Low-acuity coverage. Dress business casual. Parking validated.",
-  },
-  {
-    id: 3,
-    eventName: "North Shore Triathlon",
-    eventType: "Sporting event",
-    organizer: "IL Endurance Events",
-    date: "Jul 26, 2026",
-    location: "Evanston, IL",
-    attendance: 450,
-    durationHours: 10,
-    riskLevel: "HIGH",
-    certRequired: "Paramedic",
-    hourlyRate: 95,
-    status: "pending",
-    notes: "Multi-sport endurance event. Elevated exertion risk. Two-EMT deployment. Water station coverage required.",
-  },
-  {
-    id: 4,
-    eventName: "Riverside Concert Series",
-    eventType: "Outdoor concert",
-    organizer: "Metro Music Presents",
-    date: "Jul 5, 2026",
-    location: "Naperville, IL",
-    attendance: 1200,
-    durationHours: 5,
-    riskLevel: "MODERATE",
-    certRequired: "EMT-Basic",
-    hourlyRate: 70,
-    status: "accepted",
-    notes: "Confirmed. Arrive 1 hr before doors open. On-site contact: events@metromusic.com.",
-  },
-  {
-    id: 5,
-    eventName: "Youth Soccer Tournament",
-    eventType: "Sporting event",
-    organizer: "Oak Park Rec League",
-    date: "Jul 8, 2026",
-    location: "Oak Park, IL",
-    attendance: 600,
-    durationHours: 7,
-    riskLevel: "LOW",
-    certRequired: "EMT-Basic",
-    hourlyRate: 58,
-    status: "accepted",
-    notes: "Confirmed. Six-field outdoor tournament. Shade and water provided. Parking lot A.",
-  },
-]
-
-const RISK_STYLES: Record<string, { label: string; className: string }> = {
-  LOW:      { label: "Low risk",      className: "text-risk-low border-risk-low/30 bg-risk-low/5" },
-  MODERATE: { label: "Moderate risk", className: "text-risk-medium border-risk-medium/30 bg-risk-medium/5" },
-  HIGH:     { label: "High risk",     className: "text-risk-high border-risk-high/30 bg-risk-high/5" },
-}
+import type { Booking, BookingStatus } from "@/lib/bookings"
 
 function RequestCard({
   req,
   onAccept,
   onDecline,
 }: {
-  req: EventRequest
-  onAccept: (id: number) => void
-  onDecline: (id: number) => void
+  req: Booking
+  onAccept: (id: string) => void
+  onDecline: (id: string) => void
 }) {
-  const risk = RISK_STYLES[req.riskLevel]
-  const isPending  = req.status === "pending"
-  const isAccepted = req.status === "accepted"
-  const isDeclined = req.status === "declined"
+  const isPending   = req.status === "pending"
+  const isAccepted  = req.status === "accepted"
+  const isDeclined  = req.status === "declined"
+  const isCancelled = req.status === "cancelled"
 
   return (
-    <div className={`border border-border bg-card flex flex-col gap-0 transition-opacity ${isDeclined ? "opacity-40" : ""}`}>
+    <div className={`border border-border bg-card flex flex-col gap-0 transition-opacity ${isDeclined || isCancelled ? "opacity-40" : ""}`}>
       <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-4">
         <div className="flex flex-col gap-1 min-w-0">
           <span className="text-foreground font-medium text-base leading-tight truncate">{req.eventName}</span>
-          <span className="text-muted-foreground text-xs font-mono">{req.eventType} · {req.organizer}</span>
+          <span className="text-muted-foreground text-xs font-mono">{req.eventType} · {req.counterpartName}</span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 ${risk.className}`}>
-            {risk.label}
-          </span>
+          {isPending && (
+            <span className="font-mono text-[10px] uppercase tracking-widest border border-risk-medium/30 bg-risk-medium/5 text-risk-medium px-2 py-0.5">
+              Pending
+            </span>
+          )}
           {isAccepted && (
             <span className="font-mono text-[10px] uppercase tracking-widest border border-risk-low/30 bg-risk-low/5 text-risk-low px-2 py-0.5">
               Accepted
@@ -140,6 +42,11 @@ function RequestCard({
           {isDeclined && (
             <span className="font-mono text-[10px] uppercase tracking-widest border border-border text-muted-foreground px-2 py-0.5">
               Declined
+            </span>
+          )}
+          {isCancelled && (
+            <span className="font-mono text-[10px] uppercase tracking-widest border border-border text-muted-foreground px-2 py-0.5">
+              Cancelled
             </span>
           )}
         </div>
@@ -173,12 +80,12 @@ function RequestCard({
             <span className="font-mono text-xs text-muted-foreground">/hr</span>
           </div>
           <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
-            ${(req.hourlyRate * req.durationHours).toLocaleString()} total est.
+            ${Math.round(req.hourlyRate * req.durationHours).toLocaleString()} total est.
           </span>
         </div>
         <div className="flex-1 flex flex-col justify-center gap-1 px-5 py-4">
           <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Notes from organizer</span>
-          <p className="text-sm text-muted-foreground leading-relaxed">{req.notes}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{req.notes ?? "No notes provided."}</p>
         </div>
         {isPending && (
           <div className="flex flex-col justify-center gap-2 px-5 py-4 md:w-44 shrink-0">
@@ -198,17 +105,57 @@ function RequestCard({
 interface DashboardContentProps {
   displayName: string
   verified: boolean
+  available: boolean
+  userId: string
+  bookings: Booking[]
 }
 
-export function DashboardContent({ displayName, verified }: DashboardContentProps) {
-  const [requests, setRequests] = useState<EventRequest[]>(MOCK_REQUESTS)
+export function DashboardContent({ displayName, verified, available, userId, bookings }: DashboardContentProps) {
+  const [requests, setRequests] = useState<Booking[]>(bookings)
+  const [isAvailable, setIsAvailable] = useState(available)
+  const [error, setError] = useState<string | null>(null)
 
   const pending  = requests.filter((r) => r.status === "pending")
   const upcoming = requests.filter((r) => r.status === "accepted")
-  const declined = requests.filter((r) => r.status === "declined")
+  const resolved = requests.filter((r) => r.status === "declined" || r.status === "cancelled")
 
-  const accept  = (id: number) => setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "accepted" } : r))
-  const decline = (id: number) => setRequests((prev) => prev.map((r) => r.id === id ? { ...r, status: "declined" } : r))
+  // Optimistic status update — revert on failure
+  const updateStatus = async (id: string, status: BookingStatus) => {
+    const previous = requests
+    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)))
+    setError(null)
+
+    const supabase = createClient()
+    const { error: updateError } = await supabase
+      .from("bookings")
+      .update({ status })
+      .eq("id", id)
+
+    if (updateError) {
+      setRequests(previous)
+      setError(`Could not update request: ${updateError.message}`)
+    }
+  }
+
+  const accept  = (id: string) => updateStatus(id, "accepted")
+  const decline = (id: string) => updateStatus(id, "declined")
+
+  const toggleAvailable = async () => {
+    const next = !isAvailable
+    setIsAvailable(next)
+    setError(null)
+
+    const supabase = createClient()
+    const { error: updateError } = await supabase
+      .from("emt_profiles")
+      .update({ available: next })
+      .eq("user_id", userId)
+
+    if (updateError) {
+      setIsAvailable(!next)
+      setError(`Could not update availability: ${updateError.message}`)
+    }
+  }
 
   const totalEarnings = upcoming.reduce((sum, r) => sum + r.hourlyRate * r.durationHours, 0)
 
@@ -232,6 +179,13 @@ export function DashboardContent({ displayName, verified }: DashboardContentProp
           </div>
         )}
 
+        {/* Action error */}
+        {error && (
+          <div className="border border-destructive/30 bg-destructive/5 px-5 py-3">
+            <p className="font-mono text-xs text-destructive">{error}</p>
+          </div>
+        )}
+
         {/* Page header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="flex flex-col gap-2">
@@ -243,10 +197,17 @@ export function DashboardContent({ displayName, verified }: DashboardContentProp
               Review incoming event requests and manage your upcoming shifts.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-risk-low" />
-            <span className="font-mono text-xs text-risk-low uppercase tracking-widest">Available for bookings</span>
-          </div>
+          <button
+            type="button"
+            onClick={toggleAvailable}
+            className="flex items-center gap-2 group cursor-pointer"
+            title={isAvailable ? "Click to mark unavailable" : "Click to mark available"}
+          >
+            <span className={`w-1.5 h-1.5 ${isAvailable ? "bg-risk-low" : "bg-muted-foreground"}`} />
+            <span className={`font-mono text-xs uppercase tracking-widest group-hover:underline underline-offset-4 ${isAvailable ? "text-risk-low" : "text-muted-foreground"}`}>
+              {isAvailable ? "Available for bookings" : "Unavailable"}
+            </span>
+          </button>
         </div>
 
         {/* Stats row */}
@@ -261,7 +222,7 @@ export function DashboardContent({ displayName, verified }: DashboardContentProp
           </div>
           <div className="flex flex-col gap-1 px-5 py-4">
             <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Est. earnings</span>
-            <span className="font-mono text-3xl tabular-nums font-bold text-foreground">${totalEarnings.toLocaleString()}</span>
+            <span className="font-mono text-3xl tabular-nums font-bold text-foreground">${Math.round(totalEarnings).toLocaleString()}</span>
           </div>
         </div>
 
@@ -277,8 +238,14 @@ export function DashboardContent({ displayName, verified }: DashboardContentProp
           </div>
           {pending.length === 0 ? (
             <div className="border border-border bg-card px-6 py-10 flex flex-col items-center gap-2 text-center">
-              <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">No pending requests</span>
-              <p className="text-sm text-muted-foreground max-w-xs">New booking requests from event organizers will appear here.</p>
+              <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                {requests.length === 0 ? "No requests yet" : "No pending requests"}
+              </span>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                {requests.length === 0
+                  ? "Complete your profile and stay available to get matched."
+                  : "New booking requests from event organizers will appear here."}
+              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-px">
@@ -309,16 +276,16 @@ export function DashboardContent({ displayName, verified }: DashboardContentProp
           )}
         </section>
 
-        {declined.length > 0 && (
+        {resolved.length > 0 && (
           <section className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Declined</h2>
               <span className="font-mono text-[10px] border border-border text-muted-foreground px-2 py-0.5 tabular-nums">
-                {declined.length}
+                {resolved.length}
               </span>
             </div>
             <div className="flex flex-col gap-px">
-              {declined.map((req) => <RequestCard key={req.id} req={req} onAccept={accept} onDecline={decline} />)}
+              {resolved.map((req) => <RequestCard key={req.id} req={req} onAccept={accept} onDecline={decline} />)}
             </div>
           </section>
         )}

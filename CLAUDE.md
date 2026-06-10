@@ -22,11 +22,11 @@ app/
   auth/            Sign-in page (Google OAuth + email magic link)
     callback/      OAuth code exchange route handler
   results/         Risk score + staffing recommendation + EMT profile cards
-  emt/[id]/        EMT profile detail (mocked, pending Supabase)
-  emt-dashboard/   EMT shift request dashboard (protected — requires session)
-  personnel/       EMT search and filter UI (renamed from /marketplace)
+  emt/[id]/        EMT profile detail + booking request form (UUID ids = real, numeric = mock)
+  emt-dashboard/   EMT booking dashboard — real data, accept/decline, availability toggle (protected)
+  personnel/       EMT search/filter UI — verified emt_profiles, mock fallback (force-dynamic)
   schedule/        (in progress)
-  events/          (in progress)
+  events/          Organizer booking list with statuses (protected)
 components/
   assessment/      StepIndicator, AssessmentIntakeForm, per-step form components
   marketplace/     FilterSidebar, SearchHeader, StaffingMarketplace
@@ -64,8 +64,8 @@ Google OAuth + email magic link via `@supabase/ssr`. No `auth-helpers-nextjs`.
   and upserts the `profiles` table (handles OAuth trigger-timing gap)
 - **Session refresh**: `proxy.ts` runs on every request; reads/writes cookies via
   the SSR cookie API — do NOT bypass it with the legacy `lib/supabase.ts` client
-- **Protected routes**: `/emt-dashboard` — proxy redirects unauthenticated requests
-  to `/auth?role=emt&next=/emt-dashboard`
+- **Protected routes**: `/emt-dashboard`, `/onboarding`, `/events` — proxy redirects
+  unauthenticated requests to `/auth` with the right `role` and `next` params
 - **NavBar**: session-aware client component; shows user name + sign-out when signed in
 - **Homepage**: async RSC — checks session and passes `emtHref` to `LandingHero` so
   authenticated users land directly on `/emt-dashboard` instead of `/auth`

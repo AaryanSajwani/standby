@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/server"
-import { CERT_DISPLAY, EMT_PUBLIC_COLUMNS } from "@/lib/emt"
+import { CERT_DISPLAY, EMT_PUBLIC_COLUMNS, joinedFullName } from "@/lib/emt"
+import { RequestEmt } from "./request-emt"
 
 interface EMTProfile {
   name: string
@@ -57,9 +58,8 @@ async function getEmt(id: string): Promise<EMTProfile | null> {
 
   if (!data) return null
 
-  const profile = data.profiles as { full_name: string | null } | null
   return {
-    name:          profile?.full_name ?? "Unknown EMT",
+    name:          joinedFullName(data.profiles) ?? "Unknown EMT",
     certification: CERT_DISPLAY[data.cert_level] ?? "EMT-B",
     eventTypes:    Array.isArray(data.specializations) ? data.specializations : [],
     radiusMiles:   data.service_radius_miles ?? 0,
@@ -78,6 +78,13 @@ export default async function EMTProfilePage({
 }) {
   const { id } = await params
   const emt = await getEmt(id)
+  const isReal = !/^\d+$/.test(id)
+
+  // Who's viewing — drives the Request CTA (sign-in redirect vs form)
+  const supabase = await createClient()
+  const {
+    data: { user: viewer },
+  } = await supabase.auth.getUser()
 
   if (!emt) {
     return (
@@ -221,17 +228,28 @@ export default async function EMTProfilePage({
         )}
 
         {/* CTA */}
-        <div className="flex items-center gap-3">
-          <Button
-            disabled={!emt.available}
-            className="font-mono text-xs tracking-wider uppercase px-8"
-          >
-            {emt.available ? "Request This EMT" : "Currently Unavailable"}
-          </Button>
-          <Link href="/personnel" className={cn(buttonVariants({ variant: "outline" }), "font-mono text-xs tracking-wider uppercase")}>
-            Browse More Personnel
-          </Link>
-        </div>
+        {isReal ? (
+          <RequestEmt
+            emtId={id}
+            emtName={emt.name}
+            hourlyRate={emt.hourlyRate ?? 0}
+            available={emt.available}
+            viewerId={viewer?.id ?? null}
+          />
+        ) : (
+          // Sample profiles aren't bookable — no real user behind them
+          <div className="flex items-center gap-3">
+            <Button
+              disabled
+              className="font-mono text-xs tracking-wider uppercase px-8"
+            >
+              Sample profile
+            </Button>
+            <Link href="/personnel" className={cn(buttonVariants({ variant: "outline" }), "font-mono text-xs tracking-wider uppercase")}>
+              Browse More Personnel
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )

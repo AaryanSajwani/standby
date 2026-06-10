@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
+import { BOOKING_COLUMNS, mapBooking, type RawBooking } from "@/lib/bookings"
+import { joinedFullName } from "@/lib/emt"
 import { DashboardContent } from "./dashboard-content"
 
 export const metadata = { title: "EMT Dashboard — Standby" }
@@ -15,11 +17,21 @@ export default async function EMTDashboardPage() {
   // No emt_profiles row → onboarding not complete
   const { data: emtProfile } = await supabase
     .from("emt_profiles")
-    .select("verified")
+    .select("verified, available")
     .eq("user_id", user.id)
     .maybeSingle()
 
   if (!emtProfile) redirect("/onboarding/emt")
+
+  const { data: rawBookings } = await supabase
+    .from("bookings")
+    .select(`${BOOKING_COLUMNS}, organizer:profiles!bookings_organizer_id_fkey ( full_name )`)
+    .eq("emt_id", user.id)
+    .order("created_at", { ascending: false })
+
+  const bookings = (rawBookings ?? []).map((row) =>
+    mapBooking(row as unknown as RawBooking, joinedFullName(row.organizer) ?? "Organizer")
+  )
 
   const displayName =
     user.user_metadata?.full_name ??
@@ -31,6 +43,9 @@ export default async function EMTDashboardPage() {
     <DashboardContent
       displayName={displayName}
       verified={emtProfile.verified}
+      available={emtProfile.available}
+      userId={user.id}
+      bookings={bookings}
     />
   )
 }
