@@ -97,6 +97,20 @@ access to the `standby` repo. Do not attempt to debug failed deploys in code.
 and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Never assign `SUPABASE_SERVICE_ROLE_KEY` or any
 privileged key to a `NEXT_PUBLIC_` variable. `.env.local` is gitignored — never commit it.
 
+**EMT credential PII — never `select *` on emt_profiles, never fetch license fields client-side.**
+`license_number`, `license_state`, `license_expiry`, and `cert_document_path` are written once
+during onboarding and must never be read back by any marketplace/profile query. All public
+reads of `emt_profiles` go through `EMT_PUBLIC_COLUMNS` in `lib/emt.ts` — an explicit column
+list that excludes credential fields. RLS is row-level, not column-level: the public-read
+policy exposes every column of verified rows, so the column allowlist in code (plus the
+column-level `REVOKE` in the hardening migration) is the defense. The revoke blocks the
+anon AND authenticated roles, so if an owner-facing "edit credentials" view is ever needed,
+read via a `security definer` RPC that checks `auth.uid()` — never re-grant column select.
+`verified` and `created_at` are also client-immutable via column-level update grants —
+only the SQL editor / service role can flip `verified`. Reuse this grant pattern on any
+new table with privileged columns (e.g. bookings: EMTs may update only `status`).
+Full SQL in `.claude/skills/auth/SKILL.md` → "Column-level grants".
+
 **Primitive library — Base UI, not Radix. Always verify before applying fixes.**
 `components.json` sets style `base-nova`. All interactive primitives come from `@base-ui/react`.
 Radix `asChild`/`Slot` patterns do not exist on these components. Before applying any shadcn

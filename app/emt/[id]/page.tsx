@@ -1,21 +1,29 @@
 import Link from "next/link"
-import { ArrowLeft, Shield, MapPin, Clock } from "lucide-react"
+import { ArrowLeft, Shield, MapPin, Clock, ShieldCheck, DollarSign } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import { createClient } from "@/lib/supabase/server"
+import { CERT_DISPLAY, EMT_PUBLIC_COLUMNS } from "@/lib/emt"
 
-// Mock data — will be replaced by Supabase fetch
-const emtData: Record<number, {
+interface EMTProfile {
   name: string
   certification: string
-  yearsExperience: number
   eventTypes: string[]
   radiusMiles: number
   available: boolean
   bio: string
-}> = {
+  yearsExperience?: number
+  hourlyRate?: number
+  location?: string
+  verified?: boolean
+}
+
+// Mock data — kept for the numeric sample-profile ids shown when no
+// verified EMTs exist yet. Real profiles use UUID ids and hit Supabase.
+const MOCK_EMT_DATA: Record<number, EMTProfile> = {
   1:  { name: "Marcus Chen",      certification: "EMT-P",          yearsExperience: 8,  eventTypes: ["Concerts", "Sports", "Festivals"],               radiusMiles: 50,  available: true,  bio: "Paramedic with 8 years of mass-gathering event experience. Specializes in high-density crowd medicine and rapid triage protocols." },
   2:  { name: "Sarah Mitchell",   certification: "EMT-B",          yearsExperience: 4,  eventTypes: ["Corporate", "Private Events"],                   radiusMiles: 25,  available: true,  bio: "EMT-Basic focused on corporate and private event coverage. Known for calm patient management and thorough documentation." },
   3:  { name: "David Rodriguez",  certification: "EMT-P",          yearsExperience: 12, eventTypes: ["Film & TV", "Concerts", "Sports"],               radiusMiles: 75,  available: false, bio: "Senior paramedic with extensive production set and live event experience across 12 years of field work." },
@@ -33,14 +41,43 @@ const emtData: Record<number, {
   15: { name: "Kevin O'Brien",    certification: "EMT-P",          yearsExperience: 11, eventTypes: ["Sports", "Concerts", "Film & TV"],               radiusMiles: 65,  available: true,  bio: "Eleven years as paramedic across sports, concerts, and film productions. Former collegiate athlete with strong sports medicine background." },
 }
 
+async function getEmt(id: string): Promise<EMTProfile | null> {
+  // Numeric ids are mock sample profiles
+  if (/^\d+$/.test(id)) return MOCK_EMT_DATA[parseInt(id, 10)] ?? null
+
+  // UUID ids are real profiles. Explicit column list only — RLS lets the
+  // public see verified rows (and owners their own), but credential PII
+  // (license_number etc.) must never be selected here.
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("emt_profiles")
+    .select(`${EMT_PUBLIC_COLUMNS}, profiles!inner ( full_name )`)
+    .eq("user_id", id)
+    .maybeSingle()
+
+  if (!data) return null
+
+  const profile = data.profiles as { full_name: string | null } | null
+  return {
+    name:          profile?.full_name ?? "Unknown EMT",
+    certification: CERT_DISPLAY[data.cert_level] ?? "EMT-B",
+    eventTypes:    Array.isArray(data.specializations) ? data.specializations : [],
+    radiusMiles:   data.service_radius_miles ?? 0,
+    available:     data.available ?? false,
+    bio:           data.bio ?? "No background provided yet.",
+    hourlyRate:    data.hourly_rate ?? undefined,
+    location:      [data.city, data.state].filter(Boolean).join(", "),
+    verified:      data.verified ?? false,
+  }
+}
+
 export default async function EMTProfilePage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const numericId = parseInt(id)
-  const emt = emtData[numericId]
+  const emt = await getEmt(id)
 
   if (!emt) {
     return (
@@ -77,6 +114,12 @@ export default async function EMTProfilePage({
             <Badge className="font-mono text-xs tracking-wider uppercase">
               {emt.certification}
             </Badge>
+            {emt.verified && (
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border border-primary/30 bg-primary/5 text-primary px-2 py-0.5">
+                <ShieldCheck className="w-3 h-3" />
+                Verified
+              </span>
+            )}
             <Badge
               variant="outline"
               className={
@@ -89,19 +132,40 @@ export default async function EMTProfilePage({
             </Badge>
           </div>
           <h1 className="text-4xl font-semibold tracking-tight">{emt.name}</h1>
+          {emt.location && (
+            <p className="font-mono text-sm text-muted-foreground flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5" />
+              {emt.location}
+            </p>
+          )}
         </div>
 
         {/* Stats row */}
         <div className="grid grid-cols-3 border border-border divide-x divide-border">
           <div className="px-6 py-5">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
-              Experience
-            </p>
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-muted-foreground" />
-              <span className="font-mono text-2xl font-bold">{emt.yearsExperience}</span>
-              <span className="text-sm text-muted-foreground">years</span>
-            </div>
+            {emt.yearsExperience !== undefined ? (
+              <>
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
+                  Experience
+                </p>
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-mono text-2xl font-bold tabular-nums">{emt.yearsExperience}</span>
+                  <span className="text-sm text-muted-foreground">years</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
+                  Rate
+                </p>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-mono text-2xl font-bold tabular-nums">{emt.hourlyRate ?? "—"}</span>
+                  <span className="text-sm text-muted-foreground">/hour</span>
+                </div>
+              </>
+            )}
           </div>
           <div className="px-6 py-5">
             <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
@@ -109,7 +173,7 @@ export default async function EMTProfilePage({
             </p>
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-muted-foreground" />
-              <span className="font-mono text-2xl font-bold">{emt.radiusMiles}</span>
+              <span className="font-mono text-2xl font-bold tabular-nums">{emt.radiusMiles}</span>
               <span className="text-sm text-muted-foreground">miles</span>
             </div>
           </div>
@@ -139,20 +203,22 @@ export default async function EMTProfilePage({
         </Card>
 
         {/* Event Types */}
-        <Card>
-          <CardHeader className="pb-0">
-            <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-              Event Type Experience
-            </span>
-          </CardHeader>
-          <CardContent className="pt-3 flex flex-wrap gap-2">
-            {emt.eventTypes.map((type) => (
-              <Badge key={type} variant="secondary" className="font-mono text-xs uppercase tracking-wider">
-                {type}
-              </Badge>
-            ))}
-          </CardContent>
-        </Card>
+        {emt.eventTypes.length > 0 && (
+          <Card>
+            <CardHeader className="pb-0">
+              <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                Event Type Experience
+              </span>
+            </CardHeader>
+            <CardContent className="pt-3 flex flex-wrap gap-2">
+              {emt.eventTypes.map((type) => (
+                <Badge key={type} variant="secondary" className="font-mono text-xs uppercase tracking-wider">
+                  {type}
+                </Badge>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* CTA */}
         <div className="flex items-center gap-3">
