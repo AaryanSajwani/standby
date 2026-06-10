@@ -8,13 +8,21 @@ import { LandingFAQ } from "@/components/landing/landing-faq"
 import { LandingCTA } from "@/components/landing/landing-cta"
 import { LandingFooter } from "@/components/landing/landing-footer"
 import { AnimatedSection } from "@/components/landing/animated-section"
+import { createClient } from "@/lib/supabase/server"
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const emtHref = user ? "/emt-dashboard" : "/auth?role=emt&next=/emt-dashboard"
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden pb-0">
       <div className="relative z-10">
         <main className="max-w-[1320px] mx-auto relative">
-          <LandingHero />
+          <LandingHero emtHref={emtHref} />
         </main>
 
         <AnimatedSection className="relative z-10 max-w-[1320px] mx-auto px-6 mt-6" delay={0.1}>

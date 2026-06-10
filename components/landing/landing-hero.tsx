@@ -3,7 +3,11 @@ import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export function LandingHero() {
+interface LandingHeroProps {
+  emtHref?: string
+}
+
+export function LandingHero({ emtHref = "/auth?role=emt&next=/emt-dashboard" }: LandingHeroProps) {
   return (
     <section
       className="flex flex-col items-center text-center relative mx-auto rounded-2xl overflow-hidden my-6 py-0 px-4
@@ -64,7 +68,7 @@ export function LandingHero() {
               Browse Personnel
             </Link>
           </div>
-          <Link href="/emt-dashboard" className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wide w-fit">
+          <Link href={emtHref} className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wide w-fit">
             I&apos;m an EMT — view your dashboard →
           </Link>
         </div>

@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Calendar, MapPin, Users, Clock, ChevronDown, Check, X } from "lucide-react"
+import type { User } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
@@ -241,6 +243,13 @@ function RequestCard({
 
 export default function EMTDashboardPage() {
   const [requests, setRequests] = useState<EventRequest[]>(MOCK_REQUESTS)
+  const [user, setUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data: { user } }) => setUser(user))
+  }, [])
 
   const pending = requests.filter((r) => r.status === "pending")
   const upcoming = requests.filter((r) => r.status === "accepted")
@@ -263,7 +272,7 @@ export default function EMTDashboardPage() {
           <div className="flex flex-col gap-2">
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">EMT Dashboard</span>
             <h1 className="text-foreground text-2xl md:text-3xl font-semibold leading-tight">
-              Welcome back, Alex.
+              Welcome back, {user?.user_metadata?.full_name ?? user?.email?.split("@")[0] ?? "EMT"}.
             </h1>
             <p className="text-muted-foreground text-sm">
               Review incoming event requests and manage your upcoming shifts.
