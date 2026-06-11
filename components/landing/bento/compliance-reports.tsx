@@ -19,8 +19,8 @@ export default function ComplianceReportsIllustration() {
         <div className="p-3 flex flex-col gap-1.5">
           {SECTIONS.map((section) => (
             <div key={section} className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-emerald-400/20 flex items-center justify-center flex-shrink-0">
-                <Check className="w-2.5 h-2.5 text-emerald-400" strokeWidth={3} />
+              <div className="w-4 h-4 rounded-full bg-risk-low/20 flex items-center justify-center flex-shrink-0">
+                <Check className="w-2.5 h-2.5 text-risk-low" strokeWidth={3} />
               </div>
               <span className="text-xs text-muted-foreground">{section}</span>
             </div>

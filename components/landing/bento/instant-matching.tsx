@@ -27,7 +27,7 @@ export default function InstantMatchingIllustration() {
               </div>
             </div>
             <div className="flex flex-col items-end flex-shrink-0">
-              <span className="text-xs font-mono font-bold text-emerald-400">{match}%</span>
+              <span className="text-xs font-mono font-bold text-risk-low">{match}%</span>
               <span className="text-xs text-muted-foreground">match</span>
             </div>
           </div>

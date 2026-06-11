@@ -18,7 +18,7 @@ export function LandingHero({ emtHref = "/auth?role=emt&next=/emt-dashboard" }: 
         className="absolute inset-0 pointer-events-none z-0"
         style={{
           backgroundImage:
-            "linear-gradient(to right, #2D3F5F33 1px, transparent 1px), linear-gradient(to bottom, #2D3F5F33 1px, transparent 1px)",
+            "linear-gradient(to right, #16294E40 1px, transparent 1px), linear-gradient(to bottom, #16294E40 1px, transparent 1px)",
           backgroundSize: "48px 48px",
         }}
       />
@@ -26,25 +26,25 @@ export function LandingHero({ emtHref = "/auth?role=emt&next=/emt-dashboard" }: 
       <div
         className="absolute inset-0 pointer-events-none z-0"
         style={{
-          background: "radial-gradient(ellipse 70% 55% at 85% -5%, #E8404A20, transparent)",
+          background: "radial-gradient(ellipse 70% 55% at 85% -5%, #F0424920, transparent)",
         }}
       />
       {/* Subtle blue vignette at bottom */}
       <div
         className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none z-0"
-        style={{ background: "linear-gradient(to top, #1B2A4A, transparent)" }}
+        style={{ background: "linear-gradient(to top, #041228, transparent)" }}
       />
       {/* Border frame */}
       <div className="absolute inset-0 rounded-2xl border border-border/40 pointer-events-none z-10" />
 
       {/* Decorative highlighted grid cells */}
       <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute" style={{ top: 81, left: 699, width: 36, height: 36, background: "#E8EAED0A" }} />
-        <div className="absolute" style={{ top: 153, left: 195, width: 36, height: 36, background: "#E8EAED0C" }} />
-        <div className="absolute" style={{ top: 225, left: 1095, width: 36, height: 36, background: "#E8EAED0C" }} />
-        <div className="absolute" style={{ top: 405, left: 87, width: 36, height: 36, background: "#E8EAED0C" }} />
-        <div className="absolute" style={{ top: 405, left: 771, width: 36, height: 36, background: "#E8404A0A" }} />
-        <div className="absolute" style={{ top: 333, left: 231, width: 36, height: 36, background: "#E8404A08" }} />
+        <div className="absolute" style={{ top: 81, left: 699, width: 36, height: 36, background: "#F7F8F90A" }} />
+        <div className="absolute" style={{ top: 153, left: 195, width: 36, height: 36, background: "#F7F8F90C" }} />
+        <div className="absolute" style={{ top: 225, left: 1095, width: 36, height: 36, background: "#F7F8F90C" }} />
+        <div className="absolute" style={{ top: 405, left: 87, width: 36, height: 36, background: "#F7F8F90C" }} />
+        <div className="absolute" style={{ top: 405, left: 771, width: 36, height: 36, background: "#F042490A" }} />
+        <div className="absolute" style={{ top: 333, left: 231, width: 36, height: 36, background: "#F0424908" }} />
       </div>
 
       {/* Hero Content */}

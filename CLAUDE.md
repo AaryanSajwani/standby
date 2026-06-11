@@ -14,6 +14,17 @@ Two-sided marketplace connecting event organizers with EMTs. Core flow: organize
 | Hosting | Vercel (Aaryan's account — see Dangerous Areas) |
 | Package manager | pnpm |
 
+## Brand
+
+Logo colors are the palette anchors: navy `#041228` (page background) and red `#F04249`
+(primary/accent/risk-high). All colors live in `app/globals.css` as CSS variables — components
+must use semantic tokens (`bg-background`, `text-risk-low`, `var(--border)` in SVG/inline
+styles), never raw hexes or Tailwind palette colors (`emerald-400`, `amber-500`, …).
+Logo assets: `public/standby-logo.png` (full lockup, transparent bg) and
+`public/standby-mark.png` (square mark, used in NavBar/footer/CTA via `next/image`).
+Both are generated from the root `StandBy Logo.png` (white bg — source of truth, do not
+reference directly in the app).
+
 ## Folder Map
 
 ```

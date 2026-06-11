@@ -20,7 +20,7 @@ export default function EMTMarketplaceIllustration() {
             <p className="text-xs font-medium text-foreground truncate">{name}</p>
             <p className="text-xs text-muted-foreground">{cert} · {exp}</p>
           </div>
-          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${available ? "bg-emerald-400" : "bg-muted-foreground/40"}`} />
+          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${available ? "bg-risk-low" : "bg-muted-foreground/40"}`} />
         </div>
       ))}
       <div className="mt-1 rounded-md bg-primary/10 border border-primary/20 px-3 py-1.5 text-center">

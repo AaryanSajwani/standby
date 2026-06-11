@@ -49,15 +49,19 @@ export function NavBar() {
   return (
     <header className="h-14 border-b border-border bg-surface/80 backdrop-blur-sm flex items-center justify-between px-6 shrink-0 sticky top-0 z-40">
       <div className="flex items-center gap-5">
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="flex items-center gap-2.5">
           <Image
-            src="/standby-logo.png"
-            alt="Standby"
-            width={96}
-            height={32}
-            className="h-8 w-auto object-contain"
+            src="/standby-mark.png"
+            alt="StandBy logo"
+            width={28}
+            height={28}
+            className="h-7 w-7 object-contain"
             priority
           />
+          <span className="font-mono text-sm font-semibold tracking-tight">
+            <span className="text-foreground">STAND</span>
+            <span className="text-primary">BY</span>
+          </span>
         </Link>
 
         <Separator orientation="vertical" className="h-4" />

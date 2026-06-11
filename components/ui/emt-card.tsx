@@ -22,11 +22,12 @@ export interface EMTCardProps {
   verified?: boolean
 }
 
+// Brand-tier ramp: red intensity tracks certification level.
 const certificationVariant: Record<string, string> = {
-  "EMT-P":           "bg-amber-500 text-white hover:bg-amber-500",
-  "EMT-B":           "bg-blue-500 text-white hover:bg-blue-500",
-  "AEMT":            "bg-teal-600 text-white hover:bg-teal-600",
-  "First Responder": "bg-purple-500 text-white hover:bg-purple-500",
+  "EMT-P":           "bg-primary text-primary-foreground hover:bg-primary",
+  "AEMT":            "bg-primary/15 text-primary-light border border-primary/30 hover:bg-primary/15",
+  "EMT-B":           "bg-secondary text-foreground border border-border hover:bg-secondary",
+  "First Responder": "bg-muted text-muted-foreground border border-border hover:bg-muted",
 }
 
 function Initials({ name }: { name: string }) {
@@ -77,7 +78,7 @@ export function EMTCard({
           className="absolute top-3 right-3 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
           onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked) }}
         >
-          <Heart className={`h-4 w-4 transition-colors ${isLiked ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
+          <Heart className={`h-4 w-4 transition-colors ${isLiked ? "fill-primary text-primary" : "text-muted-foreground"}`} />
         </Button>
 
         {available && (
@@ -131,7 +132,7 @@ export function EMTCard({
               {(rating ?? 0) > 0 && (
                 <>
                   <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    <Star className="h-4 w-4 fill-risk-medium text-risk-medium" />
                     <span className="font-semibold text-foreground">{rating!.toFixed(1)}</span>
                     {(reviewCount ?? 0) > 0 && (
                       <span className="text-muted-foreground text-sm">({reviewCount})</span>

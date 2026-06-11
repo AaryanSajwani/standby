@@ -6,9 +6,9 @@ const EVENT_TYPES = [
 ]
 
 const RISK_COLOR: Record<string, string> = {
-  High: "text-red-400",
-  Medium: "text-amber-400",
-  Low: "text-emerald-400",
+  High: "text-risk-high",
+  Medium: "text-risk-medium",
+  Low: "text-risk-low",
 }
 
 export default function EventIntelligenceIllustration() {

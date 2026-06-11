@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Twitter, Github, Linkedin } from "lucide-react"
 
 export function LandingFooter() {
@@ -7,10 +8,17 @@ export function LandingFooter() {
       {/* Left: Logo + tagline + socials */}
       <div className="flex flex-col justify-start items-start gap-8 p-4 md:p-8">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-6 h-6 border border-foreground/40 flex items-center justify-center group-hover:border-primary transition-colors">
-            <div className="w-2 h-2 bg-foreground/40 group-hover:bg-primary transition-colors" />
-          </div>
-          <span className="font-mono text-sm font-semibold tracking-tight text-foreground">STANDBY</span>
+          <Image
+            src="/standby-mark.png"
+            alt="StandBy logo"
+            width={24}
+            height={24}
+            className="h-6 w-6 object-contain"
+          />
+          <span className="font-mono text-sm font-semibold tracking-tight">
+            <span className="text-foreground">STAND</span>
+            <span className="text-primary">BY</span>
+          </span>
         </Link>
         <p className="text-foreground/80 text-sm font-medium leading-[18px] text-left">
           Event medical risk, solved.
