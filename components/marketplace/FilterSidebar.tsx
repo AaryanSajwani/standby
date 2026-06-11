@@ -128,7 +128,14 @@ function SliderFilter({
           {value} {unit}
         </span>
       </div>
-      <Slider min={min} max={max} step={1} value={[value]} onValueChange={([val]) => onChange(val)} />
+      {/* Base UI may deliver a scalar (not an array) for single-thumb sliders — never destructure */}
+      <Slider
+        min={min}
+        max={max}
+        step={1}
+        value={[value]}
+        onValueChange={(val) => onChange(Array.isArray(val) ? val[0] : val)}
+      />
       <div className="flex justify-between text-xs text-muted-foreground">
         <span>{min}</span>
         <span>{max}</span>

@@ -135,6 +135,17 @@ Radix `asChild`/`Slot` patterns do not exist on these components. Before applyin
 fix sourced from docs or the internet, confirm it targets Base UI.
 See `.claude/skills/frontend-debugging/SKILL.md` for the full hydration playbook.
 
+Two verified Base UI v1.5 gotchas (found via browser repro on the /personnel slider):
+- `Slider.Root` `onValueChange` delivers a **scalar number** for single-thumb sliders even
+  when `value` is passed as a one-element array. Never destructure the callback arg as an
+  array (`([v]) => …` throws "number is not iterable" and freezes the slider); use
+  `(v) => fn(Array.isArray(v) ? v[0] : v)`.
+- Orientation state is emitted as `data-orientation="horizontal|vertical"`, NOT bare
+  `data-horizontal`/`data-vertical` attributes. Tailwind variants must be written
+  `data-[orientation=horizontal]:…`. slider.tsx is fixed; tabs, button-group, scroll-area,
+  toggle-group, and separator still use the stale `data-horizontal:`/`data-vertical:`
+  variants and may have invisible orientation-dependent styles.
+
 ## Self-Improvement Rule
 
 After any correction or bug fix: update this file for project-wide lessons, or the relevant
