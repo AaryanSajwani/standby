@@ -22,6 +22,9 @@ must use semantic tokens (`bg-background`, `text-risk-low`, `var(--border)` in S
 styles), never raw hexes or Tailwind palette colors (`emerald-400`, `amber-500`, …).
 Logo assets: `public/standby-logo.png` (full lockup, transparent bg) and
 `public/standby-mark.png` (square mark, used in NavBar/footer/CTA via `next/image`).
+The NavBar is an inverted light surface — style it with the `--nav*` tokens
+(`bg-nav`, `text-nav-foreground`, `text-nav-muted`, `border-nav-border`), and keep it
+solid (no translucency) so dark page content doesn't bleed through while scrolling.
 Both are generated from the root `StandBy Logo.png` (white bg — source of truth, do not
 reference directly in the app).
 

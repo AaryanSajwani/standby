@@ -55,6 +55,12 @@
   --accent-signal: #F04249;
   --primary-light: #F4747A;
   --primary-dark: #C72E35;
+
+  /* Inverted light surface (NavBar) — dark ink on off-white */
+  --nav: #F8F8F9;
+  --nav-foreground: #041228;
+  --nav-muted: #5C6678;
+  --nav-border: #E3E5E9;
 }
 
 .dark {
@@ -142,6 +148,10 @@
   --color-accent-signal: var(--accent-signal);
   --color-primary-light: var(--primary-light);
   --color-primary-dark: var(--primary-dark);
+  --color-nav: var(--nav);
+  --color-nav-foreground: var(--nav-foreground);
+  --color-nav-muted: var(--nav-muted);
+  --color-nav-border: var(--nav-border);
 }
 
 @layer base {

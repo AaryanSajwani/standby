@@ -47,7 +47,7 @@ export function NavBar() {
   }
 
   return (
-    <header className="h-14 border-b border-border bg-surface/80 backdrop-blur-sm flex items-center justify-between px-6 shrink-0 sticky top-0 z-40">
+    <header className="h-14 border-b border-nav-border bg-nav flex items-center justify-between px-6 shrink-0 sticky top-0 z-40">
       <div className="flex items-center gap-5">
         <Link href="/" className="flex items-center gap-2.5">
           <Image
@@ -59,12 +59,12 @@ export function NavBar() {
             priority
           />
           <span className="font-mono text-sm font-semibold tracking-tight">
-            <span className="text-foreground">STAND</span>
+            <span className="text-nav-foreground">STAND</span>
             <span className="text-primary">BY</span>
           </span>
         </Link>
 
-        <Separator orientation="vertical" className="h-4" />
+        <Separator orientation="vertical" className="h-4 bg-nav-border" />
 
         <nav className="flex items-center">
           {NAV_LINKS.map(({ href, label }) => {
@@ -77,8 +77,8 @@ export function NavBar() {
                 className={[
                   "relative px-3 h-14 flex items-center text-sm transition-colors",
                   isActive
-                    ? "text-foreground font-medium after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "text-nav-foreground font-medium after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full"
+                    : "text-nav-muted hover:text-nav-foreground",
                 ].join(" ")}
               >
                 {label}
@@ -91,20 +91,20 @@ export function NavBar() {
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-risk-low animate-standby-pulse" />
-          <span className="text-xs font-mono text-muted-foreground tracking-wider">System Online</span>
+          <span className="text-xs font-mono text-nav-muted tracking-wider">System Online</span>
         </div>
 
-        <Separator orientation="vertical" className="h-4" />
+        <Separator orientation="vertical" className="h-4 bg-nav-border" />
 
         {user ? (
           <>
-            <span className="font-mono text-xs text-muted-foreground tracking-wide hidden sm:block max-w-[160px] truncate">
+            <span className="font-mono text-xs text-nav-muted tracking-wide hidden sm:block max-w-[160px] truncate">
               {user.user_metadata?.full_name ?? user.email}
             </span>
-            <Separator orientation="vertical" className="h-4 hidden sm:block" />
+            <Separator orientation="vertical" className="h-4 hidden sm:block bg-nav-border" />
             <button
               onClick={handleSignOut}
-              className="font-mono text-xs text-muted-foreground hover:text-foreground uppercase tracking-wider transition-colors"
+              className="font-mono text-xs text-nav-muted hover:text-nav-foreground uppercase tracking-wider transition-colors"
             >
               Sign out
             </button>
