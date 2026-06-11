@@ -1,5 +1,4 @@
 import { LandingHero } from "@/components/landing/landing-hero"
-import { LandingSocialProof } from "@/components/landing/landing-social-proof"
 import { LandingBento } from "@/components/landing/landing-bento"
 import { LandingTestimonial } from "@/components/landing/landing-testimonial"
 import { LandingPricing } from "@/components/landing/landing-pricing"
@@ -24,10 +23,6 @@ export default async function HomePage() {
         <main className="max-w-[1320px] mx-auto relative">
           <LandingHero emtHref={emtHref} />
         </main>
-
-        <AnimatedSection className="relative z-10 max-w-[1320px] mx-auto px-6 mt-6" delay={0.1}>
-          <LandingSocialProof />
-        </AnimatedSection>
 
         <AnimatedSection id="features-section" className="relative z-10 max-w-[1320px] mx-auto mt-8 md:mt-16" delay={0.2}>
           <LandingBento />
