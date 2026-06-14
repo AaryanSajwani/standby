@@ -27,7 +27,7 @@
   --chart-2: #3B82F6;
   --chart-3: #10B981;
   --chart-4: #F59E0B;
-  --chart-5: #8B5CF6;
+  --chart-5: #14B8A6;
   --radius: 0.5rem;
   --sidebar: #162238;
   --sidebar-foreground: #E8EAED;
@@ -41,10 +41,12 @@
   --surface: #162238;
   --surface-elevated: #253658;
   --grid-line: #2D3F5F;
+  /* Severity ramp stays out of Signal Red (#E8404A) — red is reserved for CTAs/actions.
+     low→green, moderate→amber, high→orange, critical→burnt orange. See ui-conventions skill. */
   --risk-low: #10B981;
   --risk-medium: #F59E0B;
-  --risk-high: #E8404A;
-  --risk-critical: #E8404A;
+  --risk-high: #F97316;
+  --risk-critical: #C2410C;
   --accent-functional: #E8404A;
   --accent-signal: #E8404A;
   --primary-light: #F87171;
@@ -75,7 +77,7 @@
   --chart-2: #3B82F6;
   --chart-3: #10B981;
   --chart-4: #F59E0B;
-  --chart-5: #8B5CF6;
+  --chart-5: #14B8A6;
   --sidebar: #162238;
   --sidebar-foreground: #E8EAED;
   --sidebar-primary: #E8404A;

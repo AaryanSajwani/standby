@@ -9,7 +9,7 @@ const LEVEL_STYLES: Record<string, string> = {
   "LOW":      "border-risk-low text-risk-low bg-risk-low/10",
   "MODERATE": "border-risk-medium text-risk-medium bg-risk-medium/10",
   "HIGH":     "border-risk-high text-risk-high bg-risk-high/10",
-  "CRITICAL": "border-destructive text-destructive bg-destructive/10",
+  "CRITICAL": "border-risk-critical text-risk-critical bg-risk-critical/10",
 }
 
 export function RiskScore({ score, level }: RiskScoreProps) {

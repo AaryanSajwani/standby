@@ -1,3 +1,5 @@
+import { cache } from "react"
+import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft, Shield, MapPin, Clock, ShieldCheck, DollarSign } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -42,7 +44,8 @@ const MOCK_EMT_DATA: Record<number, EMTProfile> = {
   15: { name: "Kevin O'Brien",    certification: "EMT-P",          yearsExperience: 11, eventTypes: ["Sports", "Concerts", "Film & TV"],               radiusMiles: 65,  available: true,  bio: "Eleven years as paramedic across sports, concerts, and film productions. Former collegiate athlete with strong sports medicine background." },
 }
 
-async function getEmt(id: string): Promise<EMTProfile | null> {
+// cache() dedupes the fetch so generateMetadata and the page share one query per request
+const getEmt = cache(async (id: string): Promise<EMTProfile | null> => {
   // Numeric ids are mock sample profiles
   if (/^\d+$/.test(id)) return MOCK_EMT_DATA[parseInt(id, 10)] ?? null
 
@@ -70,6 +73,18 @@ async function getEmt(id: string): Promise<EMTProfile | null> {
     location:      [data.city, data.state].filter(Boolean).join(", "),
     verified:      data.verified ?? false,
   }
+})
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const emt = await getEmt(id)
+  return {
+    title: emt ? `${emt.name} — ${emt.certification} · Standby` : "EMT Profile — Standby",
+  }
 }
 
 export default async function EMTProfilePage({
@@ -94,7 +109,7 @@ export default async function EMTProfilePage({
           <span className="text-xs font-mono text-primary uppercase tracking-widest">404</span>
           <p className="text-muted-foreground text-sm">EMT profile not found.</p>
           <Link href="/personnel" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-            Back to Marketplace
+            Back to personnel
           </Link>
         </div>
       </div>
@@ -148,36 +163,33 @@ export default async function EMTProfilePage({
           )}
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-3 border border-border divide-x divide-border">
-          <div className="px-6 py-5">
-            {emt.yearsExperience !== undefined ? (
-              <>
-                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
-                  Experience
-                </p>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-mono text-2xl font-bold tabular-nums">{emt.yearsExperience}</span>
-                  <span className="text-sm text-muted-foreground">years</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
-                  Rate
-                </p>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-mono text-2xl font-bold tabular-nums">{emt.hourlyRate ?? "—"}</span>
-                  <span className="text-sm text-muted-foreground">/hour</span>
-                </div>
-              </>
-            )}
-          </div>
-          <div className="px-6 py-5">
+        {/* Stats row — a superset of the marketplace card: rate is always shown */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border border border-border">
+          <div className="bg-card px-6 py-5">
             <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
-              Service Radius
+              Rate
+            </p>
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-muted-foreground" />
+              <span className="font-mono text-2xl font-bold tabular-nums">{emt.hourlyRate ?? "—"}</span>
+              <span className="text-sm text-muted-foreground">/hour</span>
+            </div>
+          </div>
+          {emt.yearsExperience !== undefined && (
+            <div className="bg-card px-6 py-5">
+              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
+                Experience
+              </p>
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-muted-foreground" />
+                <span className="font-mono text-2xl font-bold tabular-nums">{emt.yearsExperience}</span>
+                <span className="text-sm text-muted-foreground">years</span>
+              </div>
+            </div>
+          )}
+          <div className="bg-card px-6 py-5">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
+              Service radius
             </p>
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-muted-foreground" />
@@ -185,14 +197,14 @@ export default async function EMTProfilePage({
               <span className="text-sm text-muted-foreground">miles</span>
             </div>
           </div>
-          <div className="px-6 py-5">
+          <div className="bg-card px-6 py-5">
             <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
               Availability
             </p>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-muted-foreground" />
               <span className="font-mono text-sm">
-                {emt.available ? "Available for booking" : "Currently booked"}
+                {emt.available ? "Available" : "Currently booked"}
               </span>
             </div>
           </div>
@@ -247,7 +259,7 @@ export default async function EMTProfilePage({
               Sample profile
             </Button>
             <Link href="/personnel" className={cn(buttonVariants({ variant: "outline" }), "font-mono text-xs tracking-wider uppercase")}>
-              Browse More Personnel
+              Browse more personnel
             </Link>
           </div>
         )}

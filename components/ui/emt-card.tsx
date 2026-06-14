@@ -1,10 +1,8 @@
-"use client"
-
-import { useState } from "react"
 import Link from "next/link"
-import { MapPin, Star, Heart, ShieldCheck } from "lucide-react"
+import { MapPin, ShieldCheck } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 export interface EMTCardProps {
   id: string | number
@@ -14,33 +12,14 @@ export interface EMTCardProps {
   eventTypes: string[]
   radiusMiles: number
   available: boolean
-  rating?: number
-  reviewCount?: number
   hourlyRate: number
-  avatar?: string
-  completedEvents?: number
   verified?: boolean
 }
 
-const certificationVariant: Record<string, string> = {
-  "EMT-P":           "bg-amber-500 text-white hover:bg-amber-500",
-  "EMT-B":           "bg-blue-500 text-white hover:bg-blue-500",
-  "AEMT":            "bg-teal-600 text-white hover:bg-teal-600",
-  "First Responder": "bg-purple-500 text-white hover:bg-purple-500",
-}
-
-function Initials({ name }: { name: string }) {
-  const parts = name.trim().split(" ")
-  const letters = parts.length >= 2
-    ? parts[0][0] + parts[parts.length - 1][0]
-    : name.slice(0, 2)
-  return (
-    <div className="h-20 w-20 rounded-full border-4 border-card bg-secondary flex items-center justify-center">
-      <span className="font-mono text-lg font-bold text-muted-foreground uppercase">
-        {letters}
-      </span>
-    </div>
-  )
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  const letters = parts.length >= 2 ? parts[0][0] + parts[parts.length - 1][0] : name.slice(0, 2)
+  return letters.toUpperCase()
 }
 
 export function EMTCard({
@@ -51,134 +30,85 @@ export function EMTCard({
   eventTypes,
   radiusMiles,
   available,
-  rating,
-  reviewCount,
   hourlyRate,
-  avatar,
-  completedEvents,
   verified,
 }: EMTCardProps) {
-  const [isLiked, setIsLiked] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
-
-  const hasStats = (rating ?? 0) > 0 || (reviewCount ?? 0) > 0 || (completedEvents ?? 0) > 0 || (yearsExperience ?? 0) > 0
-
   return (
-    <div
-      className="group bg-card rounded-xl border border-border overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-black/20 hover:-translate-y-1"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Cover / status banner */}
-      <div className="relative h-24 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent overflow-hidden">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-3 right-3 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background"
-          onClick={(e) => { e.stopPropagation(); setIsLiked(!isLiked) }}
-        >
-          <Heart className={`h-4 w-4 transition-colors ${isLiked ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
-        </Button>
-
-        {available && (
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs font-medium text-primary">
-            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-            Online
+    <div className="group flex flex-col bg-card border border-border hover:border-primary/40 transition-colors">
+      {/* Header — monogram, name, cert, availability */}
+      <div className="flex items-start gap-3 p-4 border-b border-border">
+        <div className="h-12 w-12 shrink-0 border border-border bg-secondary flex items-center justify-center">
+          <span className="font-mono text-sm font-bold text-muted-foreground uppercase">{initialsOf(name)}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-medium text-foreground leading-tight truncate">{name}</h3>
+          <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+            <Badge variant="secondary" className="font-mono text-[10px] uppercase tracking-wider">
+              {certification}
+            </Badge>
+            {verified && (
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border border-primary/30 bg-primary/5 text-primary px-1.5 py-0.5">
+                <ShieldCheck className="w-3 h-3" />
+                Verified
+              </span>
+            )}
           </div>
-        )}
+        </div>
+        <Badge
+          variant="outline"
+          className={
+            available
+              ? "font-mono text-[10px] uppercase tracking-wider border-risk-low text-risk-low bg-risk-low/10"
+              : "font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+          }
+        >
+          {available ? "Available" : "Booked"}
+        </Badge>
       </div>
 
-      {/* Profile content */}
-      <div className="relative px-4 pb-4">
-        {/* Avatar */}
-        <div className="absolute -top-10 left-4">
-          <div className="relative">
-            {avatar ? (
-              <img src={avatar} alt={name} className="h-20 w-20 rounded-full border-4 border-card object-cover" />
-            ) : (
-              <Initials name={name} />
+      {/* Body — rate, experience, specializations, radius */}
+      <div className="flex flex-col gap-3 p-4 flex-1">
+        <div className="flex items-baseline justify-between">
+          <div className="flex items-baseline gap-1">
+            <span className="font-mono text-2xl font-bold tabular-nums text-foreground">${hourlyRate}</span>
+            <span className="font-mono text-xs text-muted-foreground">/hr</span>
+          </div>
+          {(yearsExperience ?? 0) > 0 && (
+            <span className="font-mono text-xs tabular-nums text-muted-foreground">
+              {yearsExperience} yr experience
+            </span>
+          )}
+        </div>
+
+        {eventTypes.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {eventTypes.slice(0, 3).map((type) => (
+              <Badge key={type} variant="secondary" className="font-mono text-[10px] uppercase tracking-wider">
+                {type}
+              </Badge>
+            ))}
+            {eventTypes.length > 3 && (
+              <Badge variant="secondary" className="font-mono text-[10px] text-muted-foreground">
+                +{eventTypes.length - 3}
+              </Badge>
             )}
-            <span className={`absolute bottom-1 right-1 h-4 w-4 rounded-full border-2 border-card ${available ? "bg-risk-low" : "bg-muted-foreground"}`} />
           </div>
+        )}
+
+        <div className="flex items-center gap-1.5 text-muted-foreground mt-auto">
+          <MapPin className="w-3.5 h-3.5" />
+          <span className="font-mono text-xs tabular-nums">Up to {radiusMiles} mi</span>
         </div>
+      </div>
 
-        <div className="pt-12">
-          {/* Name, cert, rate */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex flex-col gap-1.5">
-              <h3 className="font-semibold text-foreground text-lg leading-tight">{name}</h3>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <Badge className={`text-xs font-semibold ${certificationVariant[certification]}`}>
-                  {certification}
-                </Badge>
-                {verified && (
-                  <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border border-primary/30 bg-primary/5 text-primary px-1.5 py-0.5">
-                    <ShieldCheck className="w-3 h-3" />
-                    Verified
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-foreground">${hourlyRate}</p>
-              <p className="text-xs text-muted-foreground">/hour</p>
-            </div>
-          </div>
-
-          {/* Rating & stats — only shown when data exists */}
-          {hasStats && (
-            <div className="flex items-center gap-3 mt-3 flex-wrap">
-              {(rating ?? 0) > 0 && (
-                <>
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    <span className="font-semibold text-foreground">{rating!.toFixed(1)}</span>
-                    {(reviewCount ?? 0) > 0 && (
-                      <span className="text-muted-foreground text-sm">({reviewCount})</span>
-                    )}
-                  </div>
-                  <span className="text-muted-foreground">·</span>
-                </>
-              )}
-              {(completedEvents ?? 0) > 0 && (
-                <>
-                  <span className="text-sm text-muted-foreground">{completedEvents} events</span>
-                  <span className="text-muted-foreground">·</span>
-                </>
-              )}
-              {(yearsExperience ?? 0) > 0 && (
-                <span className="text-sm text-muted-foreground">{yearsExperience}yr exp</span>
-              )}
-            </div>
-          )}
-
-          {/* Event type tags */}
-          {eventTypes.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {eventTypes.slice(0, 3).map((type) => (
-                <Badge key={type} variant="secondary" className="text-xs font-medium">{type}</Badge>
-              ))}
-              {eventTypes.length > 3 && (
-                <Badge variant="secondary" className="text-xs font-medium text-muted-foreground">
-                  +{eventTypes.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
-
-          {/* Location */}
-          <div className="flex items-center gap-1.5 mt-3 text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5" />
-            <span className="text-sm">Up to {radiusMiles} miles</span>
-          </div>
-
-          {/* CTA — visible on hover */}
-          <div className={`mt-4 transition-all duration-300 ${isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
-            <Button render={<Link href={`/emt/${id}`} />} className="w-full" variant="secondary">
-              View profile
-            </Button>
-          </div>
-        </div>
+      {/* CTA */}
+      <div className="p-4 pt-0">
+        <Link
+          href={`/emt/${id}`}
+          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-full font-mono text-xs uppercase tracking-wider")}
+        >
+          View profile
+        </Link>
       </div>
     </div>
   )

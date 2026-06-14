@@ -26,8 +26,11 @@ app/
   emt/[id]/        EMT profile detail + booking request form (UUID ids = real, numeric = mock)
   emt-dashboard/   EMT booking dashboard — real data, accept/decline, availability toggle (protected)
   personnel/       EMT search/filter UI — verified emt_profiles, mock fallback (force-dynamic)
-  schedule/        (in progress)
+  schedule/        Upcoming coverage — date-ordered pending/accepted bookings (protected)
   events/          Organizer booking list with statuses (protected)
+  for-emts/        Supply-side marketing page (posted-rate model, founding-medic CTA)
+  terms/           Terms of Use (starter draft — needs counsel review)
+  privacy/         Privacy Policy (starter draft — needs counsel review)
 components/
   assessment/      StepIndicator, AssessmentIntakeForm, per-step form components
   marketplace/     FilterSidebar, SearchHeader, StaffingMarketplace
@@ -87,6 +90,28 @@ Google OAuth + email magic link via `@supabase/ssr`. No `auth-helpers-nextjs`.
 In Next.js 16, `middleware.ts` was renamed to `proxy.ts` and the exported function
 must be named `proxy` (not `middleware`). The `config.matcher` export works identically.
 Do not create `middleware.ts` — it will produce a deprecation warning and may not run.
+
+## Product Conventions (2026-06-14 audit pass)
+
+**Honest trust — no fabricated content (P0, legal).** Never ship fake testimonials, stats,
+ratings, review counts, or stock-photo avatars — FTC exposure (16 CFR Part 465) plus instant
+credibility loss with safety-critical buyers. Trust = methodology (mass-gathering medicine /
+NAEMSP), credential verification, honest early-access framing. Personnel use monogram blocks;
+sample data sits behind a "Sample profiles" banner with no trust signals. Frame the engine as a
+"multi-factor risk model," not "AI," and keep the medical-director disclaimer. Full rules in the
+`ui-conventions` skill → "Trust & honesty".
+
+**Navigation split.** `NavBar` branches on auth + `user_metadata.role`: signed-out → marketing nav
+(How it works · Pricing · For EMTs · Sign in · Start assessment, no "System Online"); signed-in →
+app nav (organizer: Events · New assessment · Personnel · Schedule; EMT: Dashboard · Personnel).
+Every nav link resolves to a real route — no stubs. Post-auth landing: organizer → `/events`,
+EMT → `/emt-dashboard`.
+
+**Monetization = Option B (chosen 2026-06-14).** Marketplace free both sides, assessment free; the
+AHJ-ready report is the future paid tier ("free during early access" for now). Copy says "EMTs keep
+100% of their posted rate" — never "no markup / no agency overhead" (forecloses the planned
+Option A organizer service fee). Don't promise the report free forever. Sequencing: B now, A when a
+metro has liquidity, C (managed/assured tier) at scale.
 
 ## Dangerous Areas
 

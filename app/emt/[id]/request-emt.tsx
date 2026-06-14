@@ -108,10 +108,10 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
           href={`/auth?role=organizer&next=/emt/${emtId}`}
           className={cn(buttonVariants(), "font-mono text-xs tracking-wider uppercase px-8")}
         >
-          Request This EMT
+          Request coverage
         </Link>
         <Link href="/personnel" className={cn(buttonVariants({ variant: "outline" }), "font-mono text-xs tracking-wider uppercase")}>
-          Browse More Personnel
+          Browse more personnel
         </Link>
       </div>
     )
@@ -140,10 +140,10 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
           onClick={() => setOpen((o) => !o)}
           className="font-mono text-xs tracking-wider uppercase px-8"
         >
-          {available ? (open ? "Close request form" : "Request This EMT") : "Currently Unavailable"}
+          {available ? (open ? "Close request form" : "Request coverage") : "Currently unavailable"}
         </Button>
         <Link href="/personnel" className={cn(buttonVariants({ variant: "outline" }), "font-mono text-xs tracking-wider uppercase")}>
-          Browse More Personnel
+          Browse more personnel
         </Link>
       </div>
 

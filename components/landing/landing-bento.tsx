@@ -33,13 +33,13 @@ const BentoCard = ({
 
 const CARDS = [
   {
-    title: "AI-powered risk scoring.",
-    description: "Get defensible multi-factor assessments in minutes, not hours.",
+    title: "Multi-factor risk scoring.",
+    description: "Get a defensible, guideline-based assessment in minutes, not hours.",
     Component: RiskScoringIllustration,
   },
   {
     title: "Personnel marketplace.",
-    description: "Browse 340+ certified professionals matched to your event.",
+    description: "Browse license-verified professionals matched to your event.",
     Component: EMTMarketplaceIllustration,
   },
   {
@@ -54,7 +54,7 @@ const CARDS = [
   },
   {
     title: "Event intelligence.",
-    description: "AI trained on 2,500+ real events across every category.",
+    description: "Patient-presentation benchmarks from event-medicine research, by event type.",
     Component: EventIntelligenceIllustration,
   },
   {
@@ -75,7 +75,7 @@ export function LandingBento() {
               Everything your event medical coverage needs
             </h2>
             <p className="w-full max-w-[600px] text-center text-muted-foreground text-lg md:text-xl font-medium leading-relaxed">
-              From AI risk scoring to AHJ-ready documentation, Standby covers the entire event medical workflow in a single platform.
+              From multi-factor risk scoring to AHJ-ready documentation, Standby covers the entire event medical workflow in a single platform.
             </p>
           </div>
         </div>

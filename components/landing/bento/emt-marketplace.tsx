@@ -24,7 +24,7 @@ export default function EMTMarketplaceIllustration() {
         </div>
       ))}
       <div className="mt-1 rounded-md bg-primary/10 border border-primary/20 px-3 py-1.5 text-center">
-        <p className="text-xs font-medium text-primary">340+ certified professionals</p>
+        <p className="text-xs font-medium text-primary">License-verified before they appear</p>
       </div>
     </div>
   )

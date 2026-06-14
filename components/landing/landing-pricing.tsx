@@ -40,13 +40,12 @@ export function LandingPricing() {
           <span className="font-mono text-xs uppercase tracking-[0.2em] text-primary">
             Transparent pricing
           </span>
-          <h2 className="text-foreground text-4xl md:text-5xl font-semibold leading-tight max-w-[600px]">
-            Pay for the EMT. Not the platform.
+          <h2 className="text-foreground text-4xl md:text-5xl font-semibold leading-tight max-w-[640px]">
+            Defensible coverage, priced up front.
           </h2>
-          <p className="text-muted-foreground text-sm md:text-base font-medium max-w-[540px] leading-relaxed">
-            Standby is free to use. Run your risk assessment, get a staffing recommendation,
-            and browse matched EMTs at no cost. You pay your EMT directly at their posted rate —
-            no markup, no agency overhead.
+          <p className="text-muted-foreground text-sm md:text-base font-medium max-w-[560px] leading-relaxed">
+            Assess your event, get a staffing recommendation, and browse matched EMTs — free.
+            When you book, you pay your EMT directly at their posted rate, and they keep 100% of it.
           </p>
         </div>
 
@@ -99,10 +98,11 @@ export function LandingPricing() {
         <div className="border border-border bg-surface px-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
             <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              What's included at no charge
+              Free to start
             </span>
             <p className="text-sm text-foreground">
-              Risk assessment · Staffing recommendation · EMT matching · Compliance documentation
+              Risk assessment · Staffing recommendation · Personnel matching ·{" "}
+              <span className="text-muted-foreground">AHJ-ready reporting, free during early access</span>
             </p>
           </div>
           <Link

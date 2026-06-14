@@ -60,6 +60,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Protect /schedule (upcoming coverage) — must be signed in
+  if (pathname.startsWith("/schedule") && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/auth"
+    url.searchParams.set("role", "organizer")
+    url.searchParams.set("next", "/schedule")
+    return NextResponse.redirect(url)
+  }
+
   // Protect /onboarding — must be signed in
   if (pathname.startsWith("/onboarding") && !user) {
     const url = request.nextUrl.clone()

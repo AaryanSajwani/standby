@@ -62,7 +62,7 @@ export function EMTProfileCard({
           className="mt-5 w-full font-mono text-xs tracking-wider uppercase"
           size="sm"
         >
-          Request Staffing
+          Request staffing
         </Button>
       </CardContent>
     </Card>

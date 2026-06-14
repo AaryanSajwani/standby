@@ -1,9 +1,9 @@
 import { LandingHero } from "@/components/landing/landing-hero"
 import { LandingSocialProof } from "@/components/landing/landing-social-proof"
+import { LandingHowItWorks } from "@/components/landing/landing-how-it-works"
 import { LandingBento } from "@/components/landing/landing-bento"
-import { LandingTestimonial } from "@/components/landing/landing-testimonial"
+import { LandingMethodology } from "@/components/landing/landing-methodology"
 import { LandingPricing } from "@/components/landing/landing-pricing"
-import { LandingTestimonialGrid } from "@/components/landing/landing-testimonial-grid"
 import { LandingFAQ } from "@/components/landing/landing-faq"
 import { LandingCTA } from "@/components/landing/landing-cta"
 import { LandingFooter } from "@/components/landing/landing-footer"
@@ -29,20 +29,20 @@ export default async function HomePage() {
           <LandingSocialProof />
         </AnimatedSection>
 
+        <AnimatedSection id="how-it-works" className="relative z-10 max-w-[1320px] mx-auto mt-8 md:mt-16" delay={0.2}>
+          <LandingHowItWorks />
+        </AnimatedSection>
+
         <AnimatedSection id="features-section" className="relative z-10 max-w-[1320px] mx-auto mt-8 md:mt-16" delay={0.2}>
           <LandingBento />
         </AnimatedSection>
 
         <AnimatedSection className="relative z-10 max-w-[1320px] mx-auto mt-8 md:mt-16" delay={0.2}>
-          <LandingTestimonial />
+          <LandingMethodology />
         </AnimatedSection>
 
         <AnimatedSection id="pricing-section" className="relative z-10 max-w-[1320px] mx-auto mt-8 md:mt-16" delay={0.2}>
           <LandingPricing />
-        </AnimatedSection>
-
-        <AnimatedSection id="testimonials-section" className="relative z-10 max-w-[1320px] mx-auto mt-8 md:mt-16" delay={0.2}>
-          <LandingTestimonialGrid />
         </AnimatedSection>
 
         <AnimatedSection id="faq-section" className="relative z-10 max-w-[1320px] mx-auto mt-8 md:mt-16" delay={0.2}>

@@ -20,7 +20,9 @@ function GoogleIcon() {
 export function AuthContent() {
   const searchParams = useSearchParams()
   const role = (searchParams.get("role") ?? "organizer") as "emt" | "organizer"
-  const next = searchParams.get("next") ?? (role === "emt" ? "/emt-dashboard" : "/")
+  // Post-auth landing by role: EMTs → dashboard (which routes to onboarding if needed),
+  // organizers → Events (the app home). See §3.
+  const next = searchParams.get("next") ?? (role === "emt" ? "/emt-dashboard" : "/events")
   const urlError = searchParams.get("error")
 
   const [email, setEmail] = useState("")

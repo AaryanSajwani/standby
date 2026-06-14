@@ -58,6 +58,8 @@ export interface AssessmentResult {
   riskFactors: { crowd: number; environmental: number; activity: number }
   staffing: { emtCount: number; certLevel: CertLevel; hours: number; estimatedCost: string }
   recommendedCertLevels: CertLevel[]
+  // Guideline basis for each recommendation — what makes the report "defensible" to an AHJ (§4.5)
+  staffingBasis: string[]
 }
 
 const ACTIVITY_RISK: Record<string, number> = {
@@ -154,6 +156,16 @@ export function scoreAssessment(form: AssessmentFormData): AssessmentResult {
     `commonly require ${emtCount} ${certLevel} ${emtCount === 1 ? "professional" : "professionals"} ` +
     `for approximately ${hours} hours of coverage.`
 
+  // Each line ties a recommendation to its basis — the paper trail an AHJ can check.
+  const staffingBasis = [
+    `Risk weighting combines crowd (${crowd}/10), environmental (${environmental}/10), and activity (${activity}/10) exposure — the factor structure used in mass-gathering patient-presentation models (e.g., Arbon, Hartman).`,
+    `${emtCount} ${certLevel} ${emtCount === 1 ? "professional" : "professionals"} recommended: coverage scaled to ${attendance.toLocaleString()} expected attendees, consistent with NAEMSP mass-gathering EMS guidance on personnel ratios.`,
+    certLevel === "EMT-P"
+      ? "Advanced life support (paramedic) coverage indicated for higher-acuity or higher-density events where IV access, cardiac monitoring, or advanced airway management may be required."
+      : "Basic life support coverage is appropriate for this risk profile; escalate to ALS if attendance, acuity, or crowd density increase.",
+    "This is decision support, not a medical order — review and sign-off by a qualified medical director is required before the event.",
+  ]
+
   return {
     riskScore,
     riskLevel,
@@ -161,5 +173,6 @@ export function scoreAssessment(form: AssessmentFormData): AssessmentResult {
     riskFactors: { crowd, environmental, activity },
     staffing: { emtCount, certLevel, hours, estimatedCost },
     recommendedCertLevels,
+    staffingBasis,
   }
 }

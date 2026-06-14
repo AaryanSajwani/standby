@@ -115,7 +115,7 @@ export function EventSummaryPanel({
           ) : saveState === "saving" ? (
             "Saving…"
           ) : (
-            "Save Report"
+            "Save report"
           )}
         </Button>
         {saveState === "error" && (
@@ -128,7 +128,7 @@ export function EventSummaryPanel({
           className="w-full font-mono text-xs tracking-wider uppercase"
           onClick={onStartNew}
         >
-          Start New Assessment
+          Start new assessment
         </Button>
       </CardContent>
     </Card>

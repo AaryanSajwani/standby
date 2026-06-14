@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { RiskScore } from "@/components/results/RiskScore"
 import { StaffingCard } from "@/components/results/StaffingCard"
 import { EMTProfileCard } from "@/components/results/EMTProfileCard"
@@ -182,6 +184,42 @@ export function ResultsContent() {
               hours={result.staffing.hours}
               estimatedCost={result.staffing.estimatedCost}
             />
+
+            {/* Guideline basis — the paper trail that makes the report defensible to an AHJ (§4.5) */}
+            <section className="border border-border bg-card p-6">
+              <h2 className="font-mono text-xs tracking-[0.2em] text-muted-foreground uppercase mb-4">
+                Guideline basis
+              </h2>
+              <ul className="flex flex-col gap-3">
+                {result.staffingBasis.map((line, i) => (
+                  <li key={i} className="flex gap-3 text-sm text-foreground/80 leading-relaxed">
+                    <span className="font-mono text-xs text-primary tabular-nums shrink-0 mt-0.5">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {/* Primary loop action — the whole product thesis in one click (§4.1) */}
+            <div className="border border-primary/40 bg-primary/5 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col gap-1">
+                <span className="font-mono text-xs uppercase tracking-widest text-primary">Next step</span>
+                <p className="text-foreground font-medium">
+                  {isSample
+                    ? "Run your own assessment to staff a real event"
+                    : `Staff this event with ${result.staffing.emtCount} ${result.staffing.certLevel} ${result.staffing.emtCount === 1 ? "professional" : "professionals"}`}
+                </p>
+              </div>
+              <Button
+                onClick={isSample ? handleStartNew : handleRequestStaffing}
+                className="font-mono text-xs uppercase tracking-wider px-6 shrink-0"
+              >
+                {isSample ? "Run assessment" : "Staff this event"}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </div>
 
             <section>
               <h2 className="font-mono text-xs tracking-[0.2em] text-muted-foreground uppercase mb-6">

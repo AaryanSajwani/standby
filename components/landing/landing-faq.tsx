@@ -11,9 +11,9 @@ const FAQ_DATA = [
       "Standby is an event medical risk assessment and EMT staffing platform built for event coordinators, safety officers, and medical directors. Whether you're running a 500-person corporate event or a 50,000-person music festival, Standby generates a defensible risk assessment and matched staffing configuration in minutes.",
   },
   {
-    question: "How does the AI risk scoring work?",
+    question: "How does the risk scoring work?",
     answer:
-      "Our AI evaluates over 30 risk factors — including expected attendance, venue type, event duration, proximity to trauma centers, historical patient presentation rates for similar events, and more. It outputs a 0–100 risk score with a full breakdown of contributing factors, so you can justify every staffing decision.",
+      "A multi-factor model — not a black box — scores your event across crowd, environmental, and activity exposure. It weighs expected attendance, venue type and outdoor exposure, weather, proximity to definitive care, on-site resources, and emergency access, then outputs a 0–10 risk level with a full breakdown of the contributing factors, so you can justify every staffing decision.",
   },
   {
     question: "How do I find and book an EMT?",
@@ -23,22 +23,22 @@ const FAQ_DATA = [
   {
     question: "How much does it cost?",
     answer:
-      "Standby is free to use. Running an assessment, getting a staffing recommendation, and browsing matched EMTs costs nothing. You pay your EMT directly at their posted hourly rate, which typically ranges from $35–45/hr for First Responders, $50–70/hr for EMT-Basics, and $85–135/hr for Paramedics — a fraction of traditional agency standby packages.",
+      "Assessing your event, getting a staffing recommendation, and browsing matched EMTs is free. When you book, you pay your EMT directly at their posted hourly rate — typically $35–45/hr for First Responders, $50–70/hr for EMT-Basics, and $85–135/hr for Paramedics — and they keep 100% of it. AHJ-ready reporting is free while we're in early access.",
   },
   {
     question: "What's included in the compliance report?",
     answer:
-      "The compliance report includes your event risk classification, staffing ratio justification, equipment requirements, medical command structure, emergency access plan, and the AI model's reasoning — all formatted for Authority Having Jurisdiction (AHJ) review and insurance documentation.",
+      "The compliance report includes your event risk classification, staffing ratio justification, equipment requirements, medical command structure, emergency access plan, and the model's reasoning with the guidelines it references — all formatted for Authority Having Jurisdiction (AHJ) review and insurance documentation.",
   },
   {
     question: "How accurate are the staffing recommendations?",
     answer:
-      "Our recommendations are based on NAEMSP and event medicine best-practice guidelines, calibrated against data from 2,500+ real events. Coordinators using Standby report a 98% first-submission AHJ approval rate. That said, Standby recommendations should always be reviewed by a qualified medical director.",
+      "Recommendations are grounded in mass-gathering and event-medicine best-practice guidelines, including NAEMSP position statements. Each staffing line references the basis for its ratio, so an AHJ can see the reasoning rather than take a number on faith. Standby is a decision-support tool — every recommendation should be reviewed and signed off by a qualified medical director.",
   },
   {
     question: "Is my event data secure?",
     answer:
-      "Yes. All data is encrypted in transit and at rest. We do not share event-specific information with third parties. Enterprise plans include on-premises deployment options and dedicated data residency configurations for organizations with strict compliance requirements.",
+      "Yes. All data is encrypted in transit and at rest, and we don't sell or share your event-specific information with third parties. You can request export or deletion of your data at any time. See our Privacy Policy for the full detail of what we collect and why.",
   },
 ]
 

@@ -20,19 +20,19 @@ export default function RiskScoringIllustration() {
       {/* Risk labels */}
       <div className="w-full flex flex-col gap-2">
         {[
-          { label: "Crowd density", value: "High", color: "text-red-400" },
-          { label: "Venue proximity to trauma center", value: "8.2 mi", color: "text-amber-400" },
-          { label: "Historical incident rate", value: "2.3%", color: "text-emerald-400" },
+          { label: "Crowd density", value: "High", color: "text-risk-high" },
+          { label: "Proximity to definitive care", value: "8.2 mi", color: "text-risk-medium" },
+          { label: "Patient presentation rate", value: "1.4%", color: "text-risk-low" },
         ].map(({ label, value, color }) => (
           <div key={label} className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">{label}</span>
-            <span className={`font-mono font-medium ${color}`}>{value}</span>
+            <span className={`font-mono tabular-nums font-medium ${color}`}>{value}</span>
           </div>
         ))}
       </div>
       <div className="w-full rounded-lg bg-primary/10 border border-primary/20 px-3 py-2 text-center">
-        <p className="text-xs text-muted-foreground">Risk Score</p>
-        <p className="font-mono text-xl font-bold text-primary">74 / 100</p>
+        <p className="text-xs text-muted-foreground">Risk level</p>
+        <p className="font-mono text-xl font-bold tabular-nums text-primary">7 / 10</p>
       </div>
     </div>
   )
