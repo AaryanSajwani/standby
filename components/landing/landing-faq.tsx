@@ -18,12 +18,12 @@ const FAQ_DATA = [
   {
     question: "How do I find and book an EMT?",
     answer:
-      "Browse certified EMTs on the Personnel page, filtered by certification level, experience, location, and event-type specialization. Each profile shows the EMT's posted hourly rate, event history, and availability. Send a booking request directly — no intermediary, no agency markup.",
+      "Browse certified EMTs on the Personnel page, filtered by certification level, experience, location, and event-type specialization. Each profile shows the EMT's posted hourly rate, event history, and availability. Send a booking request directly: the EMT keeps 100% of their posted rate, and Standby's service fee is added on top and shown as its own line — never buried in the rate.",
   },
   {
     question: "How much does it cost?",
     answer:
-      "Assessing your event, getting a staffing recommendation, and browsing matched EMTs is free. When you book, you pay your EMT directly at their posted hourly rate — typically $35–45/hr for First Responders, $50–70/hr for EMT-Basics, and $85–135/hr for Paramedics — and they keep 100% of it. AHJ-ready reporting is free while we're in early access.",
+      "Assessing your event, getting a staffing recommendation, and browsing matched EMTs is free. When you book, the EMT keeps 100% of their posted hourly rate — typically $35–45/hr for First Responders, $50–70/hr for EMT-Basics, and $85–135/hr for Paramedics — and Standby adds a transparent service fee on top, shown as its own line at checkout. AHJ-ready compliance reporting will be part of Standby Premier; it's free to preview during early access.",
   },
   {
     question: "What's included in the compliance report?",

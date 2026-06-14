@@ -107,11 +107,15 @@ app nav (organizer: Events · New assessment · Personnel · Schedule; EMT: Dash
 Every nav link resolves to a real route — no stubs. Post-auth landing: organizer → `/events`,
 EMT → `/emt-dashboard`.
 
-**Monetization = Option B (chosen 2026-06-14).** Marketplace free both sides, assessment free; the
-AHJ-ready report is the future paid tier ("free during early access" for now). Copy says "EMTs keep
-100% of their posted rate" — never "no markup / no agency overhead" (forecloses the planned
-Option A organizer service fee). Don't promise the report free forever. Sequencing: B now, A when a
-metro has liquidity, C (managed/assured tier) at scale.
+**Monetization — two-part, buyer-side (revised 2026-06-14).** (1) *Transactional*: a transparent
+**buyer-side** commission — the EMT keeps 100% of their posted rate; Standby's fee is added on top
+and shown as its own line at checkout (transparency, not a markup). Keep "EMTs keep 100% of their
+posted rate"; never "no markup / no agency overhead." (2) *Standby Premier* (subscription, coming
+soon): unlocks the AHJ-ready compliance report, built on the risk engine. Buyer-side now protects
+the EMT recruiting promise while supply is the bottleneck; revisit a seller-side take-rate at scale.
+**Copy/static only** until billing is decided — no Stripe, no commission-split logic, no Premier
+gating, and never mock a checkout with hardcoded dollar amounts. Premier CTA stays disabled/"coming
+soon." Full copy rules in the `ui-conventions` skill → "Pricing model."
 
 ## Dangerous Areas
 

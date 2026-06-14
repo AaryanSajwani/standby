@@ -13,7 +13,7 @@ const VALUE_PROPS = [
   {
     Icon: DollarSign,
     title: "Keep 100% of your rate",
-    body: "Organizers pay you directly at your posted hourly rate. Standby never takes a cut of what you earn.",
+    body: "You're paid your full posted rate. Standby's service fee is charged to the organizer on top — never cut from what you earn.",
   },
   {
     Icon: BadgeCheck,
@@ -107,9 +107,9 @@ export default function ForEmtsPage() {
             <DollarSign className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-semibold text-foreground">How payment works</h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              When an organizer requests you and you accept, the engagement is directly between
-              you and them at your posted rate. Standby facilitates the connection and the
-              paperwork — it doesn&apos;t skim your pay.
+              When an organizer requests you and you accept, you&apos;re paid at your posted rate.
+              Standby&apos;s service fee is charged to the organizer on top of your rate — it never
+              comes out of what you earn. You keep 100% of what you post.
             </p>
           </div>
           <div className="flex flex-col gap-3 p-6 md:p-8 border border-border bg-card">
