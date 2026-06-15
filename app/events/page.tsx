@@ -46,6 +46,34 @@ export default async function EventsPage() {
 
   if (assessError) console.error("[/events] assessments query failed:", assessError.message)
 
+  // Group saved assessments by event into a version history (audit trail, §4.7).
+  // Re-running + saving the same event name yields v1, v2, … with score/attendance deltas.
+  const assessmentGroups = (() => {
+    const byEvent = new Map<string, typeof assessments>()
+    for (const a of assessments ?? []) {
+      const key = (a.event_name ?? "").trim().toLowerCase()
+      const list = byEvent.get(key) ?? []
+      list.push(a)
+      byEvent.set(key, list)
+    }
+    return Array.from(byEvent.values())
+      .map((versions) => {
+        const ordered = [...(versions ?? [])].sort(
+          (x, y) => +new Date(x.created_at) - +new Date(y.created_at)
+        )
+        return { versions: ordered, latest: ordered[ordered.length - 1] }
+      })
+      .sort((g1, g2) => +new Date(g2.latest.created_at) - +new Date(g1.latest.created_at))
+  })()
+
+  const riskClassFor = (score: number) =>
+    score <= 3 ? "border-risk-low/30 bg-risk-low/5 text-risk-low" :
+    score <= 5 ? "border-risk-medium/30 bg-risk-medium/5 text-risk-medium" :
+    "border-risk-high/30 bg-risk-high/5 text-risk-high"
+
+  const shortDate = (ts: string) =>
+    new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+
   return (
     <main className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-4 py-10 flex flex-col gap-10">
@@ -61,46 +89,80 @@ export default async function EventsPage() {
           </p>
         </div>
 
-        {/* Saved assessments */}
-        {(assessments ?? []).length > 0 && (
+        {/* Saved assessments — grouped into per-event version history */}
+        {assessmentGroups.length > 0 && (
           <section className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Saved assessments</h2>
               <span className="font-mono text-[10px] border border-border text-muted-foreground px-2 py-0.5 tabular-nums">
-                {(assessments ?? []).length}
+                {assessmentGroups.length}
               </span>
             </div>
             <div className="flex flex-col gap-px">
-              {(assessments ?? []).map((a) => {
-                const score = a.risk_score ?? 0
-                const riskClass =
-                  score <= 3 ? "border-risk-low/30 bg-risk-low/5 text-risk-low" :
-                  score <= 5 ? "border-risk-medium/30 bg-risk-medium/5 text-risk-medium" :
-                  "border-risk-high/30 bg-risk-high/5 text-risk-high"
+              {assessmentGroups.map(({ versions, latest }) => {
+                const score = latest.risk_score ?? 0
                 return (
-                  <div key={a.id} className="border border-border bg-card flex flex-col md:flex-row md:items-center justify-between gap-4 px-5 py-4">
-                    <div className="flex items-start gap-3 min-w-0">
-                      <FileText className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                      <div className="flex flex-col gap-1 min-w-0">
-                        <span className="text-foreground font-medium leading-tight truncate">{a.event_name}</span>
-                        <span className="text-muted-foreground text-xs font-mono">
-                          {EVENT_TYPE_LABELS[a.event_type] ?? a.event_type}
-                          {a.event_date ? ` · ${formatEventDate(a.event_date)}` : ""}
-                          {a.expected_attendance ? ` · ${a.expected_attendance.toLocaleString()} attendees` : ""}
+                  <div key={latest.id} className="border border-border bg-card flex flex-col">
+                    {/* Latest version */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-5 py-4">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <FileText className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-foreground font-medium leading-tight truncate">{latest.event_name}</span>
+                            {versions.length > 1 && (
+                              <span className="font-mono text-[10px] border border-border text-muted-foreground px-1.5 py-0.5 tabular-nums shrink-0">
+                                v{versions.length}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-muted-foreground text-xs font-mono">
+                            {EVENT_TYPE_LABELS[latest.event_type] ?? latest.event_type}
+                            {latest.event_date ? ` · ${formatEventDate(latest.event_date)}` : ""}
+                            {latest.expected_attendance ? ` · ${latest.expected_attendance.toLocaleString()} attendees` : ""}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 tabular-nums ${riskClassFor(score)}`}>
+                          Risk {score}/10
                         </span>
+                        <Link
+                          href="/personnel"
+                          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}
+                        >
+                          Find staffing
+                        </Link>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 tabular-nums ${riskClass}`}>
-                        Risk {score}/10
-                      </span>
-                      <Link
-                        href="/personnel"
-                        className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}
-                      >
-                        Find staffing
-                      </Link>
-                    </div>
+
+                    {/* Version history (audit trail) */}
+                    {versions.length > 1 && (
+                      <div className="border-t border-border px-5 py-3 flex flex-col gap-2">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Version history</span>
+                        {versions.map((v, i) => {
+                          const prev = i > 0 ? versions[i - 1] : null
+                          const sDelta = prev ? (v.risk_score ?? 0) - (prev.risk_score ?? 0) : 0
+                          const aDelta = prev ? (v.expected_attendance ?? 0) - (prev.expected_attendance ?? 0) : 0
+                          return (
+                            <div key={v.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono tabular-nums">
+                              <span className="text-muted-foreground w-7 shrink-0">v{i + 1}</span>
+                              <span className="text-muted-foreground">{shortDate(v.created_at)}</span>
+                              <span className="text-foreground">{(v.expected_attendance ?? 0).toLocaleString()} att</span>
+                              {prev && aDelta !== 0 && (
+                                <span className="text-muted-foreground">({aDelta > 0 ? "+" : ""}{aDelta.toLocaleString()})</span>
+                              )}
+                              <span className="text-foreground">Risk {v.risk_score ?? 0}/10</span>
+                              {prev && sDelta !== 0 && (
+                                <span className={sDelta > 0 ? "text-risk-high" : "text-risk-low"}>
+                                  {sDelta > 0 ? "↑" : "↓"} {Math.abs(sDelta)}
+                                </span>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 )
               })}

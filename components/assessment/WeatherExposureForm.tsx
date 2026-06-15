@@ -1,8 +1,10 @@
 "use client"
 
-import { ChevronDown } from "lucide-react"
+import { useState } from "react"
+import { ChevronDown, CloudSun } from "lucide-react"
 import type { AssessmentFormData } from "@/types/assessment"
 import { Button } from "@/components/ui/button"
+import { geocodePlace, fetchWeather, precipBand } from "@/lib/geo"
 
 interface WeatherExposureFormProps {
   formData: AssessmentFormData
@@ -28,8 +30,38 @@ const PRECIP_OPTIONS = [
   { value: "high", label: "High — greater than 50% chance" },
 ]
 
+type AutofillState = "idle" | "loading" | "filled" | "range" | "error"
+
 export function WeatherExposureForm({ formData, onChange, onNext, onBack }: WeatherExposureFormProps) {
   const isValid = formData.expectedWeather && formData.highTempF && formData.precipitationRisk
+
+  const [autofill, setAutofill] = useState<AutofillState>("idle")
+  const canAutofill = formData.venueAddress.trim().length >= 3 && Boolean(formData.eventDate)
+
+  // §4.4 — pull the forecast for the venue + date so this step is a confirmation, not a quiz
+  const handleAutofill = async () => {
+    setAutofill("loading")
+    const places = await geocodePlace(formData.venueAddress, 1)
+    if (places.length === 0) {
+      setAutofill("error")
+      return
+    }
+    const w = await fetchWeather(places[0].latitude, places[0].longitude, formData.eventDate)
+    if (!w) {
+      setAutofill("range")
+      return
+    }
+    onChange({
+      highTempF: String(w.highTempF),
+      precipitationRisk: precipBand(w.precipChance),
+      expectedWeather: w.condition,
+    })
+    setAutofill("filled")
+  }
+
+  const eventDateLabel = formData.eventDate
+    ? new Date(`${formData.eventDate}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : ""
 
   return (
     <div className="h-full flex">
@@ -45,6 +77,36 @@ export function WeatherExposureForm({ formData, onChange, onNext, onBack }: Weat
 
         <div className="flex-1 p-10 overflow-auto">
           <div className="grid gap-10">
+            {/* §4.4 — forecast auto-fill */}
+            <div className="border border-border bg-surface px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex flex-col gap-1">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Forecast auto-fill</span>
+                <p className="text-sm text-foreground">
+                  {canAutofill
+                    ? `Pull the forecast for ${formData.venueAddress} on ${eventDateLabel}`
+                    : "Add a venue (step 2) and event date to auto-fill from the forecast"}
+                </p>
+                {autofill === "filled" && (
+                  <span className="text-xs font-mono text-risk-low">Filled from forecast — review and adjust below.</span>
+                )}
+                {autofill === "range" && (
+                  <span className="text-xs font-mono text-muted-foreground">Date is beyond the 16-day forecast — enter manually below.</span>
+                )}
+                {autofill === "error" && (
+                  <span className="text-xs font-mono text-muted-foreground">Couldn&apos;t find that location — enter manually below.</span>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleAutofill}
+                disabled={!canAutofill || autofill === "loading"}
+                className="shrink-0 font-mono text-xs uppercase tracking-wider gap-1.5"
+              >
+                <CloudSun className="w-3.5 h-3.5" />
+                {autofill === "loading" ? "Pulling…" : "Auto-fill"}
+              </Button>
+            </div>
+
             <div className="space-y-4">
               <label className="block text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
                 Expected Weather Conditions <span className="text-risk-high">*</span>
