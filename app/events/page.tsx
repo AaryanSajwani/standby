@@ -7,6 +7,7 @@ import { joinedFullName } from "@/lib/emt"
 import { EVENT_TYPE_LABELS } from "@/lib/assessment"
 import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { AddToCalendarButton } from "@/components/AddToCalendarButton"
 import { cn } from "@/lib/utils"
 
 export const metadata = { title: "Events — Standby" }
@@ -207,9 +208,20 @@ export default async function EventsPage() {
                       <span className="text-foreground font-medium text-base leading-tight truncate">{b.eventName}</span>
                       <span className="text-muted-foreground text-xs font-mono">{b.eventType} · {b.counterpartName}</span>
                     </div>
-                    <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 shrink-0 ${status.className}`}>
-                      {status.label}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {b.status === "accepted" && (
+                        <AddToCalendarButton
+                          eventName={b.eventName}
+                          dateISO={b.dateISO}
+                          location={b.location}
+                          durationHours={b.durationHours}
+                          counterpartName={b.counterpartName}
+                        />
+                      )}
+                      <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 ${status.className}`}>
+                        {status.label}
+                      </span>
+                    </div>
                   </div>
 
                   <Separator />

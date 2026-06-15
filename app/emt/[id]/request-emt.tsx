@@ -124,8 +124,10 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
         <div className="flex flex-col gap-1">
           <span className="font-mono text-xs uppercase tracking-widest text-risk-low">Request sent</span>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            {emtName} has been notified. Track the status of this request on your{" "}
+            Your request is now in {emtName}&apos;s queue — they&apos;ll see it on their dashboard and can
+            accept or decline. Track the status on your{" "}
             <Link href="/events" className="text-foreground underline underline-offset-2">events page</Link>.
+            <span className="block mt-1 text-xs text-muted-foreground/80">Email alerts are coming soon — for now the request lives in the app.</span>
           </p>
         </div>
       </div>

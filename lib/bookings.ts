@@ -23,6 +23,7 @@ export interface Booking {
   eventName: string
   eventType: string
   date: string
+  dateISO: string // raw event_date (YYYY-MM-DD) for calendar export
   location: string
   attendance: number
   durationHours: number
@@ -47,6 +48,7 @@ export function mapBooking(row: RawBooking, counterpartName: string): Booking {
     eventName: row.event_name,
     eventType: row.event_type,
     date: formatEventDate(row.event_date),
+    dateISO: row.event_date,
     location: row.location,
     attendance: row.expected_attendance,
     durationHours: Number(row.duration_hours),

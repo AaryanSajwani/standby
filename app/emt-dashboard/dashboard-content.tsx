@@ -5,6 +5,7 @@ import { Calendar, MapPin, Users, Clock, Check, X, AlertTriangle } from "lucide-
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { AddToCalendarButton } from "@/components/AddToCalendarButton"
 import type { Booking, BookingStatus } from "@/lib/bookings"
 
 function RequestCard({
@@ -95,6 +96,18 @@ function RequestCard({
             <Button variant="outline" className="w-full rounded-none font-mono text-xs uppercase tracking-wider" onClick={() => onDecline(req.id)}>
               <X className="w-3.5 h-3.5 mr-1.5" />Decline
             </Button>
+          </div>
+        )}
+        {isAccepted && (
+          <div className="flex flex-col justify-center gap-2 px-5 py-4 md:w-44 shrink-0">
+            <AddToCalendarButton
+              eventName={req.eventName}
+              dateISO={req.dateISO}
+              location={req.location}
+              durationHours={req.durationHours}
+              counterpartName={req.counterpartName}
+              className="w-full"
+            />
           </div>
         )}
       </div>

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { BOOKING_COLUMNS, mapBooking, type RawBooking, type Booking } from "@/lib/bookings"
 import { joinedFullName } from "@/lib/emt"
 import { buttonVariants } from "@/components/ui/button"
+import { AddToCalendarButton } from "@/components/AddToCalendarButton"
 import { cn } from "@/lib/utils"
 
 export const metadata = { title: "Schedule — Standby" }
@@ -91,9 +92,20 @@ export default async function SchedulePage() {
                     </span>
                   </div>
 
-                  <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 shrink-0 self-start md:self-auto ${status.className}`}>
-                    {status.label}
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0 self-start md:self-auto">
+                    {b.status === "accepted" && (
+                      <AddToCalendarButton
+                        eventName={b.eventName}
+                        dateISO={b.dateISO}
+                        location={b.location}
+                        durationHours={b.durationHours}
+                        counterpartName={b.counterpartName}
+                      />
+                    )}
+                    <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 ${status.className}`}>
+                      {status.label}
+                    </span>
+                  </div>
                 </div>
               )
             })}
