@@ -67,7 +67,7 @@ const SECTIONS: { heading: string; body: string[] }[] = [
   {
     heading: "9. Changes and contact",
     body: [
-      "We may update this Policy; material changes will be reflected by updating the effective date below. Questions or data requests can be sent to privacy@callstandby.org.",
+      "We may update this Policy; material changes will be reflected by updating the effective date below. Questions or data requests can be sent to standbysupport@gmail.com.",
     ],
   },
 ]

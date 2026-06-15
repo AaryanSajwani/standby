@@ -64,7 +64,7 @@ const SECTIONS: { heading: string; body: string[] }[] = [
   {
     heading: "9. Contact",
     body: [
-      "Questions about these Terms can be sent to legal@callstandby.org.",
+      "Questions about these Terms can be sent to standbysupport@gmail.com.",
     ],
   },
 ]
