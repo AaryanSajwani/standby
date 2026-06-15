@@ -12,8 +12,12 @@ them in the Supabase SQL editor (the same place the auth migration lives).
 
 | File | Feature | Status | Breaking? |
 |------|---------|--------|-----------|
-| `0001_emt_availability.sql` | §5 Per-EMT availability calendar | Ready to run | No — additive table |
-| `0002_events_container.sql` | §4.2 Events as the container object | Ready to run | No — nullable columns |
+| `0001_emt_availability.sql` | §5 Per-EMT availability calendar | **Applied + wired** (2026-06-15) | No — additive table |
+| `0002_events_container.sql` | §4.2 Events as the container object | **Applied + wired** (2026-06-15) | No — nullable columns |
+
+> Both migrations have been run and the app code is live (availability calendar on the
+> EMT dashboard/profile; `events` records + `/events/[id]` container page). The "wiring
+> plan" below is kept for reference / future extension.
 
 ## How to run
 
