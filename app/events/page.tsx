@@ -41,7 +41,7 @@ export default async function EventsPage() {
 
   const { data: assessments, error: assessError } = await supabase
     .from("assessments")
-    .select("id, event_name, event_type, event_date, expected_attendance, risk_score, created_at")
+    .select("id, event_id, event_name, event_type, event_date, expected_attendance, risk_score, created_at")
     .eq("organizer_id", user.id)
     .order("created_at", { ascending: false })
 
@@ -110,7 +110,16 @@ export default async function EventsPage() {
                         <FileText className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                         <div className="flex flex-col gap-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-foreground font-medium leading-tight truncate">{latest.event_name}</span>
+                            {latest.event_id ? (
+                              <Link
+                                href={`/events/${latest.event_id}`}
+                                className="text-foreground font-medium leading-tight truncate hover:text-primary transition-colors"
+                              >
+                                {latest.event_name}
+                              </Link>
+                            ) : (
+                              <span className="text-foreground font-medium leading-tight truncate">{latest.event_name}</span>
+                            )}
                             {versions.length > 1 && (
                               <span className="font-mono text-[10px] border border-border text-muted-foreground px-1.5 py-0.5 tabular-nums shrink-0">
                                 v{versions.length}

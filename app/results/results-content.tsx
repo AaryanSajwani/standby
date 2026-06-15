@@ -101,12 +101,42 @@ export function ResultsContent() {
       return
     }
 
+    // Find or create the canonical Event this assessment belongs to (§4.2).
+    // Best-effort: if the events table is absent or errors, the assessment still
+    // saves with a null event_id (prior behavior).
+    let eventId: string | null = null
+    const attendance = parseInt(form.expectedAttendance) || null
+    const { data: existingEvent } = await supabase
+      .from("events")
+      .select("id")
+      .eq("organizer_id", user.id)
+      .eq("name", form.eventName)
+      .maybeSingle()
+    if (existingEvent?.id) {
+      eventId = existingEvent.id
+    } else {
+      const { data: newEvent } = await supabase
+        .from("events")
+        .insert({
+          organizer_id: user.id,
+          name: form.eventName,
+          event_type: form.eventType,
+          event_date: form.eventDate || null,
+          venue_address: form.venueAddress || null,
+          expected_attendance: attendance,
+        })
+        .select("id")
+        .single()
+      eventId = newEvent?.id ?? null
+    }
+
     const { error } = await supabase.from("assessments").insert({
       organizer_id: user.id,
+      event_id: eventId,
       event_name: form.eventName,
       event_type: form.eventType,
       event_date: form.eventDate || null,
-      expected_attendance: parseInt(form.expectedAttendance) || null,
+      expected_attendance: attendance,
       venue_address: form.venueAddress || null,
       form_data: form,
       risk_score: result.riskScore,
