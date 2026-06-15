@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { BOOKING_COLUMNS, mapBooking, type RawBooking } from "@/lib/bookings"
 import { joinedFullName } from "@/lib/emt"
+import { fetchUpcomingAvailability } from "@/lib/availability"
 import { DashboardContent } from "./dashboard-content"
 
 export const metadata = { title: "EMT Dashboard — Standby" }
@@ -35,6 +36,8 @@ export default async function EMTDashboardPage() {
     mapBooking(row as unknown as RawBooking, joinedFullName(row.organizer) ?? "Organizer")
   )
 
+  const availability = await fetchUpcomingAvailability(supabase, user.id)
+
   const displayName =
     user.user_metadata?.full_name ??
     user.user_metadata?.name ??
@@ -48,6 +51,7 @@ export default async function EMTDashboardPage() {
       available={emtProfile.available}
       userId={user.id}
       bookings={bookings}
+      availability={availability}
     />
   )
 }

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { AddToCalendarButton } from "@/components/AddToCalendarButton"
 import type { Booking, BookingStatus } from "@/lib/bookings"
+import { formatAvailabilityDate, type AvailabilityDate } from "@/lib/availability"
 
 function RequestCard({
   req,
@@ -121,12 +122,53 @@ interface DashboardContentProps {
   available: boolean
   userId: string
   bookings: Booking[]
+  availability: AvailabilityDate[]
 }
 
-export function DashboardContent({ displayName, verified, available, userId, bookings }: DashboardContentProps) {
+export function DashboardContent({ displayName, verified, available, userId, bookings, availability }: DashboardContentProps) {
   const [requests, setRequests] = useState<Booking[]>(bookings)
   const [isAvailable, setIsAvailable] = useState(available)
   const [error, setError] = useState<string | null>(null)
+
+  // Availability calendar (emt_availability)
+  const [dates, setDates] = useState<AvailabilityDate[]>(availability)
+  const [newDate, setNewDate] = useState("")
+  const [addingDate, setAddingDate] = useState(false)
+  const todayISO = new Date().toISOString().slice(0, 10)
+
+  const addDate = async () => {
+    if (!newDate) return
+    setAddingDate(true)
+    setError(null)
+    const supabase = createClient()
+    const { data, error: insertError } = await supabase
+      .from("emt_availability")
+      .insert({ emt_id: userId, date: newDate })
+      .select("id, date")
+      .single()
+    setAddingDate(false)
+    if (insertError) {
+      setError(
+        insertError.code === "23505"
+          ? "That date is already on your availability."
+          : `Could not add date: ${insertError.message}`
+      )
+      return
+    }
+    setDates((prev) => [...prev, data as AvailabilityDate].sort((a, b) => a.date.localeCompare(b.date)))
+    setNewDate("")
+  }
+
+  const removeDate = async (id: string) => {
+    const prev = dates
+    setDates((d) => d.filter((x) => x.id !== id))
+    const supabase = createClient()
+    const { error: deleteError } = await supabase.from("emt_availability").delete().eq("id", id)
+    if (deleteError) {
+      setDates(prev)
+      setError(`Could not remove date: ${deleteError.message}`)
+    }
+  }
 
   const pending  = requests.filter((r) => r.status === "pending")
   const upcoming = requests.filter((r) => r.status === "accepted")
@@ -238,6 +280,59 @@ export function DashboardContent({ displayName, verified, available, userId, boo
             <span className="font-mono text-3xl tabular-nums font-bold text-foreground">${Math.round(totalEarnings).toLocaleString()}</span>
           </div>
         </div>
+
+        {/* Availability calendar */}
+        <section className="flex flex-col gap-4">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Your availability</h2>
+          <div className="border border-border bg-card p-5 flex flex-col gap-4">
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="avail-date" className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Add a date you can cover
+                </label>
+                <input
+                  id="avail-date"
+                  type="date"
+                  value={newDate}
+                  min={todayISO}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  className="h-10 px-3 bg-background border border-border text-foreground font-mono text-sm focus:outline-none focus:border-primary [color-scheme:dark]"
+                />
+              </div>
+              <Button
+                onClick={addDate}
+                disabled={!newDate || addingDate}
+                className="rounded-none font-mono text-xs uppercase tracking-wider"
+              >
+                {addingDate ? "Adding…" : "Add date"}
+              </Button>
+            </div>
+            {dates.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No dates marked yet. Add the dates you&apos;re available — organizers see these on your profile.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {dates.map((d) => (
+                  <span
+                    key={d.id}
+                    className="inline-flex items-center gap-2 border border-border bg-surface px-2.5 py-1 font-mono text-xs tabular-nums text-foreground"
+                  >
+                    {formatAvailabilityDate(d.date)}
+                    <button
+                      type="button"
+                      onClick={() => removeDate(d.id)}
+                      className="text-muted-foreground hover:text-risk-high transition-colors"
+                      aria-label={`Remove ${formatAvailabilityDate(d.date)}`}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* Pending requests */}
         <section className="flex flex-col gap-4">

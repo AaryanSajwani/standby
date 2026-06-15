@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/server"
 import { CERT_DISPLAY, EMT_PUBLIC_COLUMNS, joinedFullName } from "@/lib/emt"
+import { fetchUpcomingAvailability, formatAvailabilityDate } from "@/lib/availability"
 import { RequestEmt } from "./request-emt"
 
 interface EMTProfile {
@@ -101,6 +102,9 @@ export default async function EMTProfilePage({
   const {
     data: { user: viewer },
   } = await supabase.auth.getUser()
+
+  // Upcoming available dates (real profiles only; [] if the table isn't present)
+  const availability = isReal ? await fetchUpcomingAvailability(supabase, id, 12) : []
 
   if (!emt) {
     return (
@@ -235,6 +239,27 @@ export default async function EMTProfilePage({
                 <Badge key={type} variant="secondary" className="font-mono text-xs uppercase tracking-wider">
                   {type}
                 </Badge>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Availability */}
+        {availability.length > 0 && (
+          <Card>
+            <CardHeader className="pb-0">
+              <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                Available dates
+              </span>
+            </CardHeader>
+            <CardContent className="pt-3 flex flex-wrap gap-2">
+              {availability.map((d) => (
+                <span
+                  key={d.id}
+                  className="inline-flex items-center border border-border bg-surface px-2.5 py-1 font-mono text-xs tabular-nums text-foreground"
+                >
+                  {formatAvailabilityDate(d.date)}
+                </span>
               ))}
             </CardContent>
           </Card>
