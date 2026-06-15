@@ -5,7 +5,7 @@ export function LandingMethodology() {
         <div className="self-stretch px-4 py-12 md:px-6 md:py-16 lg:py-28 flex flex-col justify-start items-start gap-2">
           <div className="self-stretch flex justify-between items-center">
             <div className="flex-1 px-4 py-8 md:px-12 lg:px-20 md:py-8 lg:py-10 overflow-hidden rounded-xl flex flex-col justify-center items-center gap-6 md:gap-8 lg:gap-10 border border-primary/20 bg-card relative">
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,#E8404A10,transparent)] pointer-events-none rounded-xl" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,#F0424910,transparent)] pointer-events-none rounded-xl" />
               <span className="relative z-10 font-mono text-xs uppercase tracking-[0.2em] text-primary">
                 Why it's defensible
               </span>
