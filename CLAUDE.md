@@ -43,9 +43,11 @@ app/
   schedule/        Upcoming coverage — date-ordered pending/accepted bookings (protected)
   events/          Organizer booking list with statuses (protected)
   for-emts/        Supply-side marketing page (posted-rate model, founding-medic CTA)
+  methodology/     Public methodology page — real risk factors/weights from lib/assessment.ts
   terms/           Terms of Use (starter draft — needs counsel review)
   privacy/         Privacy Policy (starter draft — needs counsel review)
 components/
+  AddToCalendarButton.tsx  Client .ics generator for confirmed shifts (provider-free)
   assessment/      StepIndicator, AssessmentIntakeForm, per-step form components
   marketplace/     FilterSidebar, SearchHeader, StaffingMarketplace
   results/         RiskScore, StaffingCard, EMTProfileCard, EventSummaryPanel
@@ -60,11 +62,13 @@ lib/
   assessment.ts    Risk scoring engine, sessionStorage keys, BookingPrefill type
   bookings.ts      BOOKING_COLUMNS allowlist, Booking mapper, date formatting
   emt.ts           CERT_DISPLAY, EMT_PUBLIC_COLUMNS allowlist, joinedFullName
+  geo.ts           Free keyless Open-Meteo geocoding + weather (venue autocomplete, weather auto-pull)
   utils.ts         cn() Tailwind merge helper
 proxy.ts           Next.js 16 proxy (session refresh + route protection)
 types/
   assessment.ts    AssessmentFormData interface + EMPTY_FORM_DATA constant
 hooks/             use-mobile, use-toast (standard shadcn)
+migrations/        Reviewable Supabase SQL not auto-applied (availability calendar, events container) — see its README
 pointer-ai-landing-page/  Separate Next.js sub-project, own lockfile, not a workspace
 ```
 
