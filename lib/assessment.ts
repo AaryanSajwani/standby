@@ -62,7 +62,8 @@ export interface AssessmentResult {
   staffingBasis: string[]
 }
 
-const ACTIVITY_RISK: Record<string, number> = {
+// Exported so the public /methodology page documents the exact same weights the engine uses
+export const ACTIVITY_RISK: Record<string, number> = {
   "marathon": 9, "sporting-event": 8, "festival": 7, "concert": 7,
   "political-rally": 6, "other": 4, "religious-gathering": 4,
   "trade-show": 3, "corporate": 2, "wedding": 2,

@@ -1,4 +1,4 @@
-import { Calendar, Users, Activity, Check } from "lucide-react"
+import { Calendar, Users, Activity, Check, Download } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -20,6 +20,7 @@ interface EventSummaryPanelProps {
   saveState?: SaveState
   saveDisabled?: boolean
   onStartNew?: () => void
+  onDownload?: () => void
 }
 
 function RiskBar({ value, label }: { value: number; label: string }) {
@@ -44,6 +45,7 @@ export function EventSummaryPanel({
   saveState = "idle",
   saveDisabled = false,
   onStartNew,
+  onDownload,
 }: EventSummaryPanelProps) {
   return (
     <Card className="flex flex-col">
@@ -100,8 +102,8 @@ export function EventSummaryPanel({
 
       <Separator />
 
-      {/* Actions */}
-      <CardContent className="pt-4 space-y-2">
+      {/* Actions — hidden in the printed/PDF report */}
+      <CardContent className="pt-4 space-y-2 print:hidden">
         <Button
           className="w-full font-mono text-xs tracking-wider uppercase"
           onClick={onSaveReport}
@@ -123,6 +125,14 @@ export function EventSummaryPanel({
             Could not save — try again.
           </p>
         )}
+        <Button
+          variant="outline"
+          className="w-full font-mono text-xs tracking-wider uppercase gap-1.5"
+          onClick={onDownload}
+        >
+          <Download className="w-3.5 h-3.5" />
+          Download report (PDF)
+        </Button>
         <Button
           variant="outline"
           className="w-full font-mono text-xs tracking-wider uppercase"

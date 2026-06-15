@@ -178,3 +178,39 @@
 .animate-standby-pulse {
   animation: standby-pulse 2s ease-in-out infinite;
 }
+
+/* ── Print: AHJ report export (window.print → Save as PDF) ──────────────────────
+   Browsers drop dark backgrounds when printing, so flip the tokens to a light,
+   ink-friendly theme. App chrome (nav, footer, buttons, CTAs) is hidden per element
+   via Tailwind's `print:hidden`. */
+@media print {
+  :root {
+    --background: #ffffff;
+    --foreground: #0a0a0a;
+    --card: #ffffff;
+    --card-foreground: #0a0a0a;
+    --popover: #ffffff;
+    --muted: #f4f4f5;
+    --muted-foreground: #3f3f46;
+    --secondary: #f4f4f5;
+    --secondary-foreground: #0a0a0a;
+    --border: #d4d4d8;
+    --surface: #ffffff;
+    --surface-elevated: #f4f4f5;
+  }
+  body {
+    background: #fff !important;
+    color: #0a0a0a !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  section,
+  .print-block {
+    break-inside: avoid;
+  }
+  @page {
+    margin: 1.5cm;
+  }
+}

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 
 // Honest footer — every link points to a route that exists. No placeholder (#)
 // links, no social icons for accounts we don't have yet. See STANDBY-IMPROVEMENTS §2.
@@ -6,6 +7,7 @@ const PRODUCT_LINKS = [
   { label: "Risk assessment", href: "/assess" },
   { label: "Personnel", href: "/personnel" },
   { label: "How it works", href: "/#how-it-works" },
+  { label: "Methodology", href: "/methodology" },
   { label: "Pricing", href: "/#pricing-section" },
 ]
 
@@ -21,11 +23,18 @@ export function LandingFooter() {
       <div className="flex flex-col md:flex-row justify-between items-start gap-8 md:gap-0">
         {/* Left: Logo + tagline */}
         <div className="flex flex-col justify-start items-start gap-6 p-4 md:p-8">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-6 h-6 border border-foreground/40 flex items-center justify-center group-hover:border-primary transition-colors">
-              <div className="w-2 h-2 bg-foreground/40 group-hover:bg-primary transition-colors" />
-            </div>
-            <span className="font-mono text-sm font-semibold tracking-tight text-foreground">STANDBY</span>
+          <Link href="/" className="flex items-center gap-2.5">
+            <Image
+              src="/standby-mark.png"
+              alt="StandBy logo"
+              width={28}
+              height={28}
+              className="h-7 w-7 object-contain"
+            />
+            <span className="font-mono text-sm font-semibold tracking-tight">
+              <span className="text-foreground">STAND</span>
+              <span className="text-primary">BY</span>
+            </span>
           </Link>
           <p className="text-foreground/80 text-sm font-medium leading-[18px] text-left max-w-[220px]">
             Defensible event medical coverage, from risk assessment to staffed roster.

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { ArrowRight } from "lucide-react"
@@ -140,11 +141,23 @@ export function ResultsContent() {
     router.push("/assess")
   }
 
+  // PDF export via the browser print dialog — print CSS flips to a light theme and
+  // hides app chrome, so "Save as PDF" yields a clean AHJ-ready document (§4.6)
+  const handleDownload = () => window.print()
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-6 py-12 lg:px-8">
+        {/* Print-only report header */}
+        <div className="hidden print:flex items-center justify-between mb-6 pb-4 border-b border-border">
+          <span className="font-mono text-sm font-semibold tracking-tight">STANDBY</span>
+          <span className="font-mono text-xs text-muted-foreground">
+            Event Medical Risk Assessment · {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+          </span>
+        </div>
+
         {isSample && (
-          <div className="border border-border bg-surface px-4 py-3 flex items-center gap-3 mb-8">
+          <div className="border border-border bg-surface px-4 py-3 flex items-center gap-3 mb-8 print:hidden">
             <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground shrink-0">
               Sample report
             </span>
@@ -155,7 +168,7 @@ export function ResultsContent() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:block print:gap-0">
           {/* Left Column - Main Report */}
           <div className="lg:col-span-2 space-y-10">
             <header>
@@ -200,10 +213,16 @@ export function ResultsContent() {
                   </li>
                 ))}
               </ul>
+              <Link
+                href="/methodology"
+                className="inline-block mt-4 font-mono text-xs uppercase tracking-wider text-primary hover:underline print:hidden"
+              >
+                See full methodology →
+              </Link>
             </section>
 
             {/* Primary loop action — the whole product thesis in one click (§4.1) */}
-            <div className="border border-primary/40 bg-primary/5 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="border border-primary/40 bg-primary/5 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
               <div className="flex flex-col gap-1">
                 <span className="font-mono text-xs uppercase tracking-widest text-primary">Next step</span>
                 <p className="text-foreground font-medium">
@@ -221,7 +240,7 @@ export function ResultsContent() {
               </Button>
             </div>
 
-            <section>
+            <section className="print:hidden">
               <h2 className="font-mono text-xs tracking-[0.2em] text-muted-foreground uppercase mb-6">
                 Available Personnel
               </h2>
@@ -242,8 +261,8 @@ export function ResultsContent() {
           </div>
 
           {/* Right Column - Sticky Summary */}
-          <div className="lg:col-span-1">
-            <div className="lg:sticky lg:top-8">
+          <div className="lg:col-span-1 print:mt-8">
+            <div className="lg:sticky lg:top-8 print:static">
               <EventSummaryPanel
                 eventName={form.eventName}
                 eventType={EVENT_TYPE_LABELS[form.eventType] ?? form.eventType}
@@ -254,6 +273,7 @@ export function ResultsContent() {
                 saveState={saveState}
                 saveDisabled={isSample}
                 onStartNew={handleStartNew}
+                onDownload={handleDownload}
               />
             </div>
           </div>
