@@ -14,6 +14,20 @@ Two-sided marketplace connecting event organizers with EMTs. Core flow: organize
 | Hosting | Vercel (Aaryan's account — see Dangerous Areas) |
 | Package manager | pnpm |
 
+## Brand
+
+Logo colors are the palette anchors: navy `#041228` (page background) and red `#F04249`
+(primary/accent/risk-high). All colors live in `app/globals.css` as CSS variables — components
+must use semantic tokens (`bg-background`, `text-risk-low`, `var(--border)` in SVG/inline
+styles), never raw hexes or Tailwind palette colors (`emerald-400`, `amber-500`, …).
+Logo assets: `public/standby-logo.png` (full lockup, transparent bg) and
+`public/standby-mark.png` (square mark, used in NavBar/footer/CTA via `next/image`).
+The NavBar is an inverted light surface — style it with the `--nav*` tokens
+(`bg-nav`, `text-nav-foreground`, `text-nav-muted`, `border-nav-border`), and keep it
+solid (no translucency) so dark page content doesn't bleed through while scrolling.
+Both are generated from the root `StandBy Logo.png` (white bg — source of truth, do not
+reference directly in the app).
+
 ## Folder Map
 
 ```
@@ -149,6 +163,17 @@ Full SQL in `.claude/skills/auth/SKILL.md` → "Column-level grants".
 Radix `asChild`/`Slot` patterns do not exist on these components. Before applying any shadcn
 fix sourced from docs or the internet, confirm it targets Base UI.
 See `.claude/skills/frontend-debugging/SKILL.md` for the full hydration playbook.
+
+Two verified Base UI v1.5 gotchas (found via browser repro on the /personnel slider):
+- `Slider.Root` `onValueChange` delivers a **scalar number** for single-thumb sliders even
+  when `value` is passed as a one-element array. Never destructure the callback arg as an
+  array (`([v]) => …` throws "number is not iterable" and freezes the slider); use
+  `(v) => fn(Array.isArray(v) ? v[0] : v)`.
+- Orientation state is emitted as `data-orientation="horizontal|vertical"`, NOT bare
+  `data-horizontal`/`data-vertical` attributes. Tailwind variants must be written
+  `data-[orientation=horizontal]:…`. slider.tsx is fixed; tabs, button-group, scroll-area,
+  toggle-group, and separator still use the stale `data-horizontal:`/`data-vertical:`
+  variants and may have invisible orientation-dependent styles.
 
 ## Self-Improvement Rule
 

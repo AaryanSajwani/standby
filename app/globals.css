@@ -3,89 +3,99 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Brand palette — anchored on the StandBy logo:
+ *   navy #041228 (page anchor) · red #F04249 (sole accent)
+ * Surfaces are a tonal ramp of the navy; text neutrals are clean
+ * off-whites/grays (no blue cast) for breathing room.
+ */
 :root {
-  --background: #1B2A4A;
-  --foreground: #E8EAED;
-  --card: #1F3055;
-  --card-foreground: #E8EAED;
-  --popover: #1F3055;
-  --popover-foreground: #E8EAED;
-  --primary: #E8404A;
+  --background: #041228;
+  --foreground: #F7F8F9;
+  --card: #081C3D;
+  --card-foreground: #F7F8F9;
+  --popover: #081C3D;
+  --popover-foreground: #F7F8F9;
+  --primary: #F04249;
   --primary-foreground: #FFFFFF;
-  --secondary: #253658;
-  --secondary-foreground: #E8EAED;
-  --muted: #253658;
-  --muted-foreground: #8B9AB8;
-  --accent: #E8404A;
+  --secondary: #0D2347;
+  --secondary-foreground: #F7F8F9;
+  --muted: #0D2347;
+  --muted-foreground: #98A0AC;
+  --accent: #F04249;
   --accent-foreground: #FFFFFF;
-  --destructive: #E8404A;
+  --destructive: #F04249;
   --destructive-foreground: #FFFFFF;
-  --border: #2D3F5F;
-  --input: #253658;
-  --ring: #E8404A;
-  --chart-1: #E8404A;
+  --border: #16294E;
+  --input: #0D2347;
+  --ring: #F04249;
+  --chart-1: #F04249;
   --chart-2: #3B82F6;
   --chart-3: #10B981;
   --chart-4: #F59E0B;
-  --chart-5: #14B8A6;
+  --chart-5: #8B5CF6;
   --radius: 0.5rem;
-  --sidebar: #162238;
-  --sidebar-foreground: #E8EAED;
-  --sidebar-primary: #E8404A;
+  --sidebar: #020A1C;
+  --sidebar-foreground: #F7F8F9;
+  --sidebar-primary: #F04249;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #253658;
-  --sidebar-accent-foreground: #E8EAED;
-  --sidebar-border: #2D3F5F;
-  --sidebar-ring: #E8404A;
+  --sidebar-accent: #0D2347;
+  --sidebar-accent-foreground: #F7F8F9;
+  --sidebar-border: #16294E;
+  --sidebar-ring: #F04249;
 
-  --surface: #162238;
-  --surface-elevated: #253658;
-  --grid-line: #2D3F5F;
-  /* Severity ramp stays out of Signal Red (#E8404A) — red is reserved for CTAs/actions.
-     low→green, moderate→amber, high→orange, critical→burnt orange. See ui-conventions skill. */
+  --surface: #020A1C;
+  --surface-elevated: #0D2347;
+  --grid-line: #16294E;
   --risk-low: #10B981;
   --risk-medium: #F59E0B;
-  --risk-high: #F97316;
-  --risk-critical: #C2410C;
-  --accent-functional: #E8404A;
-  --accent-signal: #E8404A;
-  --primary-light: #F87171;
-  --primary-dark: #B91C1C;
+  --risk-high: #F04249;
+  --risk-critical: #F04249;
+  --accent-functional: #F04249;
+  --accent-signal: #F04249;
+  --primary-light: #F4747A;
+  --primary-dark: #C72E35;
+
+  /* Inverted light surface (NavBar) — dark ink on off-white */
+  --nav: #F8F8F9;
+  --nav-foreground: #041228;
+  --nav-muted: #5C6678;
+  --nav-border: #E3E5E9;
 }
 
 .dark {
-  --background: #1B2A4A;
-  --foreground: #E8EAED;
-  --card: #1F3055;
-  --card-foreground: #E8EAED;
-  --popover: #1F3055;
-  --popover-foreground: #E8EAED;
-  --primary: #E8404A;
+  --background: #041228;
+  --foreground: #F7F8F9;
+  --card: #081C3D;
+  --card-foreground: #F7F8F9;
+  --popover: #081C3D;
+  --popover-foreground: #F7F8F9;
+  --primary: #F04249;
   --primary-foreground: #FFFFFF;
-  --secondary: #253658;
-  --secondary-foreground: #E8EAED;
-  --muted: #253658;
-  --muted-foreground: #8B9AB8;
-  --accent: #E8404A;
+  --secondary: #0D2347;
+  --secondary-foreground: #F7F8F9;
+  --muted: #0D2347;
+  --muted-foreground: #98A0AC;
+  --accent: #F04249;
   --accent-foreground: #FFFFFF;
-  --destructive: #E8404A;
+  --destructive: #F04249;
   --destructive-foreground: #FFFFFF;
-  --border: #2D3F5F;
-  --input: #253658;
-  --ring: #E8404A;
-  --chart-1: #E8404A;
+  --border: #16294E;
+  --input: #0D2347;
+  --ring: #F04249;
+  --chart-1: #F04249;
   --chart-2: #3B82F6;
   --chart-3: #10B981;
   --chart-4: #F59E0B;
-  --chart-5: #14B8A6;
-  --sidebar: #162238;
-  --sidebar-foreground: #E8EAED;
-  --sidebar-primary: #E8404A;
+  --chart-5: #8B5CF6;
+  --sidebar: #020A1C;
+  --sidebar-foreground: #F7F8F9;
+  --sidebar-primary: #F04249;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #253658;
-  --sidebar-accent-foreground: #E8EAED;
-  --sidebar-border: #2D3F5F;
-  --sidebar-ring: #E8404A;
+  --sidebar-accent: #0D2347;
+  --sidebar-accent-foreground: #F7F8F9;
+  --sidebar-border: #16294E;
+  --sidebar-ring: #F04249;
 }
 
 @theme inline {
@@ -138,6 +148,10 @@
   --color-accent-signal: var(--accent-signal);
   --color-primary-light: var(--primary-light);
   --color-primary-dark: var(--primary-dark);
+  --color-nav: var(--nav);
+  --color-nav-foreground: var(--nav-foreground);
+  --color-nav-muted: var(--nav-muted);
+  --color-nav-border: var(--nav-border);
 }
 
 @layer base {

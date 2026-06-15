@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -61,6 +62,13 @@ export function LandingCTA() {
       </div>
       <div className="relative z-10 flex flex-col justify-start items-center gap-9 max-w-4xl mx-auto text-center">
         <div className="flex flex-col justify-start items-center gap-4">
+          <Image
+            src="/standby-mark.png"
+            alt="StandBy logo"
+            width={56}
+            height={56}
+            className="h-12 w-12 md:h-14 md:w-14 object-contain mb-2"
+          />
           <h2 className="text-foreground text-4xl md:text-5xl lg:text-[68px] font-semibold leading-tight lg:leading-[76px] break-words max-w-[600px]">
             Medical coverage that starts before the event does.
           </h2>
@@ -70,7 +78,7 @@ export function LandingCTA() {
         </div>
         <Link
           href="/assess"
-          className={cn(buttonVariants({ size: "lg" }), "px-[30px] py-2 rounded-full text-base font-medium shadow-[0px_0px_0px_4px_rgba(232,64,74,0.2)] hover:shadow-[0px_0px_0px_6px_rgba(232,64,74,0.15)] transition-all duration-200")}
+          className={cn(buttonVariants({ size: "lg" }), "px-[30px] py-2 rounded-full text-base font-medium shadow-[0px_0px_0px_4px_rgba(240,66,73,0.2)] hover:shadow-[0px_0px_0px_6px_rgba(240,66,73,0.15)] transition-all duration-200")}
         >
           Start Your Assessment
         </Link>

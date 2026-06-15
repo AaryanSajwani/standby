@@ -5,13 +5,13 @@ export default function RiskScoringIllustration() {
       <div className="relative w-40 h-20 overflow-hidden">
         <svg viewBox="0 0 160 80" className="w-full h-full">
           {/* Background arc */}
-          <path d="M 10 80 A 70 70 0 0 1 150 80" stroke="#2D3F5F" strokeWidth="10" fill="none" strokeLinecap="round" />
+          <path d="M 10 80 A 70 70 0 0 1 150 80" stroke="var(--border)" strokeWidth="10" fill="none" strokeLinecap="round" />
           {/* Low risk segment */}
-          <path d="M 10 80 A 70 70 0 0 1 56 22" stroke="#10B981" strokeWidth="10" fill="none" strokeLinecap="round" />
+          <path d="M 10 80 A 70 70 0 0 1 56 22" stroke="var(--risk-low)" strokeWidth="10" fill="none" strokeLinecap="round" />
           {/* Medium risk segment */}
-          <path d="M 56 22 A 70 70 0 0 1 104 22" stroke="#F59E0B" strokeWidth="10" fill="none" strokeLinecap="round" />
+          <path d="M 56 22 A 70 70 0 0 1 104 22" stroke="var(--risk-medium)" strokeWidth="10" fill="none" strokeLinecap="round" />
           {/* High risk segment */}
-          <path d="M 104 22 A 70 70 0 0 1 150 80" stroke="#E8404A" strokeWidth="10" fill="none" strokeLinecap="round" />
+          <path d="M 104 22 A 70 70 0 0 1 150 80" stroke="var(--risk-high)" strokeWidth="10" fill="none" strokeLinecap="round" />
           {/* Needle */}
           <line x1="80" y1="80" x2="60" y2="28" stroke="var(--foreground)" strokeWidth="2.5" strokeLinecap="round" />
           <circle cx="80" cy="80" r="5" fill="var(--foreground)" />
