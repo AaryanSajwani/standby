@@ -59,6 +59,11 @@ const EMPTY: FormData = {
 
 const STEPS = ["Basics", "Credentials", "Marketplace"]
 
+// Cert upload limits — mirrored server-side by the certifications bucket's
+// file_size_limit + allowed_mime_types (migrations/0004). Keep the two in sync.
+const CERT_MAX_BYTES = 10 * 1024 * 1024 // 10 MB
+const CERT_MIME_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp"]
+
 function StepBar({ current }: { current: number }) {
   return (
     <div className="flex items-center gap-0">
@@ -377,7 +382,23 @@ export function OnboardingForm({ userId }: { userId: string }) {
                     type="file"
                     accept=".jpg,.jpeg,.png,.webp,.pdf"
                     className="hidden"
-                    onChange={(e) => set({ certFile: e.target.files?.[0] ?? null })}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null
+                      if (!f) return set({ certFile: null })
+                      // `accept` is a picker hint, not a guard — validate for real.
+                      // Server-side backstop: bucket file_size_limit + allowed_mime_types
+                      // in migrations/0004 (client checks alone are bypassable).
+                      if (f.size > CERT_MAX_BYTES) {
+                        setError(`File is too large — max ${CERT_MAX_BYTES / 1024 / 1024} MB.`)
+                        return set({ certFile: null })
+                      }
+                      if (!CERT_MIME_TYPES.includes(f.type)) {
+                        setError("Unsupported file type — upload a PDF or image (JPG, PNG, WebP).")
+                        return set({ certFile: null })
+                      }
+                      setError(null)
+                      set({ certFile: f })
+                    }}
                   />
                 </label>
               )}
