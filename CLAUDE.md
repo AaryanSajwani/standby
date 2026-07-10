@@ -175,9 +175,10 @@ Two verified Base UI v1.5 gotchas (found via browser repro on the /personnel sli
   `(v) => fn(Array.isArray(v) ? v[0] : v)`.
 - Orientation state is emitted as `data-orientation="horizontal|vertical"`, NOT bare
   `data-horizontal`/`data-vertical` attributes. Tailwind variants must be written
-  `data-[orientation=horizontal]:…`. slider.tsx is fixed; tabs, button-group, scroll-area,
-  toggle-group, and separator still use the stale `data-horizontal:`/`data-vertical:`
-  variants and may have invisible orientation-dependent styles.
+  `data-[orientation=horizontal]:…`. All shipped components are fixed (slider, tabs,
+  button-group, scroll-area, toggle-group, separator — 2026-07-10). Any NEWLY generated
+  shadcn/base-nova component may reintroduce the stale `data-horizontal:` form — grep for
+  it after every `shadcn add`.
 
 ## Self-Improvement Rule
 
