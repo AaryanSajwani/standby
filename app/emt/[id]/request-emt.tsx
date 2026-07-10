@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ChevronDown, Check } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { BOOKING_PREFILL_KEY, type BookingPrefill } from "@/lib/assessment"
+import { findOrCreateEvent } from "@/lib/events"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
@@ -40,6 +41,9 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
   const [attendance, setAttendance] = useState("")
   const [duration, setDuration] = useState("")
   const [notes, setNotes] = useState("")
+  // Carried from a saved assessment when present; otherwise the booking
+  // find-or-creates the event on submit. Never shown in the form.
+  const [eventId, setEventId] = useState<string | null>(null)
 
   // Prefill from a completed assessment (set by Request Staffing on /results)
   useEffect(() => {
@@ -54,6 +58,7 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
       if (p.attendance) setAttendance(p.attendance)
       if (p.durationHours) setDuration(p.durationHours)
       if (p.notes) setNotes(p.notes)
+      if (p.eventId) setEventId(p.eventId)
       if (viewerId && available) setOpen(true)
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -76,9 +81,25 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
     setError(null)
     const supabase = createClient()
 
+    // Use the event id carried from a saved assessment; otherwise find-or-create
+    // it now (cold path: organizer requested coverage without saving a report)
+    // so the booking still rolls up to /events/[id] by id, not by name.
+    let bookingEventId = eventId
+    if (!bookingEventId) {
+      bookingEventId = await findOrCreateEvent(supabase, {
+        organizerId: viewerId,
+        name: eventName.trim(),
+        eventType,
+        eventDate,
+        venueAddress: location.trim(),
+        expectedAttendance: Number(attendance),
+      })
+    }
+
     const { error: insertError } = await supabase.from("bookings").insert({
       organizer_id: viewerId,
       emt_id: emtId,
+      event_id: bookingEventId,
       event_name: eventName.trim(),
       event_type: eventType,
       event_date: eventDate,

@@ -17,6 +17,10 @@ export interface BookingPrefill {
   attendance: string
   durationHours: string
   notes: string
+  // Set only when Save Report already created the canonical event (§4.2). When
+  // present, the booking links by id with no string-matching; when absent (the
+  // organizer skipped Save Report), the booking path find-or-creates the event.
+  eventId?: string
 }
 
 export const EVENT_TYPE_LABELS: Record<string, string> = {

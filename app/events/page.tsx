@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { BOOKING_COLUMNS, formatEventDate, mapBooking, type RawBooking, type Booking } from "@/lib/bookings"
 import { joinedFullName } from "@/lib/emt"
 import { EVENT_TYPE_LABELS } from "@/lib/assessment"
+import { normalizeEventName } from "@/lib/events"
 import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { AddToCalendarButton } from "@/components/AddToCalendarButton"
@@ -52,7 +53,7 @@ export default async function EventsPage() {
   const assessmentGroups = (() => {
     const byEvent = new Map<string, typeof assessments>()
     for (const a of assessments ?? []) {
-      const key = (a.event_name ?? "").trim().toLowerCase()
+      const key = normalizeEventName(a.event_name)
       const list = byEvent.get(key) ?? []
       list.push(a)
       byEvent.set(key, list)

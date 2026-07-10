@@ -86,12 +86,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const versions = assessments ?? []
   const latestScore = versions.length > 0 ? versions[versions.length - 1].risk_score ?? 0 : null
 
-  // Roster — bookings for this organizer matched to the event by name
+  // Roster — bookings linked to this event by event_id (§4.2). Deliberately NOT
+  // matched by event_name: name-matching was the casing-drift bug. Bookings
+  // created before event_id wiring (event_id IS NULL) will not appear here until
+  // backfilled — that's the intended, explicit transition.
   const { data: rawBookings } = await supabase
     .from("bookings")
     .select(`${BOOKING_COLUMNS}, emt:profiles!bookings_emt_id_fkey ( full_name )`)
     .eq("organizer_id", user.id)
-    .eq("event_name", event.name)
+    .eq("event_id", id)
     .order("created_at", { ascending: false })
 
   const roster = (rawBookings ?? []).map((row) =>

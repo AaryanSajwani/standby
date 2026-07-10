@@ -22,6 +22,7 @@ import {
   type AssessmentResult,
   type BookingPrefill,
 } from "@/lib/assessment"
+import { findOrCreateEvent } from "@/lib/events"
 
 // Sample shown when no completed assessment exists in this session
 const SAMPLE_FORM: AssessmentFormData = {
@@ -58,6 +59,9 @@ export function ResultsContent() {
   const [result, setResult] = useState<AssessmentResult | null>(null)
   const [isSample, setIsSample] = useState(false)
   const [saveState, setSaveState] = useState<SaveState>("idle")
+  // Canonical event id, set once Save Report find-or-creates it. Carried into
+  // the booking prefill so Request Staffing links the booking by id, not name.
+  const [eventId, setEventId] = useState<string | null>(null)
 
   useEffect(() => {
     let formData = SAMPLE_FORM
@@ -101,38 +105,24 @@ export function ResultsContent() {
       return
     }
 
-    // Find or create the canonical Event this assessment belongs to (§4.2).
-    // Best-effort: if the events table is absent or errors, the assessment still
-    // saves with a null event_id (prior behavior).
-    let eventId: string | null = null
+    // Find or create the canonical Event this assessment belongs to (§4.2),
+    // via the shared helper so the matching normalization can't drift from the
+    // /events grouping. Best-effort: a null id means the events table is absent
+    // or errored and the assessment still saves with a null event_id.
     const attendance = parseInt(form.expectedAttendance) || null
-    const { data: existingEvent } = await supabase
-      .from("events")
-      .select("id")
-      .eq("organizer_id", user.id)
-      .eq("name", form.eventName)
-      .maybeSingle()
-    if (existingEvent?.id) {
-      eventId = existingEvent.id
-    } else {
-      const { data: newEvent } = await supabase
-        .from("events")
-        .insert({
-          organizer_id: user.id,
-          name: form.eventName,
-          event_type: form.eventType,
-          event_date: form.eventDate || null,
-          venue_address: form.venueAddress || null,
-          expected_attendance: attendance,
-        })
-        .select("id")
-        .single()
-      eventId = newEvent?.id ?? null
-    }
+    const resolvedEventId = await findOrCreateEvent(supabase, {
+      organizerId: user.id,
+      name: form.eventName,
+      eventType: form.eventType,
+      eventDate: form.eventDate || null,
+      venueAddress: form.venueAddress || null,
+      expectedAttendance: attendance,
+    })
+    setEventId(resolvedEventId)
 
     const { error } = await supabase.from("assessments").insert({
       organizer_id: user.id,
-      event_id: eventId,
+      event_id: resolvedEventId,
       event_name: form.eventName,
       event_type: form.eventType,
       event_date: form.eventDate || null,
@@ -156,6 +146,10 @@ export function ResultsContent() {
       attendance: form.expectedAttendance,
       durationHours: String(result.staffing.hours),
       notes: form.specialConsiderations,
+      // Carry the canonical event id when Save Report already created it, so the
+      // booking links by id with zero string-matching. Omitted → request-emt
+      // find-or-creates the event at booking time (cold path).
+      ...(eventId ? { eventId } : {}),
     }
     try {
       sessionStorage.setItem(BOOKING_PREFILL_KEY, JSON.stringify(prefill))
