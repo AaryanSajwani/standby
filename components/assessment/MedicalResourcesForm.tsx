@@ -1,8 +1,10 @@
 "use client"
 
-import { ChevronDown } from "lucide-react"
+import { useState } from "react"
+import { ChevronDown, MapPin } from "lucide-react"
 import type { AssessmentFormData } from "@/types/assessment"
 import { Button } from "@/components/ui/button"
+import { geocodePlace, fetchNearestHospital, type HospitalResult } from "@/lib/geo"
 
 interface MedicalResourcesFormProps {
   formData: AssessmentFormData
@@ -10,6 +12,8 @@ interface MedicalResourcesFormProps {
   onNext: () => void
   onBack: () => void
 }
+
+type AutofillState = "idle" | "loading" | "filled" | "none" | "error"
 
 const YES_NO_OPTIONS = [
   { value: "", label: "Select…" },
@@ -27,6 +31,30 @@ const MEDICAL_PLAN_OPTIONS = [
 export function MedicalResourcesForm({ formData, onChange, onNext, onBack }: MedicalResourcesFormProps) {
   const isValid = formData.nearestHospitalMiles && formData.hasOnSiteAED && formData.priorMedicalPlan
 
+  const [autofill, setAutofill] = useState<AutofillState>("idle")
+  const [hospital, setHospital] = useState<HospitalResult | null>(null)
+  const canAutofill = formData.venueAddress.trim().length >= 3
+
+  // §4.3 — compute transport distance from the venue instead of asking the
+  // organizer to know it. Straight-line, so it under-reads driving distance —
+  // conservative for the risk engine's >10 mi factor; always user-editable.
+  const handleAutofill = async () => {
+    setAutofill("loading")
+    const places = await geocodePlace(formData.venueAddress, 1)
+    if (places.length === 0) {
+      setAutofill("error")
+      return
+    }
+    const nearest = await fetchNearestHospital(places[0].latitude, places[0].longitude)
+    if (!nearest) {
+      setAutofill("none")
+      return
+    }
+    setHospital(nearest)
+    onChange({ nearestHospitalMiles: String(nearest.distanceMiles) })
+    setAutofill("filled")
+  }
+
   return (
     <div className="h-full flex">
       <div className="w-0.5 bg-accent-signal flex-shrink-0" />
@@ -41,6 +69,39 @@ export function MedicalResourcesForm({ formData, onChange, onNext, onBack }: Med
 
         <div className="flex-1 p-10 overflow-auto">
           <div className="grid gap-10">
+            {/* §4.3 — nearest-hospital auto-fill */}
+            <div className="border border-border bg-surface px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex flex-col gap-1">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Hospital distance auto-fill</span>
+                <p className="text-sm text-foreground">
+                  {canAutofill
+                    ? `Find the nearest hospital to ${formData.venueAddress}`
+                    : "Add a venue (step 2) to find the nearest hospital automatically"}
+                </p>
+                {autofill === "filled" && hospital && (
+                  <span className="text-xs font-mono text-risk-low">
+                    Nearest: {hospital.name} — {hospital.distanceMiles} mi straight-line
+                    {hospital.hasEmergency ? "" : " (ER not confirmed)"}. Review and adjust below.
+                  </span>
+                )}
+                {autofill === "none" && (
+                  <span className="text-xs font-mono text-muted-foreground">No hospital found within 25 mi — enter the distance manually below.</span>
+                )}
+                {autofill === "error" && (
+                  <span className="text-xs font-mono text-muted-foreground">Couldn&apos;t find that location — enter manually below.</span>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleAutofill}
+                disabled={!canAutofill || autofill === "loading"}
+                className="shrink-0 font-mono text-xs uppercase tracking-wider gap-1.5"
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                {autofill === "loading" ? "Searching…" : "Auto-fill"}
+              </Button>
+            </div>
+
             <div className="space-y-4">
               <label className="block text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
                 Distance to Nearest Hospital (miles) <span className="text-risk-high">*</span>

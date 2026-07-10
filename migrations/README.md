@@ -47,6 +47,8 @@ them in the Supabase SQL editor (the same place the auth migration lives).
 ## Still needs a provider key (not a migration)
 - **Real email/SMS notifications (§5):** Resend/Postmark (email) or Twilio (SMS) account +
   API key. The in-app concierge loop + `.ics` calendar export already shipped; this adds push.
-- **Premium venue autocomplete / trauma-center dataset (§4.3):** optional upgrade from the
-  free Open-Meteo geocoding already shipped (e.g. Google Places key + a hospitals dataset
-  for automatic nearest-trauma-center distance).
+- **Premium venue autocomplete / trauma-center dataset (§4.3):** a free version shipped
+  2026-07-10 — Overpass/OSM nearest-hospital auto-fill (straight-line miles, ER tag when
+  OSM has it) on the Medical Resources step. Optional paid upgrade remains: Google Places
+  autocomplete + a verified trauma-level dataset (CMS PoS / state registry) for
+  designation-level accuracy (Level I–IV) and driving distance.

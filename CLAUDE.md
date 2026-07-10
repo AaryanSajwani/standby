@@ -62,7 +62,8 @@ lib/
   assessment.ts    Risk scoring engine, sessionStorage keys, BookingPrefill type
   bookings.ts      BOOKING_COLUMNS allowlist, Booking mapper, date formatting
   emt.ts           CERT_DISPLAY, EMT_PUBLIC_COLUMNS allowlist, joinedFullName
-  geo.ts           Free keyless Open-Meteo geocoding + weather (venue autocomplete, weather auto-pull)
+  geo.ts           Free keyless geo: Open-Meteo geocoding + weather, Overpass/OSM nearest-hospital
+                   (venue autocomplete, weather auto-pull, hospital-distance auto-fill)
   utils.ts         cn() Tailwind merge helper
 proxy.ts           Next.js 16 proxy (session refresh + route protection)
 types/
