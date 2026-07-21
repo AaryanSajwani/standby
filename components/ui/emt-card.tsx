@@ -7,7 +7,9 @@ import { cn } from "@/lib/utils"
 export interface EMTCardProps {
   id: string | number
   name: string
-  certification: "EMT-B" | "EMT-P" | "First Responder" | "AEMT"
+  // EMR/EMT-B are the recruited tiers; AEMT/EMT-P stay in the union so a
+  // legacy profile still renders its true cert (see CERT_DISPLAY in lib/emt.ts)
+  certification: "EMR" | "EMT-B" | "AEMT" | "EMT-P"
   yearsExperience?: number
   eventTypes: string[]
   radiusMiles: number

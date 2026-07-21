@@ -156,7 +156,7 @@ export default function MethodologyPage() {
 
           <Section n="07" title="Staffing recommendation">
             <ul className="flex flex-col gap-2 text-foreground/80 leading-relaxed list-disc pl-5">
-              <li><span className="font-medium text-foreground">Certification:</span> Paramedic (ALS) for High/Critical events; EMT-Basic for Moderate; First Responder for small low-risk events (under 300 attendees), otherwise EMT-Basic.</li>
+              <li><span className="font-medium text-foreground">Certification:</span> EMT-Basic (BLS) is the highest tier Standby staffs — recommended for Moderate risk and above; EMR (first responder) for small low-risk events (under 300 attendees). High/Critical reports additionally carry an explicit ALS-coordination advisory: paramedic-level coverage should be arranged through your local EMS agency and confirmed in medical-director review.</li>
               <li><span className="font-medium text-foreground">Headcount:</span> roughly one EMT per <span className="font-mono text-sm tabular-nums">750</span> attendees, with a floor of <span className="font-mono text-sm tabular-nums">2</span> for High and <span className="font-mono text-sm tabular-nums">3</span> for Critical, capped at <span className="font-mono text-sm tabular-nums">12</span>.</li>
               <li><span className="font-medium text-foreground">Coverage hours:</span> set by event type (e.g. festivals run longer than corporate events).</li>
             </ul>

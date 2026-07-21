@@ -53,7 +53,10 @@ export const ASSESS_TO_BOOKING_EVENT_TYPE: Record<string, string> = {
 // ── Scoring ──────────────────────────────────────────────────────────────────
 
 export type RiskLevel = "LOW" | "MODERATE" | "HIGH" | "CRITICAL"
-export type CertLevel = "First Responder" | "EMT-B" | "EMT-P"
+// BLS tiers only — the supply Standby actually staffs (2026-07-21 repricing).
+// Paramedic/ALS is never *recommended as bookable*; HIGH/CRITICAL reports carry
+// an ALS-coordination advisory line in staffingBasis instead.
+export type CertLevel = "EMR" | "EMT-B"
 
 export interface AssessmentResult {
   riskScore: number
@@ -79,10 +82,11 @@ const COVERAGE_HOURS: Record<string, number> = {
   "religious-gathering": 4, "trade-show": 8, "other": 6,
 }
 
+// Posted-rate bands — keep in sync with the pricing section and the
+// onboarding rate hint (ui-conventions skill → "Pricing model").
 const CERT_RATE_RANGE: Record<CertLevel, [number, number]> = {
-  "First Responder": [35, 45],
-  "EMT-B":           [50, 70],
-  "EMT-P":           [85, 135],
+  "EMR":   [15, 18],
+  "EMT-B": [18, 22],
 }
 
 const clamp10 = (n: number) => Math.min(10, Math.max(1, Math.round(n)))
@@ -133,16 +137,14 @@ export function scoreAssessment(form: AssessmentFormData): AssessmentResult {
     riskScore <= 5 ? "MODERATE" :
     riskScore <= 8 ? "HIGH" : "CRITICAL"
 
-  // Staffing recommendation
+  // Staffing recommendation — EMT-B is the highest tier Standby staffs.
+  // EMR only for small low-risk events; everything else gets EMT-B, and
+  // HIGH/CRITICAL adds the ALS advisory below.
   const certLevel: CertLevel =
-    riskLevel === "HIGH" || riskLevel === "CRITICAL" ? "EMT-P" :
-    riskLevel === "MODERATE" ? "EMT-B" :
-    attendance < 300 ? "First Responder" : "EMT-B"
+    riskLevel === "LOW" && attendance < 300 ? "EMR" : "EMT-B"
 
   const recommendedCertLevels: CertLevel[] =
-    certLevel === "EMT-P" ? ["EMT-P", "EMT-B"] :
-    certLevel === "EMT-B" ? ["EMT-B"] :
-    ["First Responder", "EMT-B"]
+    certLevel === "EMR" ? ["EMR", "EMT-B"] : ["EMT-B"]
 
   let emtCount = Math.max(1, Math.ceil(attendance / 750))
   if (riskLevel === "HIGH") emtCount = Math.max(2, emtCount)
@@ -165,8 +167,8 @@ export function scoreAssessment(form: AssessmentFormData): AssessmentResult {
   const staffingBasis = [
     `Risk weighting combines crowd (${crowd}/10), environmental (${environmental}/10), and activity (${activity}/10) exposure — the factor structure used in mass-gathering patient-presentation models (e.g., Arbon, Hartman).`,
     `${emtCount} ${certLevel} ${emtCount === 1 ? "professional" : "professionals"} recommended: coverage scaled to ${attendance.toLocaleString()} expected attendees, consistent with NAEMSP mass-gathering EMS guidance on personnel ratios.`,
-    certLevel === "EMT-P"
-      ? "Advanced life support (paramedic) coverage indicated for higher-acuity or higher-density events where IV access, cardiac monitoring, or advanced airway management may be required."
+    riskLevel === "HIGH" || riskLevel === "CRITICAL"
+      ? "This risk profile typically warrants advanced life support (ALS) capability on site or on rapid standby. Standby staffs BLS-level providers (EMR, EMT-B) — coordinate paramedic/ALS coverage through your local EMS agency as part of medical-director review."
       : "Basic life support coverage is appropriate for this risk profile; escalate to ALS if attendance, acuity, or crowd density increase.",
     "This is decision support, not a medical order — review and sign-off by a qualified medical director is required before the event.",
   ]

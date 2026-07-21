@@ -43,7 +43,7 @@ const SAMPLE_FORM: AssessmentFormData = {
 const SAMPLE_EMTS = [
   { id: 1, name: "Sarah Mitchell",  certLevel: "EMT-B", yearsExperience: 4, radiusMiles: 15, available: true  },
   { id: 2, name: "Marcus Chen",     certLevel: "EMT-B", yearsExperience: 6, radiusMiles: 20, available: true  },
-  { id: 3, name: "Jordan Williams", certLevel: "EMT-P", yearsExperience: 8, radiusMiles: 25, available: false },
+  { id: 3, name: "Jordan Williams", certLevel: "EMR",   yearsExperience: 8, radiusMiles: 25, available: false },
 ]
 
 function formatDisplayDate(isoDate: string): string {

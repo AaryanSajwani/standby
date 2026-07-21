@@ -128,7 +128,7 @@ export function LandingHero({ emtHref = "/auth?role=emt&next=/emt-dashboard" }: 
             {/* staffing recommendation */}
             <div className="border-t border-border px-5 py-3.5 flex items-center justify-between gap-3">
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Recommended</span>
-              <span className="font-mono text-xs text-foreground">4× EMT-B · 2× EMT-P</span>
+              <span className="font-mono text-xs text-foreground">12× EMT-B · ALS advisory</span>
             </div>
           </div>
 
@@ -139,7 +139,7 @@ export function LandingHero({ emtHref = "/auth?role=emt&next=/emt-dashboard" }: 
             </div>
             <div className="flex flex-col">
               <span className="text-xs font-medium text-foreground leading-tight">M. Rivera matched</span>
-              <span className="font-mono text-[10px] text-muted-foreground">Paramedic · 2.1 mi away</span>
+              <span className="font-mono text-[10px] text-muted-foreground">EMT-B · 2.1 mi away</span>
             </div>
             <span className="w-1.5 h-1.5 rounded-full bg-risk-low shrink-0" />
           </div>

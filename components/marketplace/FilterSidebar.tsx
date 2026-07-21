@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 
 export interface FilterState {
   radius: number
-  certifications: { "EMT-B": boolean; "EMT-P": boolean; "First Responder": boolean }
+  certifications: { "EMT-B": boolean; "EMR": boolean }
   availableNow: boolean
   eventTypes: {
     Concerts: boolean
@@ -27,7 +27,7 @@ export interface FilterState {
 
 export const DEFAULT_FILTERS: FilterState = {
   radius: 50,
-  certifications: { "EMT-B": false, "EMT-P": false, "First Responder": false },
+  certifications: { "EMT-B": false, "EMR": false },
   availableNow: false,
   eventTypes: { Concerts: false, Sports: false, Festivals: false, Corporate: false, "Film & TV": false, "Private Events": false },
   minYearsExperience: 0,
@@ -195,8 +195,7 @@ export function FilterSidebar({ filters, onFiltersChange, counts }: FilterSideba
 
         <FilterSection title="Certification level">
           <CheckboxFilter id="cert-emtb" label="EMT-Basic (EMT-B)" count={counts?.certifications["EMT-B"]} checked={filters.certifications["EMT-B"]} onCheckedChange={(v) => updateCertification("EMT-B", v)} />
-          <CheckboxFilter id="cert-emtp" label="Paramedic (EMT-P)" count={counts?.certifications["EMT-P"]} checked={filters.certifications["EMT-P"]} onCheckedChange={(v) => updateCertification("EMT-P", v)} />
-          <CheckboxFilter id="cert-fr" label="First Responder" count={counts?.certifications["First Responder"]} checked={filters.certifications["First Responder"]} onCheckedChange={(v) => updateCertification("First Responder", v)} />
+          <CheckboxFilter id="cert-emr" label="EMR (First Responder)" count={counts?.certifications["EMR"]} checked={filters.certifications["EMR"]} onCheckedChange={(v) => updateCertification("EMR", v)} />
         </FilterSection>
 
         <FilterSection title="Availability">

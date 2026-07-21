@@ -8,7 +8,7 @@ export const metadata = { title: "Personnel — Standby" }
 // Never statically cache — newly verified EMTs must appear immediately
 export const dynamic = "force-dynamic"
 
-const VALID_CERT_FILTERS = ["EMT-B", "EMT-P", "First Responder"]
+const VALID_CERT_FILTERS = ["EMT-B", "EMR"]
 
 export default async function PersonnelPage({
   searchParams,

@@ -1,8 +1,8 @@
 import { MapPin, Zap } from "lucide-react"
 
 const MATCHES = [
-  { name: "Jordan K.", distance: "2.1 mi", cert: "Paramedic", match: 98 },
-  { name: "Priya M.", distance: "3.4 mi", cert: "AEMT", match: 95 },
+  { name: "Jordan K.", distance: "2.1 mi", cert: "EMT-B", match: 98 },
+  { name: "Priya M.", distance: "3.4 mi", cert: "EMR", match: 95 },
   { name: "Sam T.", distance: "4.0 mi", cert: "EMT-B", match: 91 },
 ]
 

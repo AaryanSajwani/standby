@@ -1,28 +1,23 @@
+// Two BLS tiers — the supply Standby staffs (2026-07-21 repricing; paramedic
+// tier removed until ALS supply exists). Keep in sync with CERT_RATE_RANGE in
+// lib/assessment.ts and the onboarding rate hint.
 const CERT_TIERS = [
   {
-    cert: "First Responder",
-    range: "$35–45",
+    cert: "EMR (First Responder)",
+    range: "$15–18",
     unit: "/hr",
     description:
-      "Entry-level certified coverage for low-density, low-risk events. Best for corporate gatherings, private parties, and small community functions.",
+      "Emergency Medical Responder — entry-level certified coverage for low-density, low-risk events. Best for corporate gatherings, private parties, and small community functions.",
     tags: ["Private events", "Corporate", "≤ 200 attendees"],
   },
   {
-    cert: "EMT-Basic",
-    range: "$50–70",
+    cert: "EMT-Basic (EMT-B)",
+    range: "$18–22",
     unit: "/hr",
     description:
       "BLS-certified coverage — the right fit for most events. Festivals, sporting events, concerts, and any function where a fast basic life support response is required.",
     tags: ["Festivals", "Sports", "Concerts"],
     featured: true,
-  },
-  {
-    cert: "Paramedic",
-    range: "$85–135",
-    unit: "/hr",
-    description:
-      "ALS-certified coverage for high-acuity or high-density events. Required when advanced interventions, IV access, or cardiac monitoring may be needed on site.",
-    tags: ["Large events", "High-risk", "ALS required"],
   },
 ]
 
@@ -90,7 +85,7 @@ export function LandingPricing() {
           <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             EMT posted rates — what the medic keeps
           </span>
-          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border border border-border">
+          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border border border-border">
             {CERT_TIERS.map((tier) => (
               <div
                 key={tier.cert}

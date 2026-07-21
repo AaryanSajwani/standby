@@ -1,8 +1,7 @@
 const BARS = [
-  { label: "EMT-B", count: 4, max: 6, color: "bg-risk-low" },
-  { label: "AEMT", count: 2, max: 6, color: "bg-risk-medium" },
-  { label: "Paramedic", count: 3, max: 6, color: "bg-primary" },
-  { label: "Medical Dir.", count: 1, max: 6, color: "bg-chart-2" },
+  { label: "EMT-B", count: 6, max: 8, color: "bg-risk-low" },
+  { label: "EMR", count: 3, max: 8, color: "bg-risk-medium" },
+  { label: "Medical Dir.", count: 1, max: 8, color: "bg-chart-2" },
 ]
 
 export default function StaffingConfigIllustration() {

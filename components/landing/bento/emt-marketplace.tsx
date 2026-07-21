@@ -1,8 +1,8 @@
 const EMTS = [
-  { initials: "KJ", name: "K. Johnson", cert: "AEMT", exp: "8 yrs", available: true },
-  { initials: "MR", name: "M. Rivera", cert: "Paramedic", exp: "12 yrs", available: true },
-  { initials: "AT", name: "A. Torres", cert: "EMT-B", exp: "3 yrs", available: false },
-  { initials: "SP", name: "S. Patel", cert: "Paramedic", exp: "6 yrs", available: true },
+  { initials: "KJ", name: "K. Johnson", cert: "EMT-B", exp: "8 yrs", available: true },
+  { initials: "MR", name: "M. Rivera", cert: "EMT-B", exp: "12 yrs", available: true },
+  { initials: "AT", name: "A. Torres", cert: "EMR", exp: "3 yrs", available: false },
+  { initials: "SP", name: "S. Patel", cert: "EMT-B", exp: "6 yrs", available: true },
 ]
 
 export default function EMTMarketplaceIllustration() {

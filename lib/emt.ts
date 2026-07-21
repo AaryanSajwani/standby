@@ -1,6 +1,8 @@
-// Maps emt_profiles.cert_level DB values to display strings.
-export const CERT_DISPLAY: Record<string, "First Responder" | "EMT-B" | "AEMT" | "EMT-P"> = {
-  first_responder: "First Responder",
+// Maps emt_profiles.cert_level DB values to display strings. EMR + EMT-B are
+// the tiers Standby recruits (2026-07-21); aemt/emt_p mappings stay so any
+// legacy DB row still renders its true certification instead of lying.
+export const CERT_DISPLAY: Record<string, "EMR" | "EMT-B" | "AEMT" | "EMT-P"> = {
+  first_responder: "EMR",
   emt_b:           "EMT-B",
   aemt:            "AEMT",
   emt_p:           "EMT-P",

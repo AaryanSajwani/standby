@@ -7,11 +7,11 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
+// BLS tiers only — the supply Standby recruits (2026-07-21). Legacy aemt/emt_p
+// DB rows still display correctly via CERT_DISPLAY; they just can't be created here.
 const CERT_LEVELS = [
-  { label: "First Responder", value: "first_responder" },
+  { label: "EMR (First Responder)", value: "first_responder" },
   { label: "EMT-Basic (EMT-B)", value: "emt_b" },
-  { label: "Advanced EMT (AEMT)", value: "aemt" },
-  { label: "Paramedic (EMT-P)", value: "emt_p" },
 ]
 
 const SPECIALIZATIONS = [
@@ -424,12 +424,12 @@ export function OnboardingForm({ userId }: { userId: string }) {
                     max={300}
                     value={form.hourlyRate}
                     onChange={(e) => set({ hourlyRate: e.target.value })}
-                    placeholder="65"
+                    placeholder="20"
                     className="rounded-none font-mono text-sm h-10 pl-7"
                   />
                 </div>
                 <span className="font-mono text-[10px] text-muted-foreground">
-                  Typical: $35–45 FR · $50–70 EMT-B · $85–135 Paramedic
+                  Typical: $15–18 EMR · $18–22 EMT-B
                 </span>
               </div>
 
