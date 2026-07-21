@@ -26,13 +26,15 @@
 | §2 | Dead ends & broken windows | ✅ Shipped — honest footer, `/results` sample-report fallback, `/marketplace` 301, per-route metadata on every page, profile ⊇ card, all CTAs wired |
 | §3 | Nav split + auth | ✅ Shipped — marketing vs app nav by role, Sign in everywhere, protected routes in proxy, post-auth routing by role |
 | §4 | Assessment moat (4.1–4.8) | ✅ Shipped — staff-this-event loop, save + events container, venue autocomplete + auto hospital distance, weather auto-pull, guideline citations, print-to-PDF export, per-event version history, "multi-factor risk model" language |
-| §5 | Personnel marketplace | ✅ Shipped — live filter counts, `/for-emts` founding-medic page, verification badges, booking request → EMT accept flow, availability calendar, honest empty states. (Actual medic recruiting = ongoing, non-code) |
+| §5 | Personnel marketplace | ✅ Shipped — live filter counts, `/for-emts` founding-medic page, verification badges, booking request → EMT accept flow, availability calendar, honest empty states. **Open: email/SMS notifications** — blocked on a Resend (email) / Twilio (SMS) account + API key; in-app loop + `.ics` export cover it meanwhile. (Medic recruiting = ongoing, non-code) |
 | §6 | Monetization | ✅ Copy shipped — buyer-side commission + Premier "coming soon"; billing build deliberately deferred. **Repriced 2026-07-21: EMR $15–18 · EMT-B $18–22; paramedic tier removed** (BLS supply only — engine caps at EMT-B, HIGH/CRITICAL reports carry an ALS-coordination advisory) |
 | §7 | UI polish | ✅ Shipped — emoji → line icons, monograms, footer split (marketing vs app chrome), severity tokens, mono data values, button verb unified to "Request coverage", focus states verified, hydration fix |
 | — | Beyond this doc | Security/abuse pass (2026-07-20/21): per-IP rate limiting, per-user DB insert caps, security headers, error boundaries, open-redirect hardening, magic-link cooldown |
 
 **Remaining items are non-code:** ~10 organizer conversations to validate Premier
-willingness-to-pay, founding-medic recruiting in one metro, counsel review of Terms/Privacy.
+willingness-to-pay, founding-medic recruiting in one metro, counsel review of Terms/Privacy,
+and a Resend API key to unlock booking email notifications (the one outstanding build item —
+wired the same session the key exists).
 
 ---
 
