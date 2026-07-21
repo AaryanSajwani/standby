@@ -78,9 +78,9 @@ export function LandingCTA() {
         </div>
         <Link
           href="/assess"
-          className={cn(buttonVariants({ size: "lg" }), "px-[30px] py-2 rounded-full text-base font-medium shadow-[0px_0px_0px_4px_rgba(240,66,73,0.2)] hover:shadow-[0px_0px_0px_6px_rgba(240,66,73,0.15)] transition-all duration-200")}
+          className={cn(buttonVariants({ size: "lg" }), "px-[30px] py-2 rounded-full text-base font-medium")}
         >
-          Start Your Assessment
+          Start your assessment
         </Link>
       </div>
     </section>

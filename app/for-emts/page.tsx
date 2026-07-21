@@ -60,7 +60,7 @@ export default function ForEmtsPage() {
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <Link
               href="/auth?role=emt&next=/onboarding/emt"
-              className={cn(buttonVariants(), "rounded-full px-6 font-medium shadow-lg shadow-primary/20")}
+              className={cn(buttonVariants(), "rounded-full px-6 font-medium")}
             >
               Create your EMT profile
             </Link>

@@ -51,7 +51,7 @@ export function LandingHero({ emtHref = "/auth?role=emt&next=/emt-dashboard" }: 
       <div className="relative z-10 w-full h-full flex items-center justify-between gap-10 px-2 md:px-12 lg:px-16 text-left">
         <div className="space-y-4 md:space-y-5 lg:space-y-6 max-w-md md:max-w-[460px] lg:max-w-[560px]">
           <div className="inline-flex items-center gap-2 border border-primary/30 bg-primary/5 rounded-full px-3 py-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-standby-pulse" />
             <span className="text-xs font-mono text-primary tracking-widest uppercase">Event Medical Risk Platform</span>
           </div>
           <h1 className="text-foreground text-3xl md:text-4xl lg:text-6xl font-semibold leading-tight">
@@ -62,11 +62,11 @@ export function LandingHero({ emtHref = "/auth?role=emt&next=/emt-dashboard" }: 
           </p>
           <div className="flex flex-col gap-3 pt-1">
             <div className="flex items-center gap-3">
-              <Link href="/assess" className={cn(buttonVariants(), "rounded-full px-6 font-medium shadow-lg shadow-primary/20")}>
-                Start Assessment
+              <Link href="/assess" className={cn(buttonVariants(), "rounded-full px-6 font-medium")}>
+                Start assessment
               </Link>
               <Link href="/personnel" className={cn(buttonVariants({ variant: "outline" }), "rounded-full px-6 font-medium")}>
-                Browse Personnel
+                Browse personnel
               </Link>
             </div>
             <Link href={emtHref} className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors tracking-wide w-fit">
@@ -80,7 +80,7 @@ export function LandingHero({ emtHref = "/auth?role=emt&next=/emt-dashboard" }: 
           {/* soft red glow seating the card */}
           <div className="absolute -inset-10 bg-primary/[0.07] blur-3xl rounded-full pointer-events-none" />
 
-          <div className="relative border border-border bg-card/80 backdrop-blur-sm rounded-xl shadow-2xl shadow-black/40 overflow-hidden">
+          <div className="relative border border-border bg-card rounded-xl overflow-hidden">
             {/* header */}
             <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Risk Assessment</span>
