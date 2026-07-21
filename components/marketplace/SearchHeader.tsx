@@ -53,7 +53,8 @@ export function SearchHeader({
         </div>
 
         {/* Sort */}
-        <Select value={sortBy} onValueChange={onSortChange}>
+        {/* Base UI Select emits `string | null` — null-guard before forwarding */}
+        <Select value={sortBy} onValueChange={(v) => { if (v) onSortChange(v) }}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Sort by…" />
           </SelectTrigger>

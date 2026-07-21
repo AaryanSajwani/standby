@@ -1,7 +1,37 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
+import { clientIp, rateLimit } from "@/lib/rate-limit"
+import { safeInternalPath } from "@/lib/security"
+
+// Per-IP request budgets (fixed 60s windows, per server instance — see
+// lib/rate-limit.ts for the honest scope of that guarantee). Budgets are
+// deliberately generous: one page view fans out into several RSC/prefetch
+// requests, and campus/office NAT puts many users behind one IP. They exist
+// to stop scripted hammering, not to police fast humans.
+const WINDOW_MS = 60_000
+const AUTH_LIMIT = 30 // /auth + /auth/callback — a real sign-in is ~3 requests
+const PAGE_LIMIT = 300 // everything else the matcher lets through
 
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Rate limit before any Supabase work — a 429 must not cost an auth roundtrip.
+  const isAuthPath = pathname === "/auth" || pathname.startsWith("/auth/")
+  const verdict = rateLimit(
+    `${isAuthPath ? "auth" : "page"}:${clientIp(request)}`,
+    isAuthPath ? AUTH_LIMIT : PAGE_LIMIT,
+    WINDOW_MS
+  )
+  if (!verdict.ok) {
+    return new NextResponse("Too many requests. Try again in a moment.", {
+      status: 429,
+      headers: {
+        "Retry-After": String(verdict.retryAfterSec),
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -31,15 +61,13 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { pathname, searchParams } = request.nextUrl
+  const { searchParams } = request.nextUrl
 
-  // Redirect already-signed-in users away from /auth
+  // Redirect already-signed-in users away from /auth. `next` is user input —
+  // safeInternalPath blocks open-redirect payloads before it reaches new URL().
   if (pathname === "/auth" && user) {
-    const next = searchParams.get("next") ?? "/"
-    const url = request.nextUrl.clone()
-    url.pathname = next.startsWith("/") ? next : "/"
-    url.search = ""
-    return NextResponse.redirect(url)
+    const next = safeInternalPath(searchParams.get("next"))
+    return NextResponse.redirect(new URL(next, request.url))
   }
 
   // Protect /emt-dashboard — must be signed in

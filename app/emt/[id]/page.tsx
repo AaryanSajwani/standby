@@ -45,10 +45,16 @@ const MOCK_EMT_DATA: Record<number, EMTProfile> = {
   15: { name: "Kevin O'Brien",    certification: "EMT-P",          yearsExperience: 11, eventTypes: ["Sports", "Concerts", "Film & TV"],               radiusMiles: 65,  available: true,  bio: "Eleven years as paramedic across sports, concerts, and film productions. Former collegiate athlete with strong sports medicine background." },
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 // cache() dedupes the fetch so generateMetadata and the page share one query per request
 const getEmt = cache(async (id: string): Promise<EMTProfile | null> => {
   // Numeric ids are mock sample profiles
   if (/^\d+$/.test(id)) return MOCK_EMT_DATA[parseInt(id, 10)] ?? null
+
+  // Anything else must be a UUID — junk ids would only 400 at Postgres on the
+  // uuid cast, so skip the roundtrip (and the error-log noise) entirely
+  if (!UUID_RE.test(id)) return null
 
   // UUID ids are real profiles. Explicit column list only — RLS lets the
   // public see verified rows (and owners their own), but credential PII

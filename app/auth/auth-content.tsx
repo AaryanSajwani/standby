@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { safeInternalPath } from "@/lib/security"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -21,17 +22,32 @@ export function AuthContent() {
   const searchParams = useSearchParams()
   const role = (searchParams.get("role") ?? "organizer") as "emt" | "organizer"
   // Post-auth landing by role: EMTs → dashboard (which routes to onboarding if needed),
-  // organizers → Events (the app home). See §3.
-  const next = searchParams.get("next") ?? (role === "emt" ? "/emt-dashboard" : "/events")
+  // organizers → Events (the app home). See §3. `next` is user input — sanitize it
+  // here too so an off-origin value never even reaches the callback URL.
+  const next = safeInternalPath(
+    searchParams.get("next"),
+    role === "emt" ? "/emt-dashboard" : "/events"
+  )
   const urlError = searchParams.get("error")
 
   const [email, setEmail] = useState("")
   const [sent, setSent] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [magicLoading, setMagicLoading] = useState(false)
+  // Seconds until another magic link may be sent. Matches Supabase's own
+  // per-email send interval, and keeps click-spam from firing a burst of
+  // emails at an arbitrary address (sends go browser→Supabase directly, so
+  // our middleware can't rate limit them — this is the app-side brake).
+  const [cooldown, setCooldown] = useState(0)
   const [error, setError] = useState<string | null>(
     urlError === "callback_failed" ? "Sign-in failed — please try again." : null
   )
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [cooldown])
 
   const supabase = createClient()
 
@@ -57,6 +73,7 @@ export function AuthContent() {
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (cooldown > 0) return
     setMagicLoading(true)
     setError(null)
     const { error } = await supabase.auth.signInWithOtp({
@@ -70,6 +87,7 @@ export function AuthContent() {
       setError(error.message)
     } else {
       setSent(true)
+      setCooldown(60)
     }
     setMagicLoading(false)
   }
@@ -170,10 +188,10 @@ export function AuthContent() {
           </div>
           <Button
             type="submit"
-            disabled={magicLoading || !email}
+            disabled={magicLoading || !email || cooldown > 0}
             className="w-full rounded-none font-mono text-xs uppercase tracking-wider"
           >
-            {magicLoading ? "Sending…" : "Send magic link"}
+            {magicLoading ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Send magic link"}
           </Button>
         </form>
 

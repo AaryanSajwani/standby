@@ -15,7 +15,8 @@ export async function geocodePlace(query: string, count = 5): Promise<GeoResult[
     `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}` +
     `&count=${count}&language=en&format=json`
   try {
-    const res = await fetch(url)
+    // Timeout so a hung third-party API can't stall the form (fails to manual entry)
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) })
     if (!res.ok) return []
     const data = await res.json()
     return (data.results ?? [])
@@ -47,7 +48,7 @@ export async function fetchWeather(lat: number, lng: number, dateISO: string): P
     `&daily=temperature_2m_max,precipitation_probability_max,weather_code` +
     `&temperature_unit=fahrenheit&timezone=auto&start_date=${dateISO}&end_date=${dateISO}`
   try {
-    const res = await fetch(url)
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) })
     if (!res.ok) return null
     const daily = (await res.json())?.daily
     if (!daily?.time?.length) return null
@@ -127,6 +128,9 @@ async function queryHospitals(lat: number, lng: number, radiusMeters: number): P
           "User-Agent": "standby-assessment/1.0 (callstandby.org)",
         },
         body: `data=${encodeURIComponent(query)}`,
+        // Per-mirror timeout: a hung mirror must fail fast so the next one gets
+        // its turn (the [timeout:10] above is server-side only, not transport)
+        signal: AbortSignal.timeout(8000),
       })
       if (!res.ok) continue
       data = await res.json()

@@ -136,6 +136,42 @@ the EMT recruiting promise while supply is the bottleneck; revisit a seller-side
 gating, and never mock a checkout with hardcoded dollar amounts. Premier CTA stays disabled/"coming
 soon." Full copy rules in the `ui-conventions` skill → "Pricing model."
 
+## Security & Abuse Layers (2026-07-20)
+
+Defense sits in three layers, outermost first. Know which layer owns a given limit
+before changing it:
+
+1. **proxy.ts app-layer rate limiter** (`lib/rate-limit.ts`): per-IP fixed 60s windows —
+   30 req/min on `/auth*`, 300 req/min on everything else the matcher passes. In-memory =
+   **per server instance, best-effort**, good against bursts and single-source floods, not
+   a global guarantee. Keep it BEFORE the Supabase block (429s must not cost an auth
+   roundtrip) and keep budgets generous: one page view fans out into several RSC/prefetch
+   requests, and campus NAT (Cornell demos) puts many users behind one IP.
+2. **DB backstops** (migrations 0004–0005): payload size caps, cross-tenant reference
+   checks, per-user daily insert caps (assessments 100 / events 50 / bookings 100). These
+   are the durable limits — a hostile client speaking raw PostgREST hits them even if it
+   never touches Next.
+3. **Supabase dashboard** (config, not code): Auth rate limits on magic-link/OTP sends and
+   optional CAPTCHA under Authentication → Attack Protection. Magic-link sends go
+   browser→Supabase **directly — proxy.ts can never rate limit them**; the app-side brake
+   is the 60s resend cooldown in `auth-content.tsx`.
+
+**Redirect params are user input.** Any path from `?next=` (or similar) must pass
+`safeInternalPath()` (`lib/security.ts`) before reaching `NextResponse.redirect`/`new URL()`
+— it blocks `https://…`, `//host`, and `/\host` open-redirect payloads. Used in proxy.ts,
+the auth callback, and auth-content; reuse it for every new redirect param.
+
+**Security headers** live in `next.config.mjs` (`securityHeaders`): nosniff, DENY framing,
+referrer policy, permissions policy, HSTS, and a minimal CSP (frame-ancestors/object-src/
+base-uri/form-action only). A full `default-src` CSP is a deliberate non-goal until we adopt
+nonces — Next inline scripts + browser calls to Open-Meteo/Overpass would break.
+
+**Resilience:** `app/error.tsx` + `app/global-error.tsx` + `app/not-found.tsx` are the
+branded failure surfaces; external geo fetches carry `AbortSignal.timeout` so a hung
+third-party API degrades to manual entry instead of stalling the form. TypeScript build
+errors now FAIL the build (`ignoreBuildErrors` removed) — do not re-add the escape hatch;
+fix the types.
+
 ## Dangerous Areas
 
 **Vercel deploys — repo is private, requires explicit GitHub app access.**
@@ -169,7 +205,7 @@ Radix `asChild`/`Slot` patterns do not exist on these components. Before applyin
 fix sourced from docs or the internet, confirm it targets Base UI.
 See `.claude/skills/frontend-debugging/SKILL.md` for the full hydration playbook.
 
-Two verified Base UI v1.5 gotchas (found via browser repro on the /personnel slider):
+Verified Base UI v1.5 gotchas (browser repro on /personnel; typecheck 2026-07-20):
 - `Slider.Root` `onValueChange` delivers a **scalar number** for single-thumb sliders even
   when `value` is passed as a one-element array. Never destructure the callback arg as an
   array (`([v]) => …` throws "number is not iterable" and freezes the slider); use
@@ -180,6 +216,12 @@ Two verified Base UI v1.5 gotchas (found via browser repro on the /personnel sli
   button-group, scroll-area, toggle-group, separator — 2026-07-10). Any NEWLY generated
   shadcn/base-nova component may reintroduce the stale `data-horizontal:` form — grep for
   it after every `shadcn add`.
+- `Select.Root` `onValueChange` is typed `(value: string | null, …)` — passing a handler
+  that takes plain `string` is a type error (and null does occur on clear). Wrap it:
+  `(v) => { if (v) onChange(v) }` (fixed in `SearchHeader.tsx`, 2026-07-20).
+- Unused `components/ui/*` files still type-check at build. `resizable.tsx` and
+  `calendar.tsx` were deleted 2026-07-20 (imports didn't match the installed lib versions —
+  they'd have crashed at first use). Re-generate from shadcn if ever needed; don't restore.
 
 ## Self-Improvement Rule
 

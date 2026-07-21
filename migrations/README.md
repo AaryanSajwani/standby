@@ -16,6 +16,7 @@ them in the Supabase SQL editor (the same place the auth migration lives).
 | `0002_events_container.sql` | §4.2 Events as the container object | **Applied + wired** (2026-06-15) | No — nullable columns |
 | `0003_events_unique_name.sql` | §4.2 Race-safe unique event name per organizer | **Applied + wired** (2026-07-10) | No — additive index |
 | `0004_security_hardening.sql` | Abuse backstops: upload caps, cross-tenant event_id, payload/date bounds | **Pending** — run any time | No — constraints legit clients never hit |
+| `0005_insert_rate_caps.sql` | Per-user daily insert caps (assessments/events/bookings) + supporting indexes | **Pending** — run any time | No — caps sit far above real usage |
 
 > Both migrations have been run and the app code is live (availability calendar on the
 > EMT dashboard/profile; `events` records + `/events/[id]` container page). The "wiring
