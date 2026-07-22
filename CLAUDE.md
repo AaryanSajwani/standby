@@ -54,11 +54,14 @@ components/
   layout/          NavBar, ShellWrapper (wraps every page in root layout.tsx)
   landing/         Marketing landing page sections
   ui/              shadcn-generated components (base-nova / Base UI style)
+  api/
+    notifications/booking/  POST route — booking emails (request→EMT, decision→organizer)
 lib/
   supabase/
     client.ts      Browser client (createBrowserClient from @supabase/ssr)
     server.ts      Server/RSC client (createServerClient, reads Next.js cookies())
   supabase.ts      Legacy anon client — unused, kept for reference
+  notifications.ts Server-only Resend sender + booking email templates (never import client-side)
   assessment.ts    Risk scoring engine, sessionStorage keys, BookingPrefill type
   bookings.ts      BOOKING_COLUMNS allowlist, Booking mapper, date formatting
   emt.ts           CERT_DISPLAY, EMT_PUBLIC_COLUMNS allowlist, joinedFullName
@@ -171,6 +174,19 @@ branded failure surfaces; external geo fetches carry `AbortSignal.timeout` so a 
 third-party API degrades to manual entry instead of stalling the form. TypeScript build
 errors now FAIL the build (`ignoreBuildErrors` removed) — do not re-add the escape hatch;
 fix the types.
+
+**Email notifications (Resend, 2026-07-22).** Booking request → EMT inbox; accept/decline
+→ organizer inbox. Flow: client fires a fire-and-forget POST to
+`/api/notifications/booking` naming only `{ bookingId, event }`; the route authenticates
+the session, loads the booking under RLS, verifies the caller is the right participant AND
+the claimed event matches the stored status, then rebuilds all email content from the DB
+row (client content is never trusted; all fields HTML-escaped). Recipient emails come from
+the `booking_notification_info` security-definer RPC (migration 0006) — auth.users emails
+must NEVER be copied onto `profiles` (the verified-EMT public-read policy would leak
+them). `RESEND_API_KEY` is server-only (`lib/notifications.ts`); `RESEND_FROM` overrides
+the default `notifications@callstandby.org` sender. Every send is best-effort: missing
+key, unverified domain, or missing migration → logged skip, in-app flow stays the source
+of truth. /api/* runs under its own 30 req/min proxy rate tier.
 
 ## Dangerous Areas
 

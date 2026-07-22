@@ -17,6 +17,7 @@ them in the Supabase SQL editor (the same place the auth migration lives).
 | `0003_events_unique_name.sql` | §4.2 Race-safe unique event name per organizer | **Applied + wired** (2026-07-10) | No — additive index |
 | `0004_security_hardening.sql` | Abuse backstops: upload caps, cross-tenant event_id, payload/date bounds | **Applied** (2026-07-21) | No — constraints legit clients never hit |
 | `0005_insert_rate_caps.sql` | Per-user daily insert caps (assessments/events/bookings) + supporting indexes | **Applied** (2026-07-21) | No — caps sit far above real usage |
+| `0006_booking_notification_rpc.sql` | Security-definer RPC: participant emails for booking notification sends | **Pending** — run any time | No — without it, emails silently skip; in-app flow unaffected |
 
 > Both migrations have been run and the app code is live (availability calendar on the
 > EMT dashboard/profile; `events` records + `/events/[id]` container page). The "wiring
@@ -47,8 +48,12 @@ them in the Supabase SQL editor (the same place the auth migration lives).
 - Because `event_id` is nullable, existing rows keep working through the transition.
 
 ## Still needs a provider key (not a migration)
-- **Real email/SMS notifications (§5):** Resend/Postmark (email) or Twilio (SMS) account +
-  API key. The in-app concierge loop + `.ics` calendar export already shipped; this adds push.
+- **Email notifications (§5): SHIPPED 2026-07-22.** Resend key is in env (local + Vercel);
+  booking request → EMT inbox, accept/decline → organizer inbox via
+  `/api/notifications/booking` + `lib/notifications.ts`. Requires migration `0006` (recipient
+  lookup) and the callstandby.org domain verified in Resend — until both, sends skip silently
+  and the in-app loop remains the truth. **SMS (Twilio) deliberately deferred**: per-message
+  cost + US A2P registration overhead isn't worth it at current volume.
 - **Premium venue autocomplete / trauma-center dataset (§4.3):** a free version shipped
   2026-07-10 — Overpass/OSM nearest-hospital auto-fill (straight-line miles, ER tag when
   OSM has it) on the Medical Resources step. Optional paid upgrade remains: Google Places

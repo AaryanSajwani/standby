@@ -189,6 +189,16 @@ export function DashboardContent({ displayName, verified, available, userId, boo
     if (updateError) {
       setRequests(previous)
       setError(`Could not update request: ${updateError.message}`)
+      return
+    }
+    // Best-effort email to the organizer — server rebuilds content from the DB
+    // and verifies the stored status matches. Failure never blocks the update.
+    if (status === "accepted" || status === "declined") {
+      void fetch("/api/notifications/booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: id, event: status }),
+      }).catch(() => {})
     }
   }
 

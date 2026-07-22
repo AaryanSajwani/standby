@@ -96,24 +96,37 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
       })
     }
 
-    const { error: insertError } = await supabase.from("bookings").insert({
-      organizer_id: viewerId,
-      emt_id: emtId,
-      event_id: bookingEventId,
-      event_name: eventName.trim(),
-      event_type: eventType,
-      event_date: eventDate,
-      location: location.trim(),
-      expected_attendance: Number(attendance),
-      duration_hours: durationNum,
-      offered_rate: hourlyRate,
-      notes: notes.trim() || null,
-    })
+    const { data: created, error: insertError } = await supabase
+      .from("bookings")
+      .insert({
+        organizer_id: viewerId,
+        emt_id: emtId,
+        event_id: bookingEventId,
+        event_name: eventName.trim(),
+        event_type: eventType,
+        event_date: eventDate,
+        location: location.trim(),
+        expected_attendance: Number(attendance),
+        duration_hours: durationNum,
+        offered_rate: hourlyRate,
+        notes: notes.trim() || null,
+      })
+      .select("id")
+      .single()
 
     if (insertError) {
       setError(insertError.message)
       setSubmitting(false)
       return
+    }
+    // Best-effort email to the EMT — the server rebuilds content from the DB
+    // row, so this only names the booking. Failure never blocks the request.
+    if (created?.id) {
+      void fetch("/api/notifications/booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: created.id, event: "requested" }),
+      }).catch(() => {})
     }
     try {
       sessionStorage.removeItem(BOOKING_PREFILL_KEY)
@@ -147,8 +160,8 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
           <p className="text-sm text-muted-foreground leading-relaxed">
             Your request is now in {emtName}&apos;s queue — they&apos;ll see it on their dashboard and can
             accept or decline. Track the status on your{" "}
-            <Link href="/events" className="text-foreground underline underline-offset-2">events page</Link>.
-            <span className="block mt-1 text-xs text-muted-foreground/80">Email alerts are coming soon — for now the request lives in the app.</span>
+            <Link href="/events" className="text-foreground underline underline-offset-2">events page</Link>
+            {" "}— you&apos;ll get an email when they respond.
           </p>
         </div>
       </div>

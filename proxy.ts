@@ -10,6 +10,7 @@ import { safeInternalPath } from "@/lib/security"
 // to stop scripted hammering, not to police fast humans.
 const WINDOW_MS = 60_000
 const AUTH_LIMIT = 30 // /auth + /auth/callback — a real sign-in is ~3 requests
+const API_LIMIT = 30 // /api/* — notification pings; one per booking action
 const PAGE_LIMIT = 300 // everything else the matcher lets through
 
 export async function proxy(request: NextRequest) {
@@ -17,9 +18,11 @@ export async function proxy(request: NextRequest) {
 
   // Rate limit before any Supabase work — a 429 must not cost an auth roundtrip.
   const isAuthPath = pathname === "/auth" || pathname.startsWith("/auth/")
+  const isApiPath = pathname.startsWith("/api/")
+  const tier = isAuthPath ? "auth" : isApiPath ? "api" : "page"
   const verdict = rateLimit(
-    `${isAuthPath ? "auth" : "page"}:${clientIp(request)}`,
-    isAuthPath ? AUTH_LIMIT : PAGE_LIMIT,
+    `${tier}:${clientIp(request)}`,
+    isAuthPath ? AUTH_LIMIT : isApiPath ? API_LIMIT : PAGE_LIMIT,
     WINDOW_MS
   )
   if (!verdict.ok) {
