@@ -16,9 +16,10 @@ type NavLink = { href: string; label: string }
 // Signed-out visitors get a marketing nav; the only auth entry used to be buried
 // mid-hero. Signed-in users get an app nav keyed to their role. See §3.
 const MARKETING_LINKS: NavLink[] = [
-  { href: "/#how-it-works",   label: "How it works" },
-  { href: "/#pricing-section", label: "Pricing"     },
-  { href: "/for-emts",        label: "For EMTs"     },
+  { href: "/#how-it-works",    label: "How it works" },
+  { href: "/personnel",        label: "Personnel"    },
+  { href: "/#pricing-section", label: "Pricing"      },
+  { href: "/for-emts",         label: "For EMTs"     },
 ]
 
 const ORGANIZER_LINKS: NavLink[] = [

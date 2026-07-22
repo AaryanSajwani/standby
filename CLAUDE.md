@@ -124,7 +124,8 @@ sample data sits behind a "Sample profiles" banner with no trust signals. Frame 
 `ui-conventions` skill → "Trust & honesty".
 
 **Navigation split.** `NavBar` branches on auth + `user_metadata.role`: signed-out → marketing nav
-(How it works · Pricing · For EMTs · Sign in · Start assessment, no "System Online"); signed-in →
+(How it works · Personnel · Pricing · For EMTs · Sign in · Start assessment, no "System Online" —
+`/personnel` is public, so it belongs in both nav states); signed-in →
 app nav (organizer: Events · New assessment · Personnel · Schedule; EMT: Dashboard · Personnel).
 Every nav link resolves to a real route — no stubs. Post-auth landing: organizer → `/events`,
 EMT → `/emt-dashboard`.

@@ -27,6 +27,7 @@ const SECTIONS: { heading: string; body: string[] }[] = [
     body: [
       "You may create an account as an event organizer or as an EMT. You must provide accurate information, keep your credentials secure, and are responsible for activity under your account. You must be at least 18 years old to use the Service.",
       "EMTs are responsible for the accuracy of the certification and licensure information they submit, and for maintaining valid, current credentials and any insurance required to provide services.",
+      "By using the Service you agree to receive transactional communications about your account and activity — for example sign-in links, booking requests, and booking status notifications sent by email. These are service messages, not marketing.",
     ],
   },
   {
@@ -38,14 +39,14 @@ const SECTIONS: { heading: string; body: string[] }[] = [
   {
     heading: "5. Bookings and payment",
     body: [
-      "When an organizer requests an EMT and the EMT accepts, the resulting engagement is a direct agreement between the organizer and the EMT. EMTs set and keep 100% of their posted hourly rate. Standby facilitates the connection and documentation; we are not a party to the engagement and are not responsible for performance, payment, or disputes between the parties.",
-      "Where Standby charges a fee for paid features (for example, premium compliance reporting), the applicable price and terms will be disclosed before you incur the charge.",
+      "When an organizer requests an EMT and the EMT accepts, the resulting engagement is a direct agreement between the organizer and the EMT. EMTs set and keep 100% of their posted hourly rate, and payment for services is currently arranged directly between the organizer and the EMT. Standby facilitates the connection and documentation; we are not a party to the engagement and are not responsible for performance, payment, or disputes between the parties.",
+      "If Standby introduces a service fee on bookings, it will be charged to the organizer in addition to the EMT's posted rate and shown as its own line item before you commit — it will not be deducted from what the EMT earns. Where Standby charges for paid features (for example, premium compliance reporting), the applicable price and terms will be disclosed before you incur any charge.",
     ],
   },
   {
     heading: "6. Acceptable use",
     body: [
-      "You agree not to misuse the Service: no unlawful, fraudulent, or harmful activity; no submitting false credentials or impersonating others; no scraping, reverse-engineering, or attempting to access data you are not authorized to access; and no use that interferes with the Service’s operation or security.",
+      "You agree not to misuse the Service: no unlawful, fraudulent, or harmful activity; no submitting false credentials or impersonating others; no scraping, automated bulk access, or attempting to access data you are not authorized to access; no circumventing rate limits, authentication, or other security controls; and no use that interferes with the Service’s operation or security.",
     ],
   },
   {
@@ -76,7 +77,7 @@ export default function TermsPage() {
         <header className="flex flex-col gap-3 pb-10 border-b border-border">
           <span className="font-mono text-xs uppercase tracking-[0.2em] text-primary">Legal</span>
           <h1 className="text-4xl font-semibold tracking-tight">Terms of Use</h1>
-          <p className="font-mono text-xs text-muted-foreground">Effective June 14, 2026</p>
+          <p className="font-mono text-xs text-muted-foreground">Effective July 22, 2026</p>
         </header>
 
         <div className="flex flex-col gap-10 py-10">

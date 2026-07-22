@@ -20,23 +20,25 @@ const SECTIONS: { heading: string; body: string[] }[] = [
     body: [
       "Account information: when you sign in with Google or an email magic link, we receive your email address and, where available, your name. We store your selected role (organizer or EMT).",
       "Event and assessment data: details you enter to run a risk assessment (such as event type, expected attendance, venue conditions, dates, and on-site resources) and any assessments or reports you save.",
-      "EMT profile and credential data: for EMTs, the certification level, service area, rate, specializations, and licensure details (such as license number, state, and expiry) you submit during onboarding. Credential fields are stored privately and are never exposed on public marketplace pages.",
+      "EMT profile and credential data: for EMTs, the certification level, service area, rate, specializations, and licensure details (such as license number, state, expiry, and an uploaded certification document) you submit during onboarding. Credential fields and documents are stored privately and are never exposed on public marketplace pages.",
       "Booking data: coverage requests exchanged between organizers and EMTs, including event details and status.",
-      "Usage data: basic technical information (such as log and device data) generated when you use the Service.",
+      "Usage data: basic technical information (such as IP address, log, and device data) generated when you use the Service. We use IP addresses for security purposes such as rate limiting and abuse prevention.",
     ],
   },
   {
     heading: "3. How we use information",
     body: [
       "To provide and operate the Service — authenticate you, generate risk assessments and reports, surface matching personnel, and process coverage requests.",
-      "To verify EMT credentials before a profile is published, to maintain safety and integrity, to communicate with you about your account and requests, and to comply with legal obligations.",
+      "To send transactional service communications — sign-in links, and email notifications about booking requests and their status. These are service messages, not marketing; we do not send marketing email.",
+      "To verify EMT credentials before a profile is published, to maintain safety and integrity, to protect the Service against abuse, and to comply with legal obligations.",
     ],
   },
   {
     heading: "4. How we share information",
     body: [
-      "With other users as needed for the Service: an EMT’s public profile (excluding private credential fields) is visible to organizers; when you send a coverage request, the relevant event details are shared with the EMT you contact.",
-      "With service providers who process data on our behalf under contract — including Supabase (authentication and database), Vercel (hosting), and Google (sign-in). These providers may only use the data to provide their services to us.",
+      "With other users as needed for the Service: an EMT’s public profile (excluding private credential fields) is visible to organizers; when you send a coverage request, the relevant event details are shared with the EMT you contact, and booking notifications include the counterpart’s display name and the event details.",
+      "With service providers who process data on our behalf — including Supabase (authentication, database, and file storage), Vercel (hosting), Google (sign-in), and Resend (delivery of transactional email, which processes your email address and the content of booking notifications). These providers may only use the data to provide their services to us.",
+      "Third-party lookups from your browser: optional assessment conveniences (venue autocomplete, weather auto-fill, and nearest-hospital distance) send the venue text or coordinates and the event date directly from your browser to Open-Meteo and OpenStreetMap’s Overpass service. These requests are not tied to your account and include no other personal information; skipping those fields’ auto-fill avoids the lookups entirely.",
       "For legal reasons, where required to comply with law or protect rights and safety. We do not sell your personal information.",
     ],
   },
@@ -59,13 +61,19 @@ const SECTIONS: { heading: string; body: string[] }[] = [
     ],
   },
   {
-    heading: "8. Children",
+    heading: "8. Cookies",
+    body: [
+      "Standby uses only essential cookies: the session cookies required to keep you signed in, set by our authentication provider (Supabase). We do not use advertising cookies, third-party analytics cookies, or cross-site tracking.",
+    ],
+  },
+  {
+    heading: "9. Children",
     body: [
       "The Service is intended for users 18 and older and is not directed to children. We do not knowingly collect personal information from children under 18.",
     ],
   },
   {
-    heading: "9. Changes and contact",
+    heading: "10. Changes and contact",
     body: [
       "We may update this Policy; material changes will be reflected by updating the effective date below. Questions or data requests can be sent to standbysupport@gmail.com.",
     ],
@@ -79,7 +87,7 @@ export default function PrivacyPage() {
         <header className="flex flex-col gap-3 pb-10 border-b border-border">
           <span className="font-mono text-xs uppercase tracking-[0.2em] text-primary">Legal</span>
           <h1 className="text-4xl font-semibold tracking-tight">Privacy Policy</h1>
-          <p className="font-mono text-xs text-muted-foreground">Effective June 14, 2026</p>
+          <p className="font-mono text-xs text-muted-foreground">Effective July 22, 2026</p>
         </header>
 
         <div className="flex flex-col gap-10 py-10">
