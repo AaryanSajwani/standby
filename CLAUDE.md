@@ -38,7 +38,7 @@ app/
   results/         Risk report computed client-side from sessionStorage via lib/assessment.ts;
                    Save Report (auth-gated insert to assessments), Request Staffing (prefill + /personnel?cert=)
   emt/[id]/        EMT profile detail + booking request form (UUID ids = real, numeric = mock)
-  emt-dashboard/   EMT booking dashboard — real data, accept/decline, availability toggle (protected)
+  emt-dashboard/   EMT booking dashboard — accept/decline, availability, past-shift history (protected)
   personnel/       EMT search/filter UI — verified emt_profiles, mock fallback (force-dynamic)
   schedule/        Upcoming coverage — date-ordered pending/accepted bookings (protected)
   events/          Organizer booking list with statuses (protected)
@@ -184,7 +184,8 @@ row (client content is never trusted; all fields HTML-escaped). Recipient emails
 the `booking_notification_info` security-definer RPC (migration 0006) — auth.users emails
 must NEVER be copied onto `profiles` (the verified-EMT public-read policy would leak
 them). `RESEND_API_KEY` is server-only (`lib/notifications.ts`); `RESEND_FROM` overrides
-the default `notifications@callstandby.org` sender. Every send is best-effort: missing
+the default sender `notifications@send.callstandby.org` — the Resend-verified domain is
+the **send. subdomain**, and the from address must match it exactly or Resend 403s. Every send is best-effort: missing
 key, unverified domain, or missing migration → logged skip, in-app flow stays the source
 of truth. /api/* runs under its own 30 req/min proxy rate tier.
 

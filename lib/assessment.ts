@@ -85,8 +85,8 @@ const COVERAGE_HOURS: Record<string, number> = {
 // Posted-rate bands — keep in sync with the pricing section and the
 // onboarding rate hint (ui-conventions skill → "Pricing model").
 const CERT_RATE_RANGE: Record<CertLevel, [number, number]> = {
-  "EMR":   [15, 18],
-  "EMT-B": [18, 22],
+  "EMR":   [20, 28],
+  "EMT-B": [20, 40],
 }
 
 const clamp10 = (n: number) => Math.min(10, Math.max(1, Math.round(n)))

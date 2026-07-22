@@ -17,7 +17,7 @@ them in the Supabase SQL editor (the same place the auth migration lives).
 | `0003_events_unique_name.sql` | §4.2 Race-safe unique event name per organizer | **Applied + wired** (2026-07-10) | No — additive index |
 | `0004_security_hardening.sql` | Abuse backstops: upload caps, cross-tenant event_id, payload/date bounds | **Applied** (2026-07-21) | No — constraints legit clients never hit |
 | `0005_insert_rate_caps.sql` | Per-user daily insert caps (assessments/events/bookings) + supporting indexes | **Applied** (2026-07-21) | No — caps sit far above real usage |
-| `0006_booking_notification_rpc.sql` | Security-definer RPC: participant emails for booking notification sends | **Pending** — run any time | No — without it, emails silently skip; in-app flow unaffected |
+| `0006_booking_notification_rpc.sql` | Security-definer RPC: participant emails for booking notification sends | **Applied** (2026-07-22) | No — without it, emails silently skip; in-app flow unaffected |
 
 > Both migrations have been run and the app code is live (availability calendar on the
 > EMT dashboard/profile; `events` records + `/events/[id]` container page). The "wiring

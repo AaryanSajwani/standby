@@ -11,15 +11,15 @@ import { SearchHeader } from "@/components/marketplace/SearchHeader"
 // an explicit "Sample profiles" banner. No fabricated trust signals (no stock
 // photos, ratings, review counts, or completed-event tallies). See §1 / §5.
 const MOCK_EMT_DATA: EMTCardProps[] = [
-  { id: 1,  name: "Marcus Chen",      certification: "EMT-B", yearsExperience: 8,  eventTypes: ["Concerts", "Sports", "Festivals"],               radiusMiles: 50,  available: true,  hourlyRate: 22 },
-  { id: 2,  name: "Sarah Mitchell",   certification: "EMT-B", yearsExperience: 4,  eventTypes: ["Corporate", "Private Events"],                   radiusMiles: 25,  available: true,  hourlyRate: 19 },
-  { id: 3,  name: "David Rodriguez",  certification: "EMT-B", yearsExperience: 12, eventTypes: ["Film & TV", "Concerts", "Sports"],               radiusMiles: 75,  available: false, hourlyRate: 22 },
-  { id: 4,  name: "Emily Thompson",   certification: "EMR",   yearsExperience: 2,  eventTypes: ["Corporate", "Festivals"],                        radiusMiles: 30,  available: true,  hourlyRate: 16 },
-  { id: 5,  name: "James Wilson",     certification: "EMT-B", yearsExperience: 6,  eventTypes: ["Sports", "Concerts"],                            radiusMiles: 40,  available: true,  hourlyRate: 20 },
-  { id: 6,  name: "Lisa Nakamura",    certification: "EMT-B", yearsExperience: 10, eventTypes: ["Film & TV", "Private Events", "Corporate"],      radiusMiles: 60,  available: true,  hourlyRate: 21 },
-  { id: 7,  name: "Robert Garcia",    certification: "EMR",   yearsExperience: 3,  eventTypes: ["Festivals", "Concerts"],                         radiusMiles: 35,  available: false, hourlyRate: 15 },
-  { id: 8,  name: "Amanda Foster",    certification: "EMT-B", yearsExperience: 5,  eventTypes: ["Sports", "Corporate"],                           radiusMiles: 45,  available: true,  hourlyRate: 19 },
-  { id: 9,  name: "Michael Park",     certification: "EMT-B", yearsExperience: 15, eventTypes: ["Concerts", "Festivals", "Film & TV", "Sports"],  radiusMiles: 100, available: true,  hourlyRate: 22 },
+  { id: 1,  name: "Marcus Chen",      certification: "EMT-B", yearsExperience: 8,  eventTypes: ["Concerts", "Sports", "Festivals"],               radiusMiles: 50,  available: true,  hourlyRate: 32 },
+  { id: 2,  name: "Sarah Mitchell",   certification: "EMT-B", yearsExperience: 4,  eventTypes: ["Corporate", "Private Events"],                   radiusMiles: 25,  available: true,  hourlyRate: 24 },
+  { id: 3,  name: "David Rodriguez",  certification: "EMT-B", yearsExperience: 12, eventTypes: ["Film & TV", "Concerts", "Sports"],               radiusMiles: 75,  available: false, hourlyRate: 38 },
+  { id: 4,  name: "Emily Thompson",   certification: "EMR",   yearsExperience: 2,  eventTypes: ["Corporate", "Festivals"],                        radiusMiles: 30,  available: true,  hourlyRate: 22 },
+  { id: 5,  name: "James Wilson",     certification: "EMT-B", yearsExperience: 6,  eventTypes: ["Sports", "Concerts"],                            radiusMiles: 40,  available: true,  hourlyRate: 28 },
+  { id: 6,  name: "Lisa Nakamura",    certification: "EMT-B", yearsExperience: 10, eventTypes: ["Film & TV", "Private Events", "Corporate"],      radiusMiles: 60,  available: true,  hourlyRate: 34 },
+  { id: 7,  name: "Robert Garcia",    certification: "EMR",   yearsExperience: 3,  eventTypes: ["Festivals", "Concerts"],                         radiusMiles: 35,  available: false, hourlyRate: 20 },
+  { id: 8,  name: "Amanda Foster",    certification: "EMT-B", yearsExperience: 5,  eventTypes: ["Sports", "Corporate"],                           radiusMiles: 45,  available: true,  hourlyRate: 26 },
+  { id: 9,  name: "Michael Park",     certification: "EMT-B", yearsExperience: 15, eventTypes: ["Concerts", "Festivals", "Film & TV", "Sports"],  radiusMiles: 100, available: true,  hourlyRate: 40 },
 ]
 
 interface StaffingMarketplaceProps {

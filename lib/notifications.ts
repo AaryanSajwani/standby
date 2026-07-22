@@ -7,7 +7,9 @@
 // fail cleanly when the key is missing, the domain isn't verified yet, or
 // migration 0006 hasn't been applied.
 
-const FROM = process.env.RESEND_FROM ?? "Standby <notifications@callstandby.org>"
+// The Resend-verified domain is the send.callstandby.org SUBDOMAIN — the from
+// address must match it exactly or Resend rejects with 403.
+const FROM = process.env.RESEND_FROM ?? "Standby <notifications@send.callstandby.org>"
 
 export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   const key = process.env.RESEND_API_KEY

@@ -23,7 +23,7 @@ const FAQ_DATA = [
   {
     question: "How much does it cost?",
     answer:
-      "Assessing your event, getting a staffing recommendation, and browsing matched EMTs is free. When you book, the EMT keeps 100% of their posted hourly rate — typically $15–18/hr for EMRs (first responders) and $18–22/hr for EMT-Basics — and Standby adds a transparent service fee on top, shown as its own line at checkout. AHJ-ready compliance reporting will be part of Standby Premier; it's free to preview during early access.",
+      "Assessing your event, getting a staffing recommendation, and browsing matched EMTs is free. When you book, the EMT keeps 100% of their posted hourly rate — typically $20–28/hr for EMRs (first responders) and $20–40/hr for EMT-Basics — and Standby adds a transparent service fee on top, shown as its own line at checkout. AHJ-ready compliance reporting will be part of Standby Premier; it's free to preview during early access.",
   },
   {
     question: "What's included in the compliance report?",

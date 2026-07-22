@@ -424,12 +424,12 @@ export function OnboardingForm({ userId }: { userId: string }) {
                     max={300}
                     value={form.hourlyRate}
                     onChange={(e) => set({ hourlyRate: e.target.value })}
-                    placeholder="20"
+                    placeholder="25"
                     className="rounded-none font-mono text-sm h-10 pl-7"
                   />
                 </div>
                 <span className="font-mono text-[10px] text-muted-foreground">
-                  Typical: $15–18 EMR · $18–22 EMT-B
+                  Typical: $20–28 EMR · $20–40 EMT-B
                 </span>
               </div>
 

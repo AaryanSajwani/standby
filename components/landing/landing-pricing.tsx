@@ -4,7 +4,7 @@
 const CERT_TIERS = [
   {
     cert: "EMR (First Responder)",
-    range: "$15–18",
+    range: "$20–28",
     unit: "/hr",
     description:
       "Emergency Medical Responder — entry-level certified coverage for low-density, low-risk events. Best for corporate gatherings, private parties, and small community functions.",
@@ -12,7 +12,7 @@ const CERT_TIERS = [
   },
   {
     cert: "EMT-Basic (EMT-B)",
-    range: "$18–22",
+    range: "$20–40",
     unit: "/hr",
     description:
       "BLS-certified coverage — the right fit for most events. Festivals, sporting events, concerts, and any function where a fast basic life support response is required.",

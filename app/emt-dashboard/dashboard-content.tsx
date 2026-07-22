@@ -13,13 +13,17 @@ function RequestCard({
   req,
   onAccept,
   onDecline,
+  past = false,
 }: {
   req: Booking
   onAccept: (id: string) => void
   onDecline: (id: string) => void
+  /** Accepted shift whose event date has passed — history, not actionable. */
+  past?: boolean
 }) {
   const isPending   = req.status === "pending"
-  const isAccepted  = req.status === "accepted"
+  const isAccepted  = req.status === "accepted" && !past
+  const isCompleted = req.status === "accepted" && past
   const isDeclined  = req.status === "declined"
   const isCancelled = req.status === "cancelled"
 
@@ -39,6 +43,11 @@ function RequestCard({
           {isAccepted && (
             <span className="font-mono text-[10px] uppercase tracking-widest border border-risk-low/30 bg-risk-low/5 text-risk-low px-2 py-0.5">
               Accepted
+            </span>
+          )}
+          {isCompleted && (
+            <span className="font-mono text-[10px] uppercase tracking-widest border border-border text-muted-foreground px-2 py-0.5">
+              Completed
             </span>
           )}
           {isDeclined && (
@@ -171,7 +180,13 @@ export function DashboardContent({ displayName, verified, available, userId, boo
   }
 
   const pending  = requests.filter((r) => r.status === "pending")
-  const upcoming = requests.filter((r) => r.status === "accepted")
+  // Accepted splits on event date: today or later = upcoming, earlier = past
+  // history. dateISO is raw YYYY-MM-DD, so string compare is date compare.
+  const accepted = requests.filter((r) => r.status === "accepted")
+  const upcoming = accepted.filter((r) => !r.dateISO || r.dateISO >= todayISO)
+  const past     = accepted
+    .filter((r) => r.dateISO && r.dateISO < todayISO)
+    .sort((a, b) => b.dateISO.localeCompare(a.dateISO)) // most recent first
   const resolved = requests.filter((r) => r.status === "declined" || r.status === "cancelled")
 
   // Optimistic status update — revert on failure
@@ -393,6 +408,21 @@ export function DashboardContent({ displayName, verified, available, userId, boo
             </div>
           )}
         </section>
+
+        {/* Past shifts — accepted work whose event date has passed */}
+        {past.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Past shifts</h2>
+              <span className="font-mono text-[10px] border border-border text-muted-foreground px-2 py-0.5 tabular-nums">
+                {past.length}
+              </span>
+            </div>
+            <div className="flex flex-col gap-px">
+              {past.map((req) => <RequestCard key={req.id} req={req} onAccept={accept} onDecline={decline} past />)}
+            </div>
+          </section>
+        )}
 
         {resolved.length > 0 && (
           <section className="flex flex-col gap-4">
