@@ -62,13 +62,16 @@ export function LandingCTA() {
       </div>
       <div className="relative z-10 flex flex-col justify-start items-center gap-9 max-w-4xl mx-auto text-center">
         <div className="flex flex-col justify-start items-center gap-4">
-          <Image
-            src="/standby-mark.png"
-            alt="StandBy logo"
-            width={56}
-            height={56}
-            className="h-12 w-12 md:h-14 md:w-14 object-contain mb-2"
-          />
+          {/* Light tile so the navy-on-transparent mark reads on the navy bg */}
+          <span className="h-12 w-12 md:h-14 md:w-14 mb-2 bg-nav border border-nav-border flex items-center justify-center p-1.5">
+            <Image
+              src="/standby-mark.png"
+              alt="StandBy logo"
+              width={56}
+              height={56}
+              className="h-full w-full object-contain"
+            />
+          </span>
           <h2 className="text-foreground text-4xl md:text-5xl lg:text-[68px] font-semibold leading-tight lg:leading-[76px] break-words max-w-[600px]">
             Medical coverage that starts before the event does.
           </h2>

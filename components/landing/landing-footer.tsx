@@ -24,13 +24,17 @@ export function LandingFooter() {
         {/* Left: Logo + tagline */}
         <div className="flex flex-col justify-start items-start gap-6 p-4 md:p-8">
           <Link href="/" className="flex items-center gap-2.5">
-            <Image
-              src="/standby-mark.png"
-              alt="StandBy logo"
-              width={28}
-              height={28}
-              className="h-7 w-7 object-contain"
-            />
+            {/* The mark is navy-on-transparent — on the navy page it needs the
+                light nav surface behind it or it blends away */}
+            <span className="h-8 w-8 shrink-0 bg-nav border border-nav-border flex items-center justify-center p-1">
+              <Image
+                src="/standby-mark.png"
+                alt="StandBy logo"
+                width={28}
+                height={28}
+                className="h-full w-full object-contain"
+              />
+            </span>
             <span className="font-mono text-sm font-semibold tracking-tight">
               <span className="text-foreground">STAND</span>
               <span className="text-primary">BY</span>
