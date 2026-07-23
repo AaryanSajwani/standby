@@ -158,8 +158,10 @@ before changing it:
    checks, per-user daily insert caps (assessments 100 / events 50 / bookings 100),
    booking status-transition trigger (pending→accepted/declined, accepted→cancelled only),
    sanity bounds on client-supplied numbers (rates 1–500, duration 0.5–72 h, attendance
-   ≤1M), owner-folder storage policies on the certifications bucket, and the
-   booking_notifications email-dedupe table. These are the durable limits — a hostile
+   ≤1M), owner-folder storage policies on the certifications bucket (insert + select
+   only — cert objects are append-only, UPDATE/DELETE default-deny so credentials
+   can't be substituted after verification), and the booking_notifications
+   email-dedupe table. These are the durable limits — a hostile
    client speaking raw PostgREST hits them even if it never touches Next.
 3. **Supabase dashboard** (config, not code): Auth rate limits on magic-link/OTP sends and
    optional CAPTCHA under Authentication → Attack Protection. Magic-link sends go

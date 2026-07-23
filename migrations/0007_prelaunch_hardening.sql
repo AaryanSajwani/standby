@@ -36,25 +36,14 @@ create policy "certifications_owner_select" on storage.objects for select
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+-- Deliberately NO update/delete policies: cert objects are append-only. The
+-- app never overwrites or removes them — upload keys are timestamped
+-- (`${userId}/cert_<ts>.<ext>`), so a replacement always writes a new key.
+-- Default-deny on UPDATE/DELETE means a credential document can't be silently
+-- substituted or destroyed after verification. The drops below clear any
+-- such policies left over from an earlier draft of this migration.
 drop policy if exists "certifications_owner_update" on storage.objects;
-create policy "certifications_owner_update" on storage.objects for update
-  to authenticated
-  using (
-    bucket_id = 'certifications'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  )
-  with check (
-    bucket_id = 'certifications'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
-
 drop policy if exists "certifications_owner_delete" on storage.objects;
-create policy "certifications_owner_delete" on storage.objects for delete
-  to authenticated
-  using (
-    bucket_id = 'certifications'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
 
 -- ⚠ After running, check for PRE-EXISTING policies on storage.objects that
 -- also grant access to this bucket under other names (they would widen access
@@ -161,11 +150,12 @@ create policy "participant_select" on public.booking_notifications for select
   );
 
 -- ── Verification (run after applying) ───────────────────────────────────────
--- 1. Bucket is private with exactly the four owner policies:
+-- 1. Bucket is private with exactly the two owner policies (insert + select;
+--    update/delete stay default-deny — append-only):
 --      select public from storage.buckets where id = 'certifications';  → false
 --      select policyname, cmd from pg_policies
 --      where schemaname = 'storage' and tablename = 'objects'
---        and policyname like 'certifications_owner_%';                  → 4 rows
+--        and policyname like 'certifications_owner_%';                  → 2 rows
 -- 2. Transition guard:
 --      update bookings set status = 'accepted' where status = 'declined' ...
 --      → ERROR: Invalid booking status transition: declined -> accepted
