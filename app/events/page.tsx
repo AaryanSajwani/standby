@@ -9,6 +9,7 @@ import { normalizeEventName } from "@/lib/events"
 import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { AddToCalendarButton } from "@/components/AddToCalendarButton"
+import { DeleteAssessmentButton } from "@/components/DeleteAssessmentButton"
 import { cn } from "@/lib/utils"
 
 export const metadata = { title: "Events — Standby" }
@@ -144,6 +145,10 @@ export default async function EventsPage() {
                         >
                           Find staffing
                         </Link>
+                        <DeleteAssessmentButton
+                          ids={versions.map((v) => v.id)}
+                          eventName={latest.event_name}
+                        />
                       </div>
                     </div>
 
