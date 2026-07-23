@@ -195,6 +195,19 @@ export function AuthContent() {
           </Button>
         </form>
 
+        {/* Consent — signing in is account creation, so terms must be at the point of entry */}
+        <p className="px-6 pb-5 -mt-2 font-mono text-[10px] text-muted-foreground leading-relaxed">
+          By continuing you agree to the{" "}
+          <a href="/terms" className="text-foreground hover:text-primary transition-colors">
+            Terms of use
+          </a>{" "}
+          and{" "}
+          <a href="/privacy" className="text-foreground hover:text-primary transition-colors">
+            Privacy policy
+          </a>
+          .
+        </p>
+
         {/* Footer */}
         <div className="border-t border-border px-6 py-3">
           <p className="font-mono text-[10px] text-muted-foreground leading-relaxed">

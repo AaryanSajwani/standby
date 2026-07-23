@@ -68,6 +68,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ sent: false, reason: "recipient_lookup_failed" })
   }
 
+  // Dedupe claim (migration 0007): the PK on (booking_id, event) makes this
+  // race-safe — exactly one caller wins, so re-POSTing the same booking/event
+  // can't fire duplicate emails. 23505 = already claimed. Any other error
+  // (e.g. migration not applied yet) logs and continues — sends stay best-effort.
+  const { error: claimError } = await supabase
+    .from("booking_notifications")
+    .insert({ booking_id: bookingId, event })
+  if (claimError) {
+    if (claimError.code === "23505") {
+      return NextResponse.json({ sent: false, reason: "already_notified" })
+    }
+    console.error("[notifications] dedupe claim failed (continuing):", claimError.message)
+  }
+
   const data: BookingEmailData = {
     eventName: bk.event_name,
     eventDate: bk.event_date,
@@ -76,7 +90,10 @@ export async function POST(request: Request) {
     offeredRate: bk.offered_rate,
     notes: bk.notes,
   }
-  const origin = new URL(request.url).origin
+  // Email CTA links: prefer the canonical origin over the request's Host
+  // header (host-header-injected phishing links are a class worth removing
+  // even though Vercel validates Host). Set SITE_URL in Vercel env.
+  const origin = process.env.SITE_URL ?? new URL(request.url).origin
 
   const { subject, html } =
     event === "requested"

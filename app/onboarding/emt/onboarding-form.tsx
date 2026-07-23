@@ -176,7 +176,11 @@ export function OnboardingForm({ userId }: { userId: string }) {
       // Upload cert document if provided
       let certDocumentPath: string | null = null
       if (form.certFile) {
-        const ext = form.certFile.name.split(".").pop()
+        // Storage key extension comes from the client filename — whitelist it
+        // so arbitrary junk can't end up in object keys (content is already
+        // capped by the bucket MIME allowlist, migrations/0004).
+        const rawExt = form.certFile.name.split(".").pop()?.toLowerCase() ?? ""
+        const ext = ["pdf", "jpg", "jpeg", "png", "webp"].includes(rawExt) ? rawExt : "bin"
         const path = `${userId}/cert_${Date.now()}.${ext}`
         const { error: uploadError } = await supabase.storage
           .from("certifications")

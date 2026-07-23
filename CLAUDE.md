@@ -154,10 +154,13 @@ before changing it:
    a global guarantee. Keep it BEFORE the Supabase block (429s must not cost an auth
    roundtrip) and keep budgets generous: one page view fans out into several RSC/prefetch
    requests, and campus NAT (Cornell demos) puts many users behind one IP.
-2. **DB backstops** (migrations 0004–0005): payload size caps, cross-tenant reference
-   checks, per-user daily insert caps (assessments 100 / events 50 / bookings 100). These
-   are the durable limits — a hostile client speaking raw PostgREST hits them even if it
-   never touches Next.
+2. **DB backstops** (migrations 0004–0007): payload size caps, cross-tenant reference
+   checks, per-user daily insert caps (assessments 100 / events 50 / bookings 100),
+   booking status-transition trigger (pending→accepted/declined, accepted→cancelled only),
+   sanity bounds on client-supplied numbers (rates 1–500, duration 0.5–72 h, attendance
+   ≤1M), owner-folder storage policies on the certifications bucket, and the
+   booking_notifications email-dedupe table. These are the durable limits — a hostile
+   client speaking raw PostgREST hits them even if it never touches Next.
 3. **Supabase dashboard** (config, not code): Auth rate limits on magic-link/OTP sends and
    optional CAPTCHA under Authentication → Attack Protection. Magic-link sends go
    browser→Supabase **directly — proxy.ts can never rate limit them**; the app-side brake
@@ -191,7 +194,10 @@ them). `RESEND_API_KEY` is server-only (`lib/notifications.ts`); `RESEND_FROM` o
 the default sender `notifications@send.callstandby.org` — the Resend-verified domain is
 the **send. subdomain**, and the from address must match it exactly or Resend 403s. Every send is best-effort: missing
 key, unverified domain, or missing migration → logged skip, in-app flow stays the source
-of truth. /api/* runs under its own 30 req/min proxy rate tier.
+of truth. /api/* runs under its own 30 req/min proxy rate tier. Duplicate sends are
+blocked by a race-safe claim on `booking_notifications` (migration 0007) — one email per
+(booking, event), 23505 → `already_notified`. Email CTA links use `SITE_URL` (server env,
+set in Vercel) instead of the request Host header when present.
 
 ## Dangerous Areas
 
