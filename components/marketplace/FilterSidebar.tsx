@@ -9,6 +9,7 @@ import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 import { AvailabilityCalendar, type AvailabilityRange } from "@/components/AvailabilityCalendar"
 import { formatAvailabilityDate } from "@/lib/availability"
+import { cn } from "@/lib/utils"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -146,6 +147,18 @@ function SliderFilter({
 
 // ── Main component ───────────────────────────────────────────────────────────
 
+/** Shared with the mobile Filters toggle in StaffingMarketplace. */
+export function countActiveFilters(filters: FilterState): number {
+  return [
+    ...Object.values(filters.certifications),
+    ...Object.values(filters.eventTypes),
+    filters.availableNow,
+    filters.availabilityRange !== null,
+    filters.minYearsExperience > 0,
+    filters.radius !== 50,
+  ].filter(Boolean).length
+}
+
 interface FilterSidebarProps {
   filters: FilterState
   onFiltersChange: (filters: FilterState) => void
@@ -155,28 +168,23 @@ interface FilterSidebarProps {
     eventTypes: Record<string, number>
     availableNow: number
   }
+  /** Layout override — the mobile panel renders full-width without the side border. */
+  className?: string
 }
 
-export function FilterSidebar({ filters, onFiltersChange, counts }: FilterSidebarProps) {
+export function FilterSidebar({ filters, onFiltersChange, counts, className }: FilterSidebarProps) {
   const updateCertification = (key: keyof FilterState["certifications"], value: boolean) =>
     onFiltersChange({ ...filters, certifications: { ...filters.certifications, [key]: value } })
 
   const updateEventType = (key: keyof FilterState["eventTypes"], value: boolean) =>
     onFiltersChange({ ...filters, eventTypes: { ...filters.eventTypes, [key]: value } })
 
-  const activeFilterCount = [
-    ...Object.values(filters.certifications),
-    ...Object.values(filters.eventTypes),
-    filters.availableNow,
-    filters.availabilityRange !== null,
-    filters.minYearsExperience > 0,
-    filters.radius !== 50,
-  ].filter(Boolean).length
+  const activeFilterCount = countActiveFilters(filters)
 
   const eventTypeKeys = Object.keys(filters.eventTypes) as (keyof FilterState["eventTypes"])[]
 
   return (
-    <aside className="w-72 shrink-0 bg-sidebar border-r border-border">
+    <aside className={cn("w-72 shrink-0 bg-sidebar border-r border-border", className)}>
       <div className="p-5 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sliders className="h-4 w-4 text-foreground" />

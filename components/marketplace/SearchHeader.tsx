@@ -34,9 +34,9 @@ export function SearchHeader({
 }: SearchHeaderProps) {
   return (
     <div className="bg-card border-b border-border">
-      <div className="flex items-center gap-4 p-5">
-        {/* Search */}
-        <div className="relative flex-1 max-w-xl">
+      <div className="flex flex-wrap items-center gap-3 md:gap-4 p-4 md:p-5">
+        {/* Search — full row on phones, inline from sm up */}
+        <div className="relative w-full sm:w-auto sm:flex-1 sm:max-w-xl">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={searchQuery}
@@ -47,7 +47,7 @@ export function SearchHeader({
         </div>
 
         {/* Result count */}
-        <div className="flex items-center gap-2 px-4">
+        <div className="flex items-center gap-2 px-1 sm:px-4">
           <span className="font-mono text-2xl font-bold tabular-nums text-foreground">{resultCount}</span>
           <span className="text-sm text-muted-foreground">available</span>
         </div>

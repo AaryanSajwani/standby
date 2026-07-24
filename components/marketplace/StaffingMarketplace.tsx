@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Activity, ShieldCheck, DollarSign, Clock } from "lucide-react"
+import { Activity, ShieldCheck, DollarSign, Clock, Sliders } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { EMTCard, type EMTCardProps } from "@/components/ui/emt-card"
-import { FilterSidebar, DEFAULT_FILTERS, type FilterState } from "@/components/marketplace/FilterSidebar"
+import { FilterSidebar, DEFAULT_FILTERS, countActiveFilters, type FilterState } from "@/components/marketplace/FilterSidebar"
 import { SearchHeader } from "@/components/marketplace/SearchHeader"
 import { enumerateDays } from "@/lib/availability"
 
@@ -50,6 +50,7 @@ export default function StaffingMarketplace({
   })
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState("recommended")
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   const results = useMemo(() => {
     let list = [...baseData]
@@ -145,9 +146,16 @@ export default function StaffingMarketplace({
         </div>
       </div>
 
-      {/* Body: sidebar + main */}
+      {/* Body: sidebar + main. The sidebar is desktop-only; below lg the same
+          FilterSidebar renders as a full-width collapsible panel behind a
+          "Filters" toggle so the results keep the whole viewport. */}
       <div className="flex flex-1">
-        <FilterSidebar filters={filters} onFiltersChange={setFilters} counts={counts} />
+        <FilterSidebar
+          filters={filters}
+          onFiltersChange={setFilters}
+          counts={counts}
+          className="hidden lg:block"
+        />
 
         <main className="flex-1 flex flex-col min-h-0">
           <SearchHeader
@@ -158,7 +166,37 @@ export default function StaffingMarketplace({
             onSortChange={setSortBy}
           />
 
-          <div className="flex-1 p-6 bg-background">
+          <div className="lg:hidden border-b border-border">
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen((o) => !o)}
+              className="w-full flex items-center justify-between px-5 py-3 bg-card"
+              aria-expanded={mobileFiltersOpen}
+            >
+              <span className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-foreground">
+                <Sliders className="w-3.5 h-3.5" />
+                Filters
+                {countActiveFilters(filters) > 0 && (
+                  <span className="font-mono text-[10px] tabular-nums border border-primary/30 bg-primary/5 text-primary px-1.5 py-0.5">
+                    {countActiveFilters(filters)}
+                  </span>
+                )}
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                {mobileFiltersOpen ? "Hide" : "Show"}
+              </span>
+            </button>
+            {mobileFiltersOpen && (
+              <FilterSidebar
+                filters={filters}
+                onFiltersChange={setFilters}
+                counts={counts}
+                className="w-full border-r-0 border-t border-border"
+              />
+            )}
+          </div>
+
+          <div className="flex-1 p-4 md:p-6 bg-background">
             {/* Sample profiles banner — shown only when falling back to mock data */}
             {isMockFallback && (
               <div className="border border-border bg-surface px-4 py-3 flex items-center gap-3 mb-6">

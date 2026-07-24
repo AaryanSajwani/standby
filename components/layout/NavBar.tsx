@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import Image from "next/image"
-import { Plus } from "lucide-react"
+import { Menu, Plus, X } from "lucide-react"
 import type { User } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
 import { buttonVariants } from "@/components/ui/button"
@@ -39,6 +39,12 @@ export function NavBar() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  // Close the mobile menu on navigation
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     const supabase = createClient()
@@ -119,7 +125,7 @@ export function NavBar() {
         </nav>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 md:gap-4">
         {/* System status — app chrome only, not on the marketing nav */}
         {isSignedIn && (
           <>
@@ -161,7 +167,45 @@ export function NavBar() {
             </Link>
           </>
         )}
+
+        {/* Mobile menu toggle — nav links live in the dropdown below md */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen((o) => !o)}
+          className="md:hidden p-1.5 -mr-1.5 text-nav-foreground"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={menuOpen}
+        >
+          {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
       </div>
+
+      {/* Mobile nav panel */}
+      {menuOpen && (
+        <nav className="md:hidden absolute top-14 left-0 right-0 bg-nav border-b border-nav-border flex flex-col">
+          {links.map(({ href, label }) => {
+            const active = isActive(href)
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                className={[
+                  "px-6 py-3.5 text-sm border-t border-nav-border",
+                  active ? "text-nav-foreground font-medium" : "text-nav-muted",
+                ].join(" ")}
+              >
+                {label}
+              </Link>
+            )
+          })}
+          {isSignedIn && (
+            <span className="px-6 py-3.5 font-mono text-xs text-nav-muted border-t border-nav-border truncate">
+              {user?.user_metadata?.full_name ?? user?.email}
+            </span>
+          )}
+        </nav>
+      )}
     </header>
   )
 }

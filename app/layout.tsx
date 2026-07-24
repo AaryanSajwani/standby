@@ -30,7 +30,9 @@ export default function RootLayout({
       lang="en"
       className={`${geist.variable} ${geistMono.variable} bg-background`}
     >
-      <body className="font-sans antialiased bg-background text-foreground min-h-screen flex flex-col">
+      {/* overflow-x-clip (not -hidden: that breaks the sticky NavBar) stops the
+          landing pages' oversized decorative blurs from letting phones pan sideways */}
+      <body className="font-sans antialiased bg-background text-foreground min-h-screen flex flex-col overflow-x-clip">
         <TooltipProvider>
           <ShellWrapper>{children}</ShellWrapper>
         </TooltipProvider>
