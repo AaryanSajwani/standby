@@ -1,12 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, ChevronUp, Sliders } from "lucide-react"
+import { ChevronDown, ChevronUp, Sliders, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
+import { AvailabilityCalendar, type AvailabilityRange } from "@/components/AvailabilityCalendar"
+import { formatAvailabilityDate } from "@/lib/availability"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -14,6 +16,8 @@ export interface FilterState {
   radius: number
   certifications: { "EMT-B": boolean; "EMR": boolean }
   availableNow: boolean
+  /** Personnel must be available on every day of this range (null = off). */
+  availabilityRange: AvailabilityRange | null
   eventTypes: {
     Concerts: boolean
     Sports: boolean
@@ -29,6 +33,7 @@ export const DEFAULT_FILTERS: FilterState = {
   radius: 50,
   certifications: { "EMT-B": false, "EMR": false },
   availableNow: false,
+  availabilityRange: null,
   eventTypes: { Concerts: false, Sports: false, Festivals: false, Corporate: false, "Film & TV": false, "Private Events": false },
   minYearsExperience: 0,
 }
@@ -60,7 +65,7 @@ function FilterSection({
       </button>
       <div
         className={`overflow-hidden transition-all duration-300 ${
-          isOpen ? "max-h-96 opacity-100 mt-3" : "max-h-0 opacity-0"
+          isOpen ? "max-h-[600px] opacity-100 mt-3" : "max-h-0 opacity-0"
         }`}
       >
         {children}
@@ -163,6 +168,7 @@ export function FilterSidebar({ filters, onFiltersChange, counts }: FilterSideba
     ...Object.values(filters.certifications),
     ...Object.values(filters.eventTypes),
     filters.availableNow,
+    filters.availabilityRange !== null,
     filters.minYearsExperience > 0,
     filters.radius !== 50,
   ].filter(Boolean).length
@@ -200,6 +206,38 @@ export function FilterSidebar({ filters, onFiltersChange, counts }: FilterSideba
 
         <FilterSection title="Availability">
           <CheckboxFilter id="avail-now" label="Available now" count={counts?.availableNow} checked={filters.availableNow} onCheckedChange={(v) => onFiltersChange({ ...filters, availableNow: v })} />
+          <div className="mt-3 flex flex-col gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              Available for dates
+            </span>
+            <AvailabilityCalendar
+              mode="range"
+              compact
+              value={filters.availabilityRange}
+              onChange={(range) => onFiltersChange({ ...filters, availabilityRange: range })}
+              disableBefore={new Date().toISOString().slice(0, 10)}
+            />
+            {filters.availabilityRange?.start && filters.availabilityRange.end ? (
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs tabular-nums text-foreground">
+                  {filters.availabilityRange.start === filters.availabilityRange.end
+                    ? formatAvailabilityDate(filters.availabilityRange.start)
+                    : `${formatAvailabilityDate(filters.availabilityRange.start)} – ${formatAvailabilityDate(filters.availabilityRange.end)}`}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onFiltersChange({ ...filters, availabilityRange: null })}
+                  className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-3 h-3" /> Clear
+                </button>
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground">
+                Drag across a date range to filter by availability
+              </span>
+            )}
+          </div>
         </FilterSection>
 
         <FilterSection title="Event experience">

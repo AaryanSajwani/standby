@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { EMTCard, type EMTCardProps } from "@/components/ui/emt-card"
 import { FilterSidebar, DEFAULT_FILTERS, type FilterState } from "@/components/marketplace/FilterSidebar"
 import { SearchHeader } from "@/components/marketplace/SearchHeader"
+import { enumerateDays } from "@/lib/availability"
 
 // Sample listings — shown only when no verified EMTs exist in the DB yet, behind
 // an explicit "Sample profiles" banner. No fabricated trust signals (no stock
@@ -27,9 +28,15 @@ interface StaffingMarketplaceProps {
   verifiedEmts?: EMTCardProps[]
   /** Cert levels to pre-check in the filter sidebar (from ?cert= on /personnel). */
   initialCertLevels?: string[]
+  /** emt_id → upcoming available dates (YYYY-MM-DD), for the date-range filter. */
+  availabilityByEmt?: Record<string, string[]>
 }
 
-export default function StaffingMarketplace({ verifiedEmts = [], initialCertLevels = [] }: StaffingMarketplaceProps) {
+export default function StaffingMarketplace({
+  verifiedEmts = [],
+  initialCertLevels = [],
+  availabilityByEmt = {},
+}: StaffingMarketplaceProps) {
   const isMockFallback = verifiedEmts.length === 0
   const baseData = isMockFallback ? MOCK_EMT_DATA : verifiedEmts
 
@@ -64,6 +71,20 @@ export default function StaffingMarketplace({ verifiedEmts = [], initialCertLeve
     if (activeEventTypes.length > 0) list = list.filter((e) => e.eventTypes.some((t) => activeEventTypes.includes(t)))
 
     if (filters.availableNow) list = list.filter((e) => e.available)
+
+    // Date-range availability: keep personnel available on EVERY day of the
+    // range (an organizer needs full-event coverage, so any-overlap would
+    // surface medics who can only work part of it). Sample/mock profiles have
+    // no availability rows and drop out — no fabricated availability (§1).
+    if (filters.availabilityRange?.start && filters.availabilityRange.end) {
+      const rangeDays = enumerateDays(filters.availabilityRange.start, filters.availabilityRange.end)
+      list = list.filter((e) => {
+        const days = availabilityByEmt[String(e.id)]
+        if (!days || days.length === 0) return false
+        const daySet = new Set(days)
+        return rangeDays.every((d) => daySet.has(d))
+      })
+    }
     if (filters.minYearsExperience > 0) list = list.filter((e) => (e.yearsExperience ?? 0) >= filters.minYearsExperience)
 
     list = list.filter((e) => e.radiusMiles <= filters.radius || filters.radius >= 100)
@@ -82,7 +103,7 @@ export default function StaffingMarketplace({ verifiedEmts = [], initialCertLeve
     }
 
     return list
-  }, [filters, searchQuery, sortBy, baseData])
+  }, [filters, searchQuery, sortBy, baseData, availabilityByEmt])
 
   // Live option counts from the current personnel set — real numbers, not hardcoded
   const counts = useMemo(() => {
