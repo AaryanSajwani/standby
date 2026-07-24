@@ -36,7 +36,9 @@ export default async function EMTDashboardPage() {
     mapBooking(row as unknown as RawBooking, joinedFullName(row.organizer) ?? "Organizer")
   )
 
-  const availability = await fetchUpcomingAvailability(supabase, user.id)
+  // 730 = the full window the date-sane constraint allows (today + 2 years) —
+  // the calendar needs every upcoming date, not a preview slice
+  const availability = await fetchUpcomingAvailability(supabase, user.id, 730)
 
   const displayName =
     user.user_metadata?.full_name ??

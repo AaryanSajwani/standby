@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Calendar, MapPin, Users, Clock, Check, X, AlertTriangle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { AddToCalendarButton } from "@/components/AddToCalendarButton"
 import type { Booking, BookingStatus } from "@/lib/bookings"
-import { formatAvailabilityDate, type AvailabilityDate } from "@/lib/availability"
+import type { AvailabilityDate } from "@/lib/availability"
+import { AvailabilityCalendar } from "@/components/AvailabilityCalendar"
 
 function RequestCard({
   req,
@@ -139,44 +140,72 @@ export function DashboardContent({ displayName, verified, available, userId, boo
   const [isAvailable, setIsAvailable] = useState(available)
   const [error, setError] = useState<string | null>(null)
 
-  // Availability calendar (emt_availability)
-  const [dates, setDates] = useState<AvailabilityDate[]>(availability)
-  const [newDate, setNewDate] = useState("")
-  const [addingDate, setAddingDate] = useState(false)
+  // Availability calendar (emt_availability). Local state updates live while
+  // dragging; the DB write happens once per drag session (onDragEnd), diffing
+  // against what's known to be persisted instead of wipe-and-reinsert.
+  const [dates, setDates] = useState<string[]>(() => availability.map((a) => a.date))
+  const [savingDates, setSavingDates] = useState(false)
+  const datesRef = useRef<string[]>(dates)
+  datesRef.current = dates
+  const savedDatesRef = useRef<Set<string>>(new Set(availability.map((a) => a.date)))
   const todayISO = new Date().toISOString().slice(0, 10)
+  // emt_availability_date_sane (migration 0004) rejects dates > today + 2 years
+  const maxDateISO = (() => {
+    const d = new Date()
+    d.setFullYear(d.getFullYear() + 2)
+    return d.toISOString().slice(0, 10)
+  })()
 
-  const addDate = async () => {
-    if (!newDate) return
-    setAddingDate(true)
+  const persistAvailability = async (override?: string[]) => {
+    const next = new Set(override ?? datesRef.current)
+    const saved = savedDatesRef.current
+    const adds = [...next].filter((d) => !saved.has(d))
+    const removes = [...saved].filter((d) => !next.has(d))
+    if (adds.length === 0 && removes.length === 0) return
+
+    setSavingDates(true)
     setError(null)
     const supabase = createClient()
-    const { data, error: insertError } = await supabase
-      .from("emt_availability")
-      .insert({ emt_id: userId, date: newDate })
-      .select("id, date")
-      .single()
-    setAddingDate(false)
-    if (insertError) {
-      setError(
-        insertError.code === "23505"
-          ? "That date is already on your availability."
-          : `Could not add date: ${insertError.message}`
-      )
-      return
+
+    if (adds.length > 0) {
+      // ignoreDuplicates → ON CONFLICT DO NOTHING on (emt_id, date), so a
+      // stale client state can't fail the whole save on an existing row
+      const { error: insertError } = await supabase
+        .from("emt_availability")
+        .upsert(adds.map((date) => ({ emt_id: userId, date })), {
+          onConflict: "emt_id,date",
+          ignoreDuplicates: true,
+        })
+      if (insertError) {
+        setError(`Could not save availability: ${insertError.message}`)
+        setDates([...saved].sort())
+        setSavingDates(false)
+        return
+      }
+      adds.forEach((d) => saved.add(d))
     }
-    setDates((prev) => [...prev, data as AvailabilityDate].sort((a, b) => a.date.localeCompare(b.date)))
-    setNewDate("")
+
+    if (removes.length > 0) {
+      const { error: deleteError } = await supabase
+        .from("emt_availability")
+        .delete()
+        .eq("emt_id", userId)
+        .in("date", removes)
+      if (deleteError) {
+        setError(`Could not save availability: ${deleteError.message}`)
+        setDates([...saved].sort())
+        setSavingDates(false)
+        return
+      }
+      removes.forEach((d) => saved.delete(d))
+    }
+
+    setSavingDates(false)
   }
 
-  const removeDate = async (id: string) => {
-    const prev = dates
-    setDates((d) => d.filter((x) => x.id !== id))
-    const supabase = createClient()
-    const { error: deleteError } = await supabase.from("emt_availability").delete().eq("id", id)
-    if (deleteError) {
-      setDates(prev)
-      setError(`Could not remove date: ${deleteError.message}`)
-    }
+  const clearAvailability = () => {
+    setDates([])
+    void persistAvailability([])
   }
 
   const pending  = requests.filter((r) => r.status === "pending")
@@ -309,53 +338,34 @@ export function DashboardContent({ displayName, verified, available, userId, boo
         {/* Availability calendar */}
         <section className="flex flex-col gap-4">
           <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Your availability</h2>
-          <div className="border border-border bg-card p-5 flex flex-col gap-4">
-            <div className="flex flex-wrap items-end gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="avail-date" className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Add a date you can cover
-                </label>
-                <input
-                  id="avail-date"
-                  type="date"
-                  value={newDate}
-                  min={todayISO}
-                  onChange={(e) => setNewDate(e.target.value)}
-                  className="h-10 px-3 bg-background border border-border text-foreground font-mono text-sm focus:outline-none focus:border-primary [color-scheme:dark]"
-                />
-              </div>
-              <Button
-                onClick={addDate}
-                disabled={!newDate || addingDate}
-                className="rounded-none font-mono text-xs uppercase tracking-wider"
-              >
-                {addingDate ? "Adding…" : "Add date"}
-              </Button>
+          <div className="border border-border bg-card p-5 flex flex-col gap-4 max-w-md">
+            <p className="text-sm text-muted-foreground">
+              Click and drag across the days you can cover — changes save automatically.
+              Organizers see these dates on your profile.
+            </p>
+            <AvailabilityCalendar
+              mode="multi"
+              value={dates}
+              onChange={setDates}
+              onDragEnd={() => void persistAvailability()}
+              disableBefore={todayISO}
+              disableAfter={maxDateISO}
+            />
+            <div className="flex items-center justify-between border-t border-border pt-3">
+              <span className="font-mono text-xs tabular-nums text-foreground">
+                {dates.length} {dates.length === 1 ? "day" : "days"} marked
+                {savingDates && <span className="text-muted-foreground"> · Saving…</span>}
+              </span>
+              {dates.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAvailability}
+                  className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground hover:text-risk-high transition-colors"
+                >
+                  <X className="w-3 h-3" /> Clear all dates
+                </button>
+              )}
             </div>
-            {dates.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No dates marked yet. Add the dates you&apos;re available — organizers see these on your profile.
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {dates.map((d) => (
-                  <span
-                    key={d.id}
-                    className="inline-flex items-center gap-2 border border-border bg-surface px-2.5 py-1 font-mono text-xs tabular-nums text-foreground"
-                  >
-                    {formatAvailabilityDate(d.date)}
-                    <button
-                      type="button"
-                      onClick={() => removeDate(d.id)}
-                      className="text-muted-foreground hover:text-risk-high transition-colors"
-                      aria-label={`Remove ${formatAvailabilityDate(d.date)}`}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
         </section>
 
