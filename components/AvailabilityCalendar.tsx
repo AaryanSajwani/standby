@@ -155,6 +155,10 @@ export function AvailabilityCalendar(props: AvailabilityCalendarProps) {
   const dragAction = useRef<"add" | "remove">("add") // multi mode only
   const dragAnchor = useRef<string | null>(null) // range mode only
   const [tempRange, setTempRange] = useState<AvailabilityRange | null>(null)
+  // Touch drags fire emulated mouse events afterwards (mousedown after
+  // touchend) — ignore mouse input briefly after any touch so a tap doesn't
+  // toggle the same day twice.
+  const suppressMouseUntil = useRef(0)
 
   const selectedSet = props.mode === "multi" ? new Set(props.value) : null
   const effectiveRange = props.mode === "range" ? tempRange ?? props.value : null
@@ -173,9 +177,17 @@ export function AvailabilityCalendar(props: AvailabilityCalendarProps) {
       }
       onDragEnd?.()
     }
+    const stopTouch = () => {
+      suppressMouseUntil.current = Date.now() + 800
+      stop()
+    }
     window.addEventListener("mouseup", stop)
+    window.addEventListener("touchend", stopTouch)
+    window.addEventListener("touchcancel", stopTouch)
     return () => {
       window.removeEventListener("mouseup", stop)
+      window.removeEventListener("touchend", stopTouch)
+      window.removeEventListener("touchcancel", stopTouch)
     }
   }, [dragging, tempRange, props, onDragEnd])
 
@@ -214,6 +226,19 @@ export function AvailabilityCalendar(props: AvailabilityCalendarProps) {
       const b = dragAnchor.current < key ? key : dragAnchor.current
       setTempRange({ start: a, end: b })
     }
+  }
+
+  // Touch path: touch-action is disabled on the grid (touch-none), so during
+  // a drag we hit-test the moving finger with elementFromPoint against the
+  // data-daykey markers that only enabled, in-month cells carry.
+  const handleGridTouchMove = (e: React.TouchEvent) => {
+    if (!dragging) return
+    suppressMouseUntil.current = Date.now() + 800
+    const touch = e.touches[0]
+    if (!touch) return
+    const el = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement | null
+    const key = el?.closest<HTMLElement>("[data-daykey]")?.dataset.daykey
+    if (key) handleDragOver(key)
   }
 
   const grid = buildGrid(year, month)
@@ -280,7 +305,10 @@ export function AvailabilityCalendar(props: AvailabilityCalendarProps) {
       </div>
 
       {/* Day grid */}
-      <div className="grid grid-cols-7 gap-px bg-border border border-border">
+      <div
+        className="grid grid-cols-7 gap-px bg-border border border-border touch-none"
+        onTouchMove={handleGridTouchMove}
+      >
         {grid.map((cell) => {
           const disabled = !cell.inMonth || isDisabledKey(cell.key)
           const isToday = cell.key === tk && cell.inMonth
@@ -302,11 +330,16 @@ export function AvailabilityCalendar(props: AvailabilityCalendarProps) {
               key={cell.key}
               data-daykey={!disabled ? cell.key : undefined}
               onMouseDown={(e) => {
+                if (Date.now() < suppressMouseUntil.current) return
                 e.preventDefault()
                 handleDown(cell)
               }}
               onMouseEnter={() => {
                 if (!disabled) handleDragOver(cell.key)
+              }}
+              onTouchStart={() => {
+                suppressMouseUntil.current = Date.now() + 800
+                handleDown(cell)
               }}
               className={cn(
                 "relative flex items-center justify-center bg-card",
