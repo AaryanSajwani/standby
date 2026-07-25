@@ -189,14 +189,20 @@ fix the types.
 `/api/notifications/booking` naming only `{ bookingId, event }`; the route authenticates
 the session, loads the booking under RLS, verifies the caller is the right participant AND
 the claimed event matches the stored status, then rebuilds all email content from the DB
-row (client content is never trusted; all fields HTML-escaped). Recipient emails come from
-the `booking_notification_info` security-definer RPC (migration 0006) — auth.users emails
-must NEVER be copied onto `profiles` (the verified-EMT public-read policy would leak
-them). `RESEND_API_KEY` is server-only (`lib/notifications.ts`); `RESEND_FROM` overrides
-the default sender `notifications@send.callstandby.org` — the Resend-verified domain is
-the **send. subdomain**, and the from address must match it exactly or Resend 403s. Every send is best-effort: missing
-key, unverified domain, or missing migration → logged skip, in-app flow stays the source
-of truth. /api/* runs under its own 30 req/min proxy rate tier. Duplicate sends are
+row (client content is never trusted; all fields HTML-escaped). Recipient emails are
+resolved **server-side with the service role** (`lib/supabase/admin.ts`,
+`SUPABASE_SERVICE_ROLE_KEY`) *after* the participant + consistency checks — never returned
+to the caller. This replaced the `booking_notification_info` authenticated RPC (migration
+0008 revoked its EXECUTE grant): that RPC was directly callable via PostgREST and returned
+raw `auth.users` emails to any participant, so an organizer who booked a verified EMT could
+harvest emails. Rule: anything the route can read *as the user* the user can read too —
+resolve counterparty PII with the service role, not a broadly-granted definer RPC.
+auth.users emails must NEVER be copied onto `profiles` (the verified-EMT public-read policy
+would leak them). `RESEND_API_KEY` is server-only (`lib/notifications.ts`); `RESEND_FROM`
+overrides the default sender `notifications@send.callstandby.org` — the Resend-verified
+domain is the **send. subdomain**, and the from address must match it exactly or Resend
+403s. Every send is best-effort: missing Resend key, missing service-role key, unverified
+domain, or missing migration → logged skip, in-app flow stays the source of truth. /api/* runs under its own 30 req/min proxy rate tier. Duplicate sends are
 blocked by a race-safe claim on `booking_notifications` (migration 0007) — one email per
 (booking, event), 23505 → `already_notified`. Email CTA links use `SITE_URL` (server env,
 set in Vercel) instead of the request Host header when present.
@@ -223,10 +229,14 @@ policy exposes every column of verified rows, so the column allowlist in code (p
 column-level `REVOKE` in the hardening migration) is the defense. The revoke blocks the
 anon AND authenticated roles, so if an owner-facing "edit credentials" view is ever needed,
 read via a `security definer` RPC that checks `auth.uid()` — never re-grant column select.
-`verified` and `created_at` are also client-immutable via column-level update grants —
-only the SQL editor / service role can flip `verified`. Reuse this grant pattern on any
-new table with privileged columns (e.g. bookings: EMTs may update only `status`).
-Full SQL in `.claude/skills/auth/SKILL.md` → "Column-level grants".
+`verified` and `created_at` are client-immutable on UPDATE via column-level grants, and
+`verified` is also blocked at INSERT by a RESTRICTIVE RLS policy (`emt_no_self_verify_insert`,
+migration 0008 — the UPDATE revoke alone let a client raw-POST `verified=true` at insert
+time). Only the SQL editor / service role (which bypass RLS) can set `verified=true`; the
+onboarding insert sends `verified=false`, which passes. A restrictive insert policy was
+chosen over an INSERT column grant so the fix needs no code/deploy coordination. Reuse the
+column-grant pattern for privileged UPDATE columns (e.g. bookings: EMTs may update only
+`status`). Full SQL in `.claude/skills/auth/SKILL.md` → "Column-level grants".
 
 **Primitive library — Base UI, not Radix. Always verify before applying fixes.**
 `components.json` sets style `base-nova`. All interactive primitives come from `@base-ui/react`.

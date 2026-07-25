@@ -210,6 +210,9 @@ export function OnboardingForm({ userId }: { userId: string }) {
         specializations: form.specializations,
         bio: form.bio.trim() || null,
         available: false,
+        // Always false here; the DB is the real control — a restrictive RLS
+        // insert policy (migration 0008) rejects any emt_profiles insert with
+        // verified=true, so a hostile client can't self-verify via raw POST.
         verified: false,
       })
 

@@ -50,11 +50,29 @@ export function rateLimit(key: string, limit: number, windowMs: number): RateLim
   return { ok: true, retryAfterSec: 0 }
 }
 
-// Client IP for keying. Vercel sets x-forwarded-for / x-real-ip from the
-// connection (client-supplied values are overwritten at the edge), so the
-// first x-forwarded-for entry is trustworthy there. Locally both are absent.
+// Loose IP-shape check: hex digits, dots, colons only, and short enough to be
+// a textual IPv4/IPv6 address. Enough to reject non-IP junk and cap length so
+// a spoofed header can't mint arbitrary or unbounded rate-limit bucket keys.
+function isIpish(s: string): boolean {
+  return s.length > 0 && s.length <= 45 && /^[0-9a-fA-F.:]+$/.test(s) && /[.:]/.test(s)
+}
+
+// Client IP for keying. Vercel sets both x-forwarded-for and x-real-ip from the
+// connection (client-supplied values are overwritten at the edge). Prefer
+// x-real-ip: it's the single true client IP with no attacker-appended list, so
+// it's a tighter key than trusting the leftmost x-forwarded-for token. Validate
+// the shape before trusting either, and fall back to "local" (dev) rather than
+// keying on garbage. NOTE: off the Vercel edge — behind a proxy that appends
+// rather than overwrites XFF — neither header is trustworthy without a
+// trusted-hop model; that's the full fix if this ever runs elsewhere.
 export function clientIp(request: NextRequest): string {
+  const realIp = request.headers.get("x-real-ip")?.trim()
+  if (realIp && isIpish(realIp)) return realIp
+
   const xff = request.headers.get("x-forwarded-for")
-  if (xff) return xff.split(",")[0].trim()
-  return request.headers.get("x-real-ip") ?? "local"
+  if (xff) {
+    const first = xff.split(",")[0].trim()
+    if (isIpish(first)) return first
+  }
+  return "local"
 }

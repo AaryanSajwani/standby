@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { bookingDecisionEmail, bookingRequestedEmail, sendEmail, type BookingEmailData } from "@/lib/notifications"
 
 // POST { bookingId, event: "requested" | "accepted" | "declined" }
@@ -8,8 +9,9 @@ import { bookingDecisionEmail, bookingRequestedEmail, sendEmail, type BookingEma
 // status update. Untrusted by design: the caller only names a booking and an
 // event — everything in the email comes from the DB row, the caller must be
 // the right participant for the claimed event, and the claimed event must
-// match the stored status. Recipient emails come from the security-definer
-// RPC in migration 0006 (auth.users is not readable any other way).
+// match the stored status. Recipient emails are resolved SERVER-SIDE with the
+// service role (migration 0008 revoked the old authenticated RPC) so raw
+// auth.users emails are never returned to the caller.
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const EVENTS = ["requested", "accepted", "declined"] as const
@@ -51,21 +53,36 @@ export async function POST(request: Request) {
       : bk.emt_id === user.id && bk.status === event
   if (!consistent) return NextResponse.json({ error: "forbidden" }, { status: 403 })
 
-  // Participant emails + display names (migration 0006). If the migration
-  // isn't applied yet the RPC errors — skip the email, in-app flow is truth.
-  const { data: rpcData, error: rpcError } = await supabase
-    .rpc("booking_notification_info", { p_booking_id: bookingId })
-    .maybeSingle()
-  // Untyped client — the RPC's row shape comes from migration 0006
-  const info = rpcData as {
-    organizer_email: string
-    organizer_name: string
-    emt_email: string
-    emt_name: string
-  } | null
-  if (rpcError || !info) {
-    if (rpcError) console.error("[notifications] recipient lookup failed:", rpcError.message)
+  // Participant emails + display names. auth.users emails are not readable by
+  // anon/authenticated (and must never be handed back to the caller), so we
+  // resolve them with the service role AFTER the participant + consistency
+  // checks above have established the caller is entitled to this notification.
+  // Best-effort: if the service key isn't configured the send is skipped and
+  // the in-app flow stays the source of truth.
+  const admin = createAdminClient()
+  if (!admin) {
+    console.error("[notifications] SUPABASE_SERVICE_ROLE_KEY not set — skipping send")
     return NextResponse.json({ sent: false, reason: "recipient_lookup_failed" })
+  }
+
+  const [orgUser, emtUser, orgProfile, emtProfile] = await Promise.all([
+    admin.auth.admin.getUserById(bk.organizer_id),
+    admin.auth.admin.getUserById(bk.emt_id),
+    admin.from("profiles").select("full_name").eq("id", bk.organizer_id).maybeSingle(),
+    admin.from("profiles").select("full_name").eq("id", bk.emt_id).maybeSingle(),
+  ])
+
+  const organizerEmail = orgUser.data.user?.email
+  const emtEmail = emtUser.data.user?.email
+  if (!organizerEmail || !emtEmail) {
+    console.error("[notifications] recipient lookup failed: missing participant email")
+    return NextResponse.json({ sent: false, reason: "recipient_lookup_failed" })
+  }
+  const info = {
+    organizer_email: organizerEmail,
+    organizer_name: orgProfile.data?.full_name || "An organizer",
+    emt_email: emtEmail,
+    emt_name: emtProfile.data?.full_name || "The medic",
   }
 
   // Dedupe claim (migration 0007): the PK on (booking_id, event) makes this

@@ -18,6 +18,8 @@ them in the Supabase SQL editor (the same place the auth migration lives).
 | `0004_security_hardening.sql` | Abuse backstops: upload caps, cross-tenant event_id, payload/date bounds | **Applied** (2026-07-21) | No — constraints legit clients never hit |
 | `0005_insert_rate_caps.sql` | Per-user daily insert caps (assessments/events/bookings) + supporting indexes | **Applied** (2026-07-21) | No — caps sit far above real usage |
 | `0006_booking_notification_rpc.sql` | Security-definer RPC: participant emails for booking notification sends | **Applied** (2026-07-22) | No — without it, emails silently skip; in-app flow unaffected |
+| `0007_prelaunch_hardening.sql` | Private cert bucket + owner policies, booking status-transition trigger, numeric sanity bounds, notification dedupe table | **Applied** (2026-07-23) | No — constraints/policies legit clients never hit |
+| `0008_scan_hardening.sql` | Scan fixes: `verified` INSERT-immutable on emt_profiles (F2), bookings INSERT must name a verified EMT (F4/F1), revoke authenticated EXECUTE on the notification RPC (F1) | **Not yet applied** | Section 3 pairs with the service-role notification route — apply + deploy together |
 
 > Both migrations have been run and the app code is live (availability calendar on the
 > EMT dashboard/profile; `events` records + `/events/[id]` container page). The "wiring
