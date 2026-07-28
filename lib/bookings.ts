@@ -1,8 +1,16 @@
 // The client-facing status vocabulary. The DB (migration 0009) permits a wider
-// lifecycle superset (draft/confirmed/checked_in/completed/…), but the marketplace
-// surfaces only these five today. `open` is the unassigned open-claim slot
-// (emt_id null) medics apply to; the rest are the direct-request lifecycle.
-export type BookingStatus = "open" | "pending" | "accepted" | "declined" | "cancelled"
+// lifecycle superset (draft/confirmed/cancelled_*/…); these are the ones the app
+// surfaces. `open` is the unassigned open-claim slot (emt_id null) medics apply
+// to; `checked_in`/`completed` are the PR B on-site + post-shift states; the rest
+// are the direct-request lifecycle.
+export type BookingStatus =
+  | "open"
+  | "pending"
+  | "accepted"
+  | "checked_in"
+  | "completed"
+  | "declined"
+  | "cancelled"
 
 // Explicit column list — same allowlist convention as EMT_PUBLIC_COLUMNS.
 export const BOOKING_COLUMNS =

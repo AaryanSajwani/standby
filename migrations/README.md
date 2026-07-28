@@ -100,16 +100,28 @@ them in the Supabase SQL editor (the same place the auth migration lives).
     request to fill (optional note), withdraw. Proxy-protected (EMT); in EMT nav.
 - Reads degrade gracefully (empty) if the tables/policies are absent.
 
-### 0010 — Check-in + reviews (PR B)
+### 0010 — Check-in + reviews (PR B) — WIRED 2026-07-28
 - **Check-in:** `lib/shifts/verification-code.ts` generates the rotating code from
-  the per-booking secret (service-role only). The medic's page polls the current
-  code; the organizer's page verifies (QR scan + manual entry). Server validates,
-  then writes a `check_ins` row and transitions the booking via the state machine.
-- **Reviews:** double-blind. The blind-window read policy lives in the migration;
-  publication (both-submitted OR 14-day close) is a service-role job. Content
-  guardrails: `lib/reviews/content-guard.ts`. Display math (shrinkage, sparse
-  "New to Standby", computed reliability): `lib/reviews/reliability.ts`.
+  the per-booking secret (service-role only, lazily created). The medic's page
+  (`/shifts/[id]`) shows the current code; the organizer verifies via manual
+  6-digit entry. Routes: `POST /api/shifts/code` (medic fetches code) and
+  `POST /api/shifts/verify` (organizer verifies → writes `check_ins` + transitions
+  accepted→checked_in / checked_in→completed). The verify route rate-limits
+  attempts per (booking, organizer) — the brute-force cap the code module requires.
+  Geolocation captured best-effort. **Deferred:** QR camera scanning and the
+  30-min self-attest fallback (manual entry is the shipped path; noted in TASKS.md).
+- **Reviews:** double-blind. Submit via `POST /api/reviews` (server-side
+  content-guard + structural RLS insert); both-submitted publishes eagerly, and
+  `GET /api/cron/publish-reviews` (daily, `vercel.json`, `CRON_SECRET`-gated) is the
+  backstop that also closes the 14-day single-sided window. Forms + code panels:
+  `app/shifts/[id]/`. Dimensions: `lib/reviews/dimensions.ts`. Content guardrails:
+  `lib/reviews/content-guard.ts`. Display math: `lib/reviews/reliability.ts`.
+- **Reputation on `/emt/[id]`:** reliability (computed, from `emt_reliability_stats`)
+  shown ABOVE published reviews; sparse (<5) shows "New to Standby". Mock sample
+  profiles carry no reputation (never fabricate trust signals).
 - **Test the blind window with a direct client query**, not the UI (§ verification).
+- **Env needed:** `CRON_SECRET` (Vercel Cron auth) + the existing
+  `SUPABASE_SERVICE_ROLE_KEY`. Without them the flow degrades (logged skip).
 
 ## Still needs a provider key (not a migration)
 - **Email notifications (§5): SHIPPED 2026-07-22.** Resend key is in env (local + Vercel);

@@ -16,11 +16,13 @@ import { cn } from "@/lib/utils"
 export const metadata = { title: "Events — Standby" }
 
 const STATUS_STYLES: Record<Booking["status"], { label: string; className: string }> = {
-  open:      { label: "Open slot", className: "border-primary/30 bg-primary/5 text-primary" },
-  pending:   { label: "Pending",   className: "border-risk-medium/30 bg-risk-medium/5 text-risk-medium" },
-  accepted:  { label: "Accepted",  className: "border-risk-low/30 bg-risk-low/5 text-risk-low" },
-  declined:  { label: "Declined",  className: "border-border text-muted-foreground" },
-  cancelled: { label: "Cancelled", className: "border-border text-muted-foreground" },
+  open:       { label: "Open slot",  className: "border-primary/30 bg-primary/5 text-primary" },
+  pending:    { label: "Pending",    className: "border-risk-medium/30 bg-risk-medium/5 text-risk-medium" },
+  accepted:   { label: "Accepted",   className: "border-risk-low/30 bg-risk-low/5 text-risk-low" },
+  checked_in: { label: "Checked in", className: "border-risk-low/30 bg-risk-low/5 text-risk-low" },
+  completed:  { label: "Completed",  className: "border-border text-foreground" },
+  declined:   { label: "Declined",   className: "border-border text-muted-foreground" },
+  cancelled:  { label: "Cancelled",  className: "border-border text-muted-foreground" },
 }
 
 export default async function EventsPage() {

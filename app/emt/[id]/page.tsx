@@ -1,7 +1,7 @@
 import { cache } from "react"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft, Shield, MapPin, Clock, ShieldCheck, DollarSign } from "lucide-react"
+import { ArrowLeft, Shield, MapPin, Clock, ShieldCheck, DollarSign, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -10,7 +10,13 @@ import { cn } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/server"
 import { CERT_DISPLAY, EMT_PUBLIC_COLUMNS, joinedFullName } from "@/lib/emt"
 import { fetchUpcomingAvailability, formatAvailabilityDate } from "@/lib/availability"
+import { ratingDisplay, formatRate } from "@/lib/reviews/reliability"
 import { RequestEmt } from "./request-emt"
+
+// Platform-mean prior for star shrinkage until there's enough data to compute a
+// real global mean. Neutral-positive; sparse profiles show "New to Standby"
+// anyway (under MIN_REVIEWS_FOR_AVERAGE), so this only shades established ones.
+const PLATFORM_MEAN = 4.5
 
 interface EMTProfile {
   name: string
@@ -111,6 +117,24 @@ export default async function EMTProfilePage({
 
   // Upcoming available dates (real profiles only; [] if the table isn't present)
   const availability = isReal ? await fetchUpcomingAvailability(supabase, id, 12) : []
+
+  // Reputation (real profiles only): reliability is COMPUTED from bookings and
+  // shown above star averages; reviews are the published double-blind pair. Mock
+  // sample profiles carry NO reputation — never fabricate trust signals.
+  type RelRow = { completed_count: number; committed_count: number; no_show_count: number; late_cancel_count: number; check_in_count: number }
+  let reliability: RelRow | null = null
+  let publishedReviews: { overall: number; body: string | null; author_role: string }[] = []
+  if (isReal) {
+    const [{ data: rel }, { data: revs }] = await Promise.all([
+      supabase.from("emt_reliability_stats").select("completed_count, committed_count, no_show_count, late_cancel_count, check_in_count").eq("emt_id", id).maybeSingle(),
+      supabase.from("reviews").select("overall, body, author_role").eq("subject_user_id", id).eq("status", "published").order("published_at", { ascending: false }),
+    ])
+    reliability = (rel as RelRow | null) ?? null
+    publishedReviews = (revs as { overall: number; body: string | null; author_role: string }[] | null) ?? []
+  }
+  const rating = ratingDisplay(publishedReviews.map((r) => r.overall), PLATFORM_MEAN)
+  const completionRate = reliability && reliability.committed_count > 0 ? reliability.completed_count / reliability.committed_count : null
+  const hasReputation = isReal && ((reliability?.committed_count ?? 0) > 0 || publishedReviews.length > 0)
 
   if (!emt) {
     return (
@@ -219,6 +243,75 @@ export default async function EMTProfilePage({
             </div>
           </div>
         </div>
+
+        {/* Reputation — reliability (computed) above star reviews. Real profiles only. */}
+        {hasReputation && (
+          <div className="flex flex-col gap-6">
+            <Card>
+              <CardHeader className="pb-0">
+                <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Reliability</span>
+              </CardHeader>
+              <CardContent className="pt-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border border border-border">
+                  {[
+                    { label: "Completed shifts", value: String(reliability?.completed_count ?? 0) },
+                    { label: "Completion rate", value: formatRate(completionRate) },
+                    { label: "No-shows", value: String(reliability?.no_show_count ?? 0) },
+                    { label: "Late cancellations", value: String(reliability?.late_cancel_count ?? 0) },
+                  ].map((s) => (
+                    <div key={s.label} className="bg-card px-5 py-4 flex flex-col gap-1">
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{s.label}</span>
+                      <span className="font-mono text-2xl font-bold tabular-nums text-foreground">{s.value}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="font-mono text-[10px] text-muted-foreground mt-3">Computed from completed bookings — not self-reported.</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-0">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Reviews</span>
+                  <div className="flex items-center gap-2">
+                    {rating.sparse ? (
+                      <span className="font-mono text-[10px] uppercase tracking-widest border border-border text-muted-foreground px-2 py-0.5">{rating.badge}</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 font-mono text-sm tabular-nums text-foreground">
+                        <Star className="w-3.5 h-3.5 text-primary fill-primary" />
+                        {rating.average?.toFixed(1)}
+                      </span>
+                    )}
+                    <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+                      {rating.count} {rating.count === 1 ? "review" : "reviews"}
+                    </span>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-3 flex flex-col gap-3">
+                {publishedReviews.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No published reviews yet.</p>
+                ) : (
+                  publishedReviews.map((r, i) => (
+                    <div key={i} className="border border-border bg-surface px-4 py-3 flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <Star key={n} className={cn("w-3 h-3", r.overall >= n ? "text-primary fill-primary" : "text-border")} />
+                          ))}
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                          {r.author_role === "organizer" ? "From an organizer" : "From a medic"}
+                        </span>
+                      </div>
+                      {r.body && <p className="text-sm text-muted-foreground leading-relaxed">{r.body}</p>}
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Background */}
         <Card>

@@ -1,15 +1,17 @@
 "use client"
 
+import Link from "next/link"
 import { useRef, useState } from "react"
-import { Calendar, MapPin, Users, Clock, Check, X, AlertTriangle, Pencil } from "lucide-react"
+import { Calendar, MapPin, Users, Clock, Check, X, AlertTriangle, Pencil, ShieldCheck, Star } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { AddToCalendarButton } from "@/components/AddToCalendarButton"
 import { CertBadge } from "@/components/CertBadge"
 import type { Booking, BookingStatus } from "@/lib/bookings"
 import type { AvailabilityDate } from "@/lib/availability"
 import { AvailabilityCalendar } from "@/components/AvailabilityCalendar"
+import { cn } from "@/lib/utils"
 
 function RequestCard({
   req,
@@ -24,10 +26,13 @@ function RequestCard({
   past?: boolean
 }) {
   const isPending   = req.status === "pending"
-  const isAccepted  = req.status === "accepted" && !past
-  const isCompleted = req.status === "accepted" && past
+  const isCheckedIn = req.status === "checked_in"
+  const isActive    = (req.status === "accepted" || req.status === "checked_in") && !past
+  const isPastAcc   = (req.status === "accepted" || req.status === "checked_in") && past
+  const isCompleted = req.status === "completed"
   const isDeclined  = req.status === "declined"
   const isCancelled = req.status === "cancelled"
+  const shiftHref   = `/shifts/${req.id}`
 
   return (
     <div className={`border border-border bg-card flex flex-col gap-0 transition-opacity ${isDeclined || isCancelled ? "opacity-40" : ""}`}>
@@ -42,13 +47,18 @@ function RequestCard({
               Pending
             </span>
           )}
-          {isAccepted && (
+          {isActive && (
             <span className="font-mono text-[10px] uppercase tracking-widest border border-risk-low/30 bg-risk-low/5 text-risk-low px-2 py-0.5">
-              Accepted
+              {isCheckedIn ? "Checked in" : "Accepted"}
+            </span>
+          )}
+          {isPastAcc && (
+            <span className="font-mono text-[10px] uppercase tracking-widest border border-border text-muted-foreground px-2 py-0.5">
+              Past
             </span>
           )}
           {isCompleted && (
-            <span className="font-mono text-[10px] uppercase tracking-widest border border-border text-muted-foreground px-2 py-0.5">
+            <span className="font-mono text-[10px] uppercase tracking-widest border border-border text-foreground px-2 py-0.5">
               Completed
             </span>
           )}
@@ -110,8 +120,12 @@ function RequestCard({
             </Button>
           </div>
         )}
-        {isAccepted && (
+        {isActive && (
           <div className="flex flex-col justify-center gap-2 px-5 py-4 md:w-44 shrink-0">
+            <Link href={shiftHref} className={cn(buttonVariants(), "w-full rounded-none font-mono text-xs uppercase tracking-wider")}>
+              <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
+              {isCheckedIn ? "Check out" : "Check in"}
+            </Link>
             <AddToCalendarButton
               eventName={req.eventName}
               dateISO={req.dateISO}
@@ -120,6 +134,14 @@ function RequestCard({
               counterpartName={req.counterpartName}
               className="w-full"
             />
+          </div>
+        )}
+        {isCompleted && (
+          <div className="flex flex-col justify-center gap-2 px-5 py-4 md:w-44 shrink-0">
+            <Link href={shiftHref} className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-none font-mono text-xs uppercase tracking-wider")}>
+              <Star className="w-3.5 h-3.5 mr-1.5" />
+              Review shift
+            </Link>
           </div>
         )}
       </div>
@@ -240,13 +262,17 @@ export function DashboardContent({ displayName, verified, available, certLevel, 
   }
 
   const pending  = requests.filter((r) => r.status === "pending")
-  // Accepted splits on event date: today or later = upcoming, earlier = past
-  // history. dateISO is raw YYYY-MM-DD, so string compare is date compare.
-  const accepted = requests.filter((r) => r.status === "accepted")
-  const upcoming = accepted.filter((r) => !r.dateISO || r.dateISO >= todayISO)
-  const past     = accepted
+  // Active = accepted or checked-in (the shift is on). Splits on event date:
+  // today or later = upcoming, earlier = past history. dateISO is raw YYYY-MM-DD,
+  // so string compare is date compare.
+  const active   = requests.filter((r) => r.status === "accepted" || r.status === "checked_in")
+  const upcoming = active.filter((r) => !r.dateISO || r.dateISO >= todayISO)
+  const past     = active
     .filter((r) => r.dateISO && r.dateISO < todayISO)
     .sort((a, b) => b.dateISO.localeCompare(a.dateISO)) // most recent first
+  const completed = requests
+    .filter((r) => r.status === "completed")
+    .sort((a, b) => (b.dateISO || "").localeCompare(a.dateISO || "")) // most recent first
   const resolved = requests.filter((r) => r.status === "declined" || r.status === "cancelled")
 
   // Optimistic status update — revert on failure
@@ -520,6 +546,21 @@ export function DashboardContent({ displayName, verified, available, certLevel, 
             </div>
             <div className="flex flex-col gap-px">
               {past.map((req) => <RequestCard key={req.id} req={req} onAccept={accept} onDecline={decline} past />)}
+            </div>
+          </section>
+        )}
+
+        {/* Completed shifts — leave a review */}
+        {completed.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Completed shifts</h2>
+              <span className="font-mono text-[10px] border border-border text-muted-foreground px-2 py-0.5 tabular-nums">
+                {completed.length}
+              </span>
+            </div>
+            <div className="flex flex-col gap-px">
+              {completed.map((req) => <RequestCard key={req.id} req={req} onAccept={accept} onDecline={decline} />)}
             </div>
           </section>
         )}

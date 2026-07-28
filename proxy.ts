@@ -91,6 +91,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Protect /shifts/[id] (check-in + reviews hub, both parties) — must be signed in
+  if (pathname.startsWith("/shifts") && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/auth"
+    url.searchParams.set("next", pathname)
+    return NextResponse.redirect(url)
+  }
+
   // Protect /open-shifts (open-claim board for medics) — must be signed in
   if (pathname.startsWith("/open-shifts") && !user) {
     const url = request.nextUrl.clone()
