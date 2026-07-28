@@ -4,8 +4,9 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ArrowLeft, Calendar, MapPin, Users, FileText } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
-import { BOOKING_COLUMNS, formatEventDate, mapBooking, type RawBooking, type Booking } from "@/lib/bookings"
+import { BOOKING_COLUMNS, formatEventDate, mapBooking, type RawBooking, type Booking, type Applicant } from "@/lib/bookings"
 import { joinedFullName } from "@/lib/emt"
+import { OpenSlotManager, type OpenSlot } from "./open-slot-manager"
 import { EVENT_TYPE_LABELS } from "@/lib/assessment"
 import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -40,6 +41,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 const STATUS_STYLES: Record<Booking["status"], { label: string; className: string }> = {
+  open:      { label: "Open slot", className: "border-primary/30 bg-primary/5 text-primary" },
   pending:   { label: "Pending",   className: "border-risk-medium/30 bg-risk-medium/5 text-risk-medium" },
   accepted:  { label: "Confirmed", className: "border-risk-low/30 bg-risk-low/5 text-risk-low" },
   declined:  { label: "Declined",  className: "border-border text-muted-foreground" },
@@ -100,6 +102,68 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const roster = (rawBookings ?? []).map((row) =>
     mapBooking(row as unknown as RawBooking, joinedFullName(row.emt) ?? "EMT")
   )
+
+  // Open-claim: open slots (emt_id null) are managed separately from the assigned
+  // roster — each gathers its applicants for the organizer to accept one.
+  const openBookings = roster.filter((b) => b.status === "open")
+  const assignedRoster = roster.filter((b) => b.status !== "open")
+
+  const openSlots: OpenSlot[] = []
+  if (openBookings.length > 0) {
+    const openIds = openBookings.map((b) => b.id)
+    // Applications on these open slots (RLS: applications visibility → the
+    // booking's organizer sees every applicant).
+    const { data: apps } = await supabase
+      .from("booking_applications")
+      .select("id, booking_id, emt_id, status, message, created_at")
+      .in("booking_id", openIds)
+      .order("created_at", { ascending: true })
+
+    const emtIds = [...new Set((apps ?? []).map((a) => a.emt_id as string))]
+    // Applicant display data — names via profiles (verified-EMT public read),
+    // rate/cert/location via emt_profiles public columns. No credential PII.
+    const [{ data: profs }, { data: emtProfs }] = await Promise.all([
+      emtIds.length
+        ? supabase.from("profiles").select("id, full_name").in("id", emtIds)
+        : Promise.resolve({ data: [] as { id: string; full_name: string | null }[] }),
+      emtIds.length
+        ? supabase.from("emt_profiles").select("user_id, cert_level, hourly_rate, city, state").in("user_id", emtIds)
+        : Promise.resolve({ data: [] as { user_id: string; cert_level: string | null; hourly_rate: number | null; city: string | null; state: string | null }[] }),
+    ])
+    const nameById = new Map((profs ?? []).map((p) => [p.id, p.full_name]))
+    const emtById = new Map((emtProfs ?? []).map((e) => [e.user_id, e]))
+
+    const applicantsByBooking = new Map<string, Applicant[]>()
+    for (const a of apps ?? []) {
+      const ep = emtById.get(a.emt_id as string)
+      const list = applicantsByBooking.get(a.booking_id as string) ?? []
+      list.push({
+        applicationId: a.id as string,
+        bookingId: a.booking_id as string,
+        emtId: a.emt_id as string,
+        emtName: nameById.get(a.emt_id as string) ?? "EMT",
+        status: a.status as Applicant["status"],
+        message: (a.message as string | null) ?? null,
+        createdISO: a.created_at as string,
+        certLevel: ep?.cert_level ?? null,
+        hourlyRate: ep?.hourly_rate ?? null,
+        city: ep?.city ?? null,
+        state: ep?.state ?? null,
+      })
+      applicantsByBooking.set(a.booking_id as string, list)
+    }
+
+    for (const b of openBookings) {
+      openSlots.push({
+        id: b.id,
+        dateISO: b.dateISO,
+        durationHours: b.durationHours,
+        hourlyRate: b.hourlyRate,
+        notes: b.notes,
+        applicants: applicantsByBooking.get(b.id) ?? [],
+      })
+    }
+  }
 
   const shortDate = (ts: string) =>
     new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -165,17 +229,31 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           )}
         </section>
 
-        {/* Staffing roster */}
+        {/* Open slots (open-claim) — post a slot, review applicants, accept one */}
+        <OpenSlotManager
+          eventId={id}
+          viewerId={user.id}
+          event={{
+            name: event.name,
+            eventType: event.event_type ?? "",
+            eventDate: event.event_date,
+            venueAddress: event.venue_address,
+            expectedAttendance: event.expected_attendance,
+          }}
+          openSlots={openSlots}
+        />
+
+        {/* Staffing roster — assigned bookings (direct requests + accepted open slots) */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Staffing roster</h2>
-            {roster.length > 0 && (
+            {assignedRoster.length > 0 && (
               <span className="font-mono text-[10px] border border-border text-muted-foreground px-2 py-0.5 tabular-nums">
-                {roster.length}
+                {assignedRoster.length}
               </span>
             )}
           </div>
-          {roster.length === 0 ? (
+          {assignedRoster.length === 0 ? (
             <div className="border border-border bg-card px-6 py-8 flex flex-col items-center gap-3 text-center">
               <FileText className="w-5 h-5 text-muted-foreground" />
               <p className="text-sm text-muted-foreground max-w-sm">No personnel requested for this event yet.</p>
@@ -185,7 +263,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </div>
           ) : (
             <div className="flex flex-col gap-px">
-              {roster.map((b) => {
+              {assignedRoster.map((b) => {
                 const status = STATUS_STYLES[b.status]
                 return (
                   <div key={b.id} className="border border-border bg-card flex flex-col md:flex-row md:items-center justify-between gap-3 px-5 py-4">

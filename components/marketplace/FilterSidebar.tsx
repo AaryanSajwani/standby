@@ -17,7 +17,7 @@ export interface FilterState {
   radius: number
   certifications: { "EMT-B": boolean; "EMR": boolean }
   availableNow: boolean
-  /** Personnel must be available on every day of this range (null = off). */
+  /** Personnel available on ANY day of this range are kept (any-overlap; null = off). */
   availabilityRange: AvailabilityRange | null
   eventTypes: {
     Concerts: boolean

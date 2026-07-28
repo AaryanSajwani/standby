@@ -91,6 +91,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Protect /open-shifts (open-claim board for medics) — must be signed in
+  if (pathname.startsWith("/open-shifts") && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = "/auth"
+    url.searchParams.set("role", "emt")
+    url.searchParams.set("next", "/open-shifts")
+    return NextResponse.redirect(url)
+  }
+
   // Protect /schedule (upcoming coverage) — must be signed in
   if (pathname.startsWith("/schedule") && !user) {
     const url = request.nextUrl.clone()

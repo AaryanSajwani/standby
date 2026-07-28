@@ -349,9 +349,9 @@ export function AvailabilityCalendar(props: AvailabilityCalendarProps) {
                   : disabled
                   ? "text-muted-foreground/40"
                   : selected
-                  ? "bg-risk-low text-background cursor-pointer"
+                  ? "bg-foreground text-background cursor-pointer"
                   : inRangeBetween
-                  ? "bg-risk-low/15 text-foreground cursor-pointer"
+                  ? "bg-foreground/15 text-foreground cursor-pointer"
                   : "text-foreground cursor-pointer hover:bg-secondary"
               )}
             >

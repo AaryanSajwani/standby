@@ -73,17 +73,20 @@ export default function StaffingMarketplace({
 
     if (filters.availableNow) list = list.filter((e) => e.available)
 
-    // Date-range availability: keep personnel available on EVERY day of the
-    // range (an organizer needs full-event coverage, so any-overlap would
-    // surface medics who can only work part of it). Sample/mock profiles have
-    // no availability rows and drop out — no fabricated availability (§1).
+    // Date-range availability: keep personnel available on ANY day of the range
+    // (any-overlap, per TASKS.md). In a thin early market, full-coverage matching
+    // hides medics who could cover most of an event, and multi-day events are
+    // often split across medics anyway — so surface anyone free during the window
+    // and let the organizer resolve per-day coverage. Single-day ranges (the
+    // common case) behave identically either way. Sample/mock profiles have no
+    // availability rows and drop out — no fabricated availability (§1).
     if (filters.availabilityRange?.start && filters.availabilityRange.end) {
       const rangeDays = enumerateDays(filters.availabilityRange.start, filters.availabilityRange.end)
       list = list.filter((e) => {
         const days = availabilityByEmt[String(e.id)]
         if (!days || days.length === 0) return false
         const daySet = new Set(days)
-        return rangeDays.every((d) => daySet.has(d))
+        return rangeDays.some((d) => daySet.has(d))
       })
     }
     if (filters.minYearsExperience > 0) list = list.filter((e) => (e.yearsExperience ?? 0) >= filters.minYearsExperience)

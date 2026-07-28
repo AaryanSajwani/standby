@@ -30,8 +30,9 @@ const ORGANIZER_LINKS: NavLink[] = [
 ]
 
 const EMT_LINKS: NavLink[] = [
-  { href: "/emt-dashboard", label: "Dashboard" },
-  { href: "/personnel",     label: "Personnel" },
+  { href: "/emt-dashboard", label: "Dashboard"   },
+  { href: "/open-shifts",   label: "Open shifts" },
+  { href: "/personnel",     label: "Personnel"   },
 ]
 
 export function NavBar() {

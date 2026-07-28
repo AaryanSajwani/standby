@@ -1,4 +1,8 @@
-export type BookingStatus = "pending" | "accepted" | "declined" | "cancelled"
+// The client-facing status vocabulary. The DB (migration 0009) permits a wider
+// lifecycle superset (draft/confirmed/checked_in/completed/…), but the marketplace
+// surfaces only these five today. `open` is the unassigned open-claim slot
+// (emt_id null) medics apply to; the rest are the direct-request lifecycle.
+export type BookingStatus = "open" | "pending" | "accepted" | "declined" | "cancelled"
 
 // Explicit column list — same allowlist convention as EMT_PUBLIC_COLUMNS.
 export const BOOKING_COLUMNS =
@@ -57,4 +61,26 @@ export function mapBooking(row: RawBooking, counterpartName: string): Booking {
     status: row.status,
     counterpartName,
   }
+}
+
+// ── Open-claim: an applicant on an organizer's open slot ─────────────────────
+// One row per medic who requested to fill a given open booking (migration 0011
+// booking_applications, joined to the medic's public profile + emt_profiles).
+// Only ever assembled for the booking's own organizer (RLS: applications
+// visibility + verified-EMT public read). No credential PII — display columns
+// only, same allowlist discipline as EMT_PUBLIC_COLUMNS.
+export interface Applicant {
+  applicationId: string
+  bookingId: string
+  emtId: string
+  emtName: string
+  status: "applied" | "accepted" | "rejected" | "withdrawn" | "expired"
+  message: string | null
+  createdISO: string
+  // Public marketplace fields for the organizer's decision (optional — a row may
+  // predate a profile field). Never license/credential fields.
+  certLevel: string | null
+  hourlyRate: number | null
+  city: string | null
+  state: string | null
 }
