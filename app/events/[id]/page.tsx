@@ -5,7 +5,8 @@ import { redirect } from "next/navigation"
 import { ArrowLeft, Calendar, MapPin, Users, FileText } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { BOOKING_COLUMNS, formatEventDate, mapBooking, type RawBooking, type Booking, type Applicant } from "@/lib/bookings"
-import { joinedFullName } from "@/lib/emt"
+import { joinedFullName, fetchCertLevels } from "@/lib/emt"
+import { CertBadge } from "@/components/CertBadge"
 import { OpenSlotManager, type OpenSlot } from "./open-slot-manager"
 import { EVENT_TYPE_LABELS } from "@/lib/assessment"
 import { buttonVariants } from "@/components/ui/button"
@@ -94,13 +95,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   // backfilled — that's the intended, explicit transition.
   const { data: rawBookings } = await supabase
     .from("bookings")
-    .select(`${BOOKING_COLUMNS}, emt:profiles!bookings_emt_id_fkey ( full_name )`)
+    .select(`${BOOKING_COLUMNS}, emt_id, emt:profiles!bookings_emt_id_fkey ( full_name )`)
     .eq("organizer_id", user.id)
     .eq("event_id", id)
     .order("created_at", { ascending: false })
 
+  const certByEmt = await fetchCertLevels(
+    supabase,
+    (rawBookings ?? []).map((r) => r.emt_id as string | null).filter(Boolean) as string[]
+  )
+
   const roster = (rawBookings ?? []).map((row) =>
-    mapBooking(row as unknown as RawBooking, joinedFullName(row.emt) ?? "EMT")
+    mapBooking(
+      row as unknown as RawBooking,
+      joinedFullName(row.emt) ?? "EMT",
+      certByEmt.get(row.emt_id as string) ?? null
+    )
   )
 
   // Open-claim: open slots (emt_id null) are managed separately from the assigned
@@ -268,7 +278,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                 return (
                   <div key={b.id} className="border border-border bg-card flex flex-col md:flex-row md:items-center justify-between gap-3 px-5 py-4">
                     <div className="flex flex-col gap-1 min-w-0">
-                      <span className="text-foreground font-medium leading-tight truncate">{b.counterpartName}</span>
+                      <span className="text-foreground font-medium leading-tight truncate flex items-center gap-2">
+                        <span className="truncate">{b.counterpartName}</span>
+                        <CertBadge level={b.certLevel} />
+                      </span>
                       <span className="text-muted-foreground text-xs font-mono tabular-nums">
                         {b.date} · {b.durationHours} hrs · ${b.hourlyRate}/hr
                       </span>

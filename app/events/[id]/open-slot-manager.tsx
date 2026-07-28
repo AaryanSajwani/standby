@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { CERT_DISPLAY } from "@/lib/emt"
+import { CertBadge } from "@/components/CertBadge"
 import { formatEventDate, type Applicant } from "@/lib/bookings"
 
 export interface OpenSlot {
@@ -239,11 +239,7 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
                     <div className="flex flex-col gap-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-foreground font-medium leading-tight truncate">{a.emtName}</span>
-                        {a.certLevel && (
-                          <span className="font-mono text-[10px] uppercase tracking-widest border border-border text-muted-foreground px-1.5 py-0.5">
-                            {CERT_DISPLAY[a.certLevel] ?? a.certLevel}
-                          </span>
-                        )}
+                        <CertBadge level={a.certLevel} />
                       </div>
                       <span className="font-mono text-[11px] text-muted-foreground tabular-nums inline-flex items-center gap-2 flex-wrap">
                         {a.hourlyRate != null && <span>Posted rate ${a.hourlyRate}/hr</span>}

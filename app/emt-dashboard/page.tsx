@@ -18,7 +18,7 @@ export default async function EMTDashboardPage() {
   // No emt_profiles row → onboarding not complete
   const { data: emtProfile } = await supabase
     .from("emt_profiles")
-    .select("verified, available")
+    .select("verified, available, cert_level, hourly_rate")
     .eq("user_id", user.id)
     .maybeSingle()
 
@@ -51,6 +51,8 @@ export default async function EMTDashboardPage() {
       displayName={displayName}
       verified={emtProfile.verified}
       available={emtProfile.available}
+      certLevel={emtProfile.cert_level ?? null}
+      hourlyRate={emtProfile.hourly_rate ?? null}
       userId={user.id}
       bookings={bookings}
       availability={availability}

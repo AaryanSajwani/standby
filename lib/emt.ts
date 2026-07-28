@@ -21,3 +21,32 @@ export function joinedFullName(rel: unknown): string | null {
   const obj = Array.isArray(rel) ? rel[0] : rel
   return (obj as { full_name?: string | null } | null)?.full_name ?? null
 }
+
+// Human label for a raw cert_level DB value ("emt_b" → "EMT-B"). Falls back to
+// the raw value so a legacy/unknown tier still renders something truthful.
+export function certLabel(certLevel: string | null | undefined): string | null {
+  if (!certLevel) return null
+  return CERT_DISPLAY[certLevel] ?? certLevel
+}
+
+// Look up cert_level for a set of EMT user_ids in one query. bookings.emt_id
+// references auth.users (not emt_profiles), so organizer booking views can't
+// PostgREST-join to it — they resolve cert here instead. cert_level is in
+// EMT_PUBLIC_COLUMNS (public-read for verified rows), so no credential PII is
+// touched. Returns a Map keyed by user_id; missing/unverified ids are absent.
+export async function fetchCertLevels(
+  supabase: { from: (t: string) => any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  emtIds: string[]
+): Promise<Map<string, string>> {
+  const ids = [...new Set(emtIds.filter(Boolean))]
+  if (ids.length === 0) return new Map()
+  const { data } = await supabase
+    .from("emt_profiles")
+    .select("user_id, cert_level")
+    .in("user_id", ids)
+  return new Map(
+    (data ?? [])
+      .filter((r: { cert_level: string | null }) => r.cert_level)
+      .map((r: { user_id: string; cert_level: string }) => [r.user_id, r.cert_level])
+  )
+}

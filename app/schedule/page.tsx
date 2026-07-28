@@ -3,7 +3,8 @@ import { redirect } from "next/navigation"
 import { CalendarDays, MapPin, Clock } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { BOOKING_COLUMNS, mapBooking, type RawBooking, type Booking } from "@/lib/bookings"
-import { joinedFullName } from "@/lib/emt"
+import { joinedFullName, fetchCertLevels } from "@/lib/emt"
+import { CertBadge } from "@/components/CertBadge"
 import { buttonVariants } from "@/components/ui/button"
 import { AddToCalendarButton } from "@/components/AddToCalendarButton"
 import { cn } from "@/lib/utils"
@@ -31,7 +32,7 @@ export default async function SchedulePage() {
   // Upcoming coverage only — confirmed or still pending, soonest first
   const { data: rawBookings, error } = await supabase
     .from("bookings")
-    .select(`${BOOKING_COLUMNS}, emt:profiles!bookings_emt_id_fkey ( full_name )`)
+    .select(`${BOOKING_COLUMNS}, emt_id, emt:profiles!bookings_emt_id_fkey ( full_name )`)
     .eq("organizer_id", user.id)
     .in("status", ["pending", "accepted"])
     .gte("event_date", today)
@@ -39,8 +40,17 @@ export default async function SchedulePage() {
 
   if (error) console.error("[/schedule] bookings query failed:", error.message)
 
+  const certByEmt = await fetchCertLevels(
+    supabase,
+    (rawBookings ?? []).map((r) => r.emt_id as string | null).filter(Boolean) as string[]
+  )
+
   const upcoming = (rawBookings ?? []).map((row) =>
-    mapBooking(row as unknown as RawBooking, joinedFullName(row.emt) ?? "EMT")
+    mapBooking(
+      row as unknown as RawBooking,
+      joinedFullName(row.emt) ?? "EMT",
+      certByEmt.get(row.emt_id as string) ?? null
+    )
   )
 
   return (
@@ -87,7 +97,7 @@ export default async function SchedulePage() {
                   <div className="flex flex-col gap-1 min-w-0 flex-1">
                     <span className="text-foreground font-medium leading-tight truncate">{b.eventName}</span>
                     <span className="text-muted-foreground text-xs font-mono flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span>{b.counterpartName}</span>
+                      <span className="inline-flex items-center gap-2">{b.counterpartName}<CertBadge level={b.certLevel} /></span>
                       <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{b.location}</span>
                       <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" />{b.durationHours} hrs</span>
                     </span>

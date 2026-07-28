@@ -36,6 +36,11 @@ export interface Booking {
   status: BookingStatus
   // Organizer name on the EMT dashboard; EMT name on /events
   counterpartName: string
+  // The booked medic's certification level (emt_profiles.cert_level, raw DB value
+  // → render via CERT_DISPLAY). Populated on organizer-facing views so the
+  // EMR/EMT-B tier is visible per booking. Null on the EMT's own dashboard (the
+  // counterpart there is the organizer) and on open slots (no medic yet).
+  certLevel: string | null
 }
 
 export function formatEventDate(isoDate: string): string {
@@ -46,7 +51,11 @@ export function formatEventDate(isoDate: string): string {
   })
 }
 
-export function mapBooking(row: RawBooking, counterpartName: string): Booking {
+export function mapBooking(
+  row: RawBooking,
+  counterpartName: string,
+  certLevel: string | null = null
+): Booking {
   return {
     id: row.id,
     eventName: row.event_name,
@@ -60,6 +69,7 @@ export function mapBooking(row: RawBooking, counterpartName: string): Booking {
     notes: row.notes,
     status: row.status,
     counterpartName,
+    certLevel,
   }
 }
 

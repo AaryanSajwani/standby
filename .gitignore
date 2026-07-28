@@ -40,3 +40,13 @@ emt-staffing-marketplace-personnel-page/
 Standby Logo.png
 Standby_Product_Blueprint.md
 Standby - Startup Overview.pdf
+
+# Internal planning / strategy docs — keep local, never on a public repo
+TASKS.md
+standby-autonomous-progress.md
+standby-build-prompts.md
+standby-payments-full-spec.md
+standby-phase2-when-you-need-it.md
+
+# Separate sub-project (own lockfile, not a workspace)
+pointer-ai-landing-page/

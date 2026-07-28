@@ -1,11 +1,12 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { Calendar, MapPin, Users, Clock, Check, X, AlertTriangle } from "lucide-react"
+import { Calendar, MapPin, Users, Clock, Check, X, AlertTriangle, Pencil } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { AddToCalendarButton } from "@/components/AddToCalendarButton"
+import { CertBadge } from "@/components/CertBadge"
 import type { Booking, BookingStatus } from "@/lib/bookings"
 import type { AvailabilityDate } from "@/lib/availability"
 import { AvailabilityCalendar } from "@/components/AvailabilityCalendar"
@@ -130,15 +131,45 @@ interface DashboardContentProps {
   displayName: string
   verified: boolean
   available: boolean
+  certLevel: string | null
+  hourlyRate: number | null
   userId: string
   bookings: Booking[]
   availability: AvailabilityDate[]
 }
 
-export function DashboardContent({ displayName, verified, available, userId, bookings, availability }: DashboardContentProps) {
+export function DashboardContent({ displayName, verified, available, certLevel, hourlyRate, userId, bookings, availability }: DashboardContentProps) {
   const [requests, setRequests] = useState<Booking[]>(bookings)
   const [isAvailable, setIsAvailable] = useState(available)
   const [error, setError] = useState<string | null>(null)
+
+  // Editable posted rate (emt_profiles.hourly_rate — owner-updatable per the
+  // column grant; DB sanity bound 1–500, migration 0007).
+  const [rate, setRate] = useState<number | null>(hourlyRate)
+  const [editingRate, setEditingRate] = useState(false)
+  const [rateInput, setRateInput] = useState(hourlyRate != null ? String(hourlyRate) : "")
+  const [savingRate, setSavingRate] = useState(false)
+
+  const saveRate = async () => {
+    const next = Number(rateInput)
+    if (!(next > 0)) return setError("Enter a valid hourly rate.")
+    if (next < 1 || next > 500) return setError("Rate must be between $1 and $500/hr.")
+    setSavingRate(true)
+    setError(null)
+    const supabase = createClient()
+    const { error: rateError } = await supabase
+      .from("emt_profiles")
+      .update({ hourly_rate: next })
+      .eq("user_id", userId)
+    if (rateError) {
+      setError(`Could not update rate: ${rateError.message}`)
+      setSavingRate(false)
+      return
+    }
+    setRate(next)
+    setEditingRate(false)
+    setSavingRate(false)
+  }
 
   // Availability calendar (emt_availability). Local state updates live while
   // dragging; the DB write happens once per drag session (onDragEnd), diffing
@@ -298,7 +329,10 @@ export function DashboardContent({ displayName, verified, available, userId, boo
         {/* Page header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="flex flex-col gap-2">
-            <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">EMT Dashboard</span>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">EMT Dashboard</span>
+              {certLevel && <CertBadge level={certLevel} />}
+            </div>
             <h1 className="text-foreground text-2xl md:text-3xl font-semibold leading-tight">
               Welcome back, {displayName}.
             </h1>
@@ -334,6 +368,62 @@ export function DashboardContent({ displayName, verified, available, userId, boo
             <span className="font-mono text-3xl tabular-nums font-bold text-foreground">${Math.round(totalEarnings).toLocaleString()}</span>
           </div>
         </div>
+
+        {/* Posted rate — owner-editable */}
+        <section className="flex flex-col gap-4">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Your posted rate</h2>
+          <div className="border border-border bg-card px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 max-w-md">
+            {editingRate ? (
+              <div className="flex items-center gap-2 w-full">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-sm text-muted-foreground">$</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={500}
+                    value={rateInput}
+                    onChange={(e) => setRateInput(e.target.value)}
+                    autoFocus
+                    className="w-full h-10 pl-7 pr-3 bg-input border border-input-border text-foreground font-mono text-sm tabular-nums focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <span className="font-mono text-xs text-muted-foreground">/hr</span>
+                <Button size="sm" disabled={savingRate} onClick={saveRate} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+                  {savingRate ? "Saving…" : "Save"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={savingRate}
+                  onClick={() => { setEditingRate(false); setRateInput(rate != null ? String(rate) : ""); setError(null) }}
+                  className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-mono text-3xl tabular-nums font-bold text-foreground">
+                      {rate != null ? `$${rate}` : "—"}
+                    </span>
+                    <span className="font-mono text-xs text-muted-foreground">/hr</span>
+                  </div>
+                  <span className="font-mono text-[10px] text-muted-foreground">You keep 100% of your posted rate.</span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setEditingRate(true); setRateInput(rate != null ? String(rate) : ""); }}
+                  className="rounded-none font-mono text-[10px] uppercase tracking-wider shrink-0"
+                >
+                  <Pencil className="w-3 h-3 mr-1.5" />Edit rate
+                </Button>
+              </>
+            )}
+          </div>
+        </section>
 
         {/* Availability calendar */}
         <section className="flex flex-col gap-4">

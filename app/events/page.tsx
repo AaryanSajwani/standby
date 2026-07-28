@@ -3,7 +3,8 @@ import { redirect } from "next/navigation"
 import { Calendar, MapPin, Users, Clock, FileText } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { BOOKING_COLUMNS, formatEventDate, mapBooking, type RawBooking, type Booking } from "@/lib/bookings"
-import { joinedFullName } from "@/lib/emt"
+import { joinedFullName, fetchCertLevels } from "@/lib/emt"
+import { CertBadge } from "@/components/CertBadge"
 import { EVENT_TYPE_LABELS } from "@/lib/assessment"
 import { normalizeEventName } from "@/lib/events"
 import { buttonVariants } from "@/components/ui/button"
@@ -32,14 +33,25 @@ export default async function EventsPage() {
 
   const { data: rawBookings, error } = await supabase
     .from("bookings")
-    .select(`${BOOKING_COLUMNS}, emt:profiles!bookings_emt_id_fkey ( full_name )`)
+    .select(`${BOOKING_COLUMNS}, emt_id, emt:profiles!bookings_emt_id_fkey ( full_name )`)
     .eq("organizer_id", user.id)
     .order("created_at", { ascending: false })
 
   if (error) console.error("[/events] bookings query failed:", error.message)
 
+  // Cert tier per booked medic (EMR / EMT-B) — resolved separately since
+  // bookings.emt_id references auth.users, not emt_profiles.
+  const certByEmt = await fetchCertLevels(
+    supabase,
+    (rawBookings ?? []).map((r) => r.emt_id as string | null).filter(Boolean) as string[]
+  )
+
   const bookings = (rawBookings ?? []).map((row) =>
-    mapBooking(row as unknown as RawBooking, joinedFullName(row.emt) ?? "EMT")
+    mapBooking(
+      row as unknown as RawBooking,
+      joinedFullName(row.emt) ?? "EMT",
+      certByEmt.get(row.emt_id as string) ?? null
+    )
   )
 
   const { data: assessments, error: assessError } = await supabase
@@ -222,7 +234,10 @@ export default async function EventsPage() {
                   <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-4">
                     <div className="flex flex-col gap-1 min-w-0">
                       <span className="text-foreground font-medium text-base leading-tight truncate">{b.eventName}</span>
-                      <span className="text-muted-foreground text-xs font-mono">{b.eventType} · {b.counterpartName}</span>
+                      <span className="text-muted-foreground text-xs font-mono flex items-center gap-2 flex-wrap">
+                        <span className="truncate">{b.eventType} · {b.counterpartName}</span>
+                        <CertBadge level={b.certLevel} />
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {b.status === "accepted" && (
