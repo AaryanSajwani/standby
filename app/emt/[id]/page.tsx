@@ -122,15 +122,29 @@ export default async function EMTProfilePage({
   // shown above star averages; reviews are the published double-blind pair. Mock
   // sample profiles carry NO reputation — never fabricate trust signals.
   type RelRow = { completed_count: number; committed_count: number; no_show_count: number; late_cancel_count: number; check_in_count: number }
+  type PubReview = { id: string; overall: number; body: string | null; author_role: string }
   let reliability: RelRow | null = null
-  let publishedReviews: { overall: number; body: string | null; author_role: string }[] = []
+  let publishedReviews: PubReview[] = []
+  // The subject's public reply per review (review_id → body). Replies to a
+  // published review are public via RLS.
+  const replyByReview = new Map<string, string>()
   if (isReal) {
     const [{ data: rel }, { data: revs }] = await Promise.all([
       supabase.from("emt_reliability_stats").select("completed_count, committed_count, no_show_count, late_cancel_count, check_in_count").eq("emt_id", id).maybeSingle(),
-      supabase.from("reviews").select("overall, body, author_role").eq("subject_user_id", id).eq("status", "published").order("published_at", { ascending: false }),
+      supabase.from("reviews").select("id, overall, body, author_role").eq("subject_user_id", id).eq("status", "published").order("published_at", { ascending: false }),
     ])
     reliability = (rel as RelRow | null) ?? null
-    publishedReviews = (revs as { overall: number; body: string | null; author_role: string }[] | null) ?? []
+    publishedReviews = (revs as PubReview[] | null) ?? []
+    const reviewIds = publishedReviews.map((r) => r.id)
+    if (reviewIds.length) {
+      const { data: replyRows } = await supabase
+        .from("review_replies")
+        .select("review_id, body")
+        .in("review_id", reviewIds)
+      for (const rep of (replyRows as { review_id: string; body: string }[] | null) ?? []) {
+        replyByReview.set(rep.review_id, rep.body)
+      }
+    }
   }
   const rating = ratingDisplay(publishedReviews.map((r) => r.overall), PLATFORM_MEAN)
   const completionRate = reliability && reliability.committed_count > 0 ? reliability.completed_count / reliability.committed_count : null
@@ -292,21 +306,30 @@ export default async function EMTProfilePage({
                 {publishedReviews.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No published reviews yet.</p>
                 ) : (
-                  publishedReviews.map((r, i) => (
-                    <div key={i} className="border border-border bg-surface px-4 py-3 flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="inline-flex items-center gap-0.5">
-                          {[1, 2, 3, 4, 5].map((n) => (
-                            <Star key={n} className={cn("w-3 h-3", r.overall >= n ? "text-primary fill-primary" : "text-border")} />
-                          ))}
-                        </span>
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                          {r.author_role === "organizer" ? "From an organizer" : "From a medic"}
-                        </span>
+                  publishedReviews.map((r, i) => {
+                    const reply = replyByReview.get(r.id)
+                    return (
+                      <div key={i} className="border border-border bg-surface px-4 py-3 flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="inline-flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((n) => (
+                              <Star key={n} className={cn("w-3 h-3", r.overall >= n ? "text-primary fill-primary" : "text-border")} />
+                            ))}
+                          </span>
+                          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                            {r.author_role === "organizer" ? "From an organizer" : "From a medic"}
+                          </span>
+                        </div>
+                        {r.body && <p className="text-sm text-muted-foreground leading-relaxed">{r.body}</p>}
+                        {reply && (
+                          <div className="mt-1 border-l-2 border-border pl-3 flex flex-col gap-1">
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Response from this medic</span>
+                            <p className="text-sm text-muted-foreground leading-relaxed">{reply}</p>
+                          </div>
+                        )}
                       </div>
-                      {r.body && <p className="text-sm text-muted-foreground leading-relaxed">{r.body}</p>}
-                    </div>
-                  ))
+                    )
+                  })
                 )}
               </CardContent>
             </Card>

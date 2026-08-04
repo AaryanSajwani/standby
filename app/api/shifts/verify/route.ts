@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { verifyCode } from "@/lib/shifts/verification-code"
+import { isCheckInOpen, checkInOpensAt, toMillis } from "@/lib/shifts/timing"
 import { assertTransition } from "@/lib/bookings/state-machine"
 import { rateLimit } from "@/lib/rate-limit"
 
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
   // Load under RLS (organizer_select_own → only the slot's organizer sees it).
   const { data: bk } = await supabase
     .from("bookings")
-    .select("id, organizer_id, emt_id, status")
+    .select("id, organizer_id, emt_id, status, starts_at")
     .eq("id", bookingId)
     .maybeSingle()
   if (!bk) return NextResponse.json({ error: "not_found" }, { status: 404 })
@@ -70,6 +71,24 @@ export async function POST(request: Request) {
 
   const from = phase === "check_in" ? "accepted" : "checked_in"
   const to = phase === "check_in" ? "checked_in" : "completed"
+
+  // Time gate: check-in opens 60 min before start (a known start time only —
+  // NULL starts_at means no gate). Check-out is never time-gated. Enforced here
+  // server-side; the client also hides the panel, but the server is authoritative.
+  if (phase === "check_in") {
+    const startsAtMs = toMillis(bk.starts_at as string | null)
+    if (!isCheckInOpen(startsAtMs, Date.now())) {
+      const opensAt = checkInOpensAt(startsAtMs)
+      return NextResponse.json(
+        {
+          error: "too_early",
+          reason: "Check-in opens 60 minutes before the shift start.",
+          opensAt: opensAt != null ? new Date(opensAt).toISOString() : null,
+        },
+        { status: 409 }
+      )
+    }
+  }
   if (bk.status !== from) {
     return NextResponse.json(
       { error: "wrong_phase", reason: phase === "check_in" ? "This shift isn't ready to check in." : "Check the medic in first." },

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { currentCode, generateSecret } from "@/lib/shifts/verification-code"
+import { isCheckInOpen, checkInOpensAt, isSelfAttestOpen, toMillis } from "@/lib/shifts/timing"
 
 // POST { bookingId }  →  { code, secondsRemaining, expiresAt }
 //
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
   // Load under RLS (emt_select_assigned → only the assigned medic sees it).
   const { data: bk } = await supabase
     .from("bookings")
-    .select("id, emt_id, status")
+    .select("id, emt_id, status, starts_at")
     .eq("id", bookingId)
     .maybeSingle()
   if (!bk) return NextResponse.json({ error: "not_found" }, { status: 404 })
@@ -42,6 +43,27 @@ export async function POST(request: Request) {
   // checked_in → check out.
   if (bk.status !== "accepted" && bk.status !== "checked_in") {
     return NextResponse.json({ error: "not_active", reason: "This shift is not checking in right now." }, { status: 409 })
+  }
+
+  // Time gate on the CHECK-IN code (status accepted). Before the 60-min window
+  // the medic can't check in, so there's no live code to show — return the
+  // window instead, plus whether the self-attest fallback is available yet so the
+  // medic panel can offer it without a second roundtrip. NULL starts_at ⇒ no gate.
+  if (bk.status === "accepted") {
+    const startsAtMs = toMillis(bk.starts_at as string | null)
+    const now = Date.now()
+    if (!isCheckInOpen(startsAtMs, now)) {
+      const opensAt = checkInOpensAt(startsAtMs)
+      return NextResponse.json(
+        {
+          error: "too_early",
+          reason: "Check-in opens 60 minutes before the shift start.",
+          opensAt: opensAt != null ? new Date(opensAt).toISOString() : null,
+          selfAttestOpen: isSelfAttestOpen(startsAtMs, now),
+        },
+        { status: 409 }
+      )
+    }
   }
 
   const admin = createAdminClient()
@@ -67,5 +89,10 @@ export async function POST(request: Request) {
   }
 
   const { code, secondsRemaining, expiresAt } = currentCode(secretRow.secret)
-  return NextResponse.json({ code, secondsRemaining, expiresAt })
+  // On the check-in leg, also tell the medic whether the self-attest fallback is
+  // live yet (30 min past start with no organizer verification) so the panel can
+  // surface it. Never on check-out.
+  const selfAttestOpen =
+    bk.status === "accepted" && isSelfAttestOpen(toMillis(bk.starts_at as string | null), Date.now())
+  return NextResponse.json({ code, secondsRemaining, expiresAt, selfAttestOpen })
 }

@@ -1,8 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Check, ShieldCheck, Clock, AlertTriangle, Star } from "lucide-react"
+import { Check, ShieldCheck, Clock, AlertTriangle, Star, Camera, Pencil } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
@@ -15,15 +16,41 @@ export interface ShiftReview {
   subscores: Record<string, number>
   body: string | null
   status: string
+  published_at: string | null
+  edited_at: string | null
+}
+
+export interface ShiftReply {
+  id: string
+  review_id: string
+  author_user_id: string
+  body: string
+  edited_at: string | null
+  created_at: string
 }
 
 interface ShiftClientProps {
   bookingId: string
   viewerRole: "organizer" | "emt"
+  viewerId: string
   status: string
+  startsAtISO: string | null
+  offeredRate: number
   counterpartName: string
   myReview: ShiftReview | null
   counterpartReview: ShiftReview | null
+  replyToMyReview: ShiftReply | null
+  myReplyToTheirReview: ShiftReply | null
+}
+
+const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000
+
+function fmtTime(iso: string | null): string {
+  if (!iso) return ""
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
 }
 
 // Best-effort browser geolocation (never blocks check-in).
@@ -38,12 +65,25 @@ function getGeo(): Promise<{ latitude: number; longitude: number; accuracy: numb
   })
 }
 
-// ── Medic: rotating check-in code ────────────────────────────────────────────
-function CheckInCodePanel({ bookingId, phase }: { bookingId: string; phase: "check_in" | "check_out" }) {
+// ── Medic: rotating check-in code (with 60-min gate + self-attest fallback) ───
+function CheckInCodePanel({
+  bookingId,
+  viewerId,
+  phase,
+}: {
+  bookingId: string
+  viewerId: string
+  phase: "check_in" | "check_out"
+}) {
   const router = useRouter()
   const [code, setCode] = useState<string | null>(null)
   const [remaining, setRemaining] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  // Time gate: before the 60-min window there's no live code — show a countdown.
+  const [tooEarly, setTooEarly] = useState(false)
+  const [opensAt, setOpensAt] = useState<string | null>(null)
+  // Self-attest fallback availability (30 min past start with no verification).
+  const [selfAttestOpen, setSelfAttestOpen] = useState(false)
 
   const fetchCode = useCallback(async () => {
     try {
@@ -52,17 +92,30 @@ function CheckInCodePanel({ bookingId, phase }: { bookingId: string; phase: "che
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookingId }),
       })
+      const json = await res.json().catch(() => ({}))
+      if (res.status === 409 && json?.error === "too_early") {
+        // Not in the check-in window yet — count down to when it opens.
+        setTooEarly(true)
+        setOpensAt(json.opensAt ?? null)
+        setSelfAttestOpen(Boolean(json.selfAttestOpen))
+        setCode(null)
+        setError(null)
+        const opensMs = json.opensAt ? Date.parse(json.opensAt) : NaN
+        setRemaining(Number.isFinite(opensMs) ? Math.max(0, Math.floor((opensMs - Date.now()) / 1000)) : 0)
+        return
+      }
       if (res.status === 409) {
         // Status advanced (organizer verified) → reflect the new state.
         router.refresh()
         return
       }
-      const json = await res.json().catch(() => ({}))
       if (!res.ok) {
         setError(json?.reason || "Could not load your check-in code.")
         return
       }
+      setTooEarly(false)
       setCode(json.code)
+      setSelfAttestOpen(Boolean(json.selfAttestOpen))
       setRemaining(Math.max(0, Math.floor(json.secondsRemaining)))
       setError(null)
     } catch {
@@ -84,6 +137,28 @@ function CheckInCodePanel({ bookingId, phase }: { bookingId: string; phase: "che
     return () => clearInterval(tick)
   }, [fetchCode])
 
+  if (tooEarly) {
+    const mins = Math.floor(remaining / 60)
+    const secs = remaining % 60
+    return (
+      <section className="flex flex-col gap-4">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Check-in</h2>
+        <div className="border border-border bg-card px-6 py-8 flex flex-col items-center gap-3 text-center">
+          <Clock className="w-5 h-5 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground max-w-xs">
+            Check-in opens 60 minutes before the shift{opensAt ? <> — at <span className="text-foreground font-mono">{fmtTime(opensAt)}</span></> : ""}.
+          </p>
+          {remaining > 0 && (
+            <span className="font-mono text-2xl tabular-nums text-foreground">
+              {mins}m {String(secs).padStart(2, "0")}s
+            </span>
+          )}
+          {error && <p className="font-mono text-xs text-destructive">{error}</p>}
+        </div>
+      </section>
+    )
+  }
+
   const pretty = code ? `${code.slice(0, 3)} ${code.slice(3)}` : "— — —"
 
   return (
@@ -104,16 +179,176 @@ function CheckInCodePanel({ bookingId, phase }: { bookingId: string; phase: "che
         </div>
         {error && <p className="font-mono text-xs text-destructive">{error}</p>}
       </div>
+
+      {/* Self-attest fallback — only on the check-in leg, once 30 min past start
+          with no organizer verification. */}
+      {phase === "check_in" && selfAttestOpen && (
+        <SelfAttestPanel bookingId={bookingId} viewerId={viewerId} />
+      )}
     </section>
   )
 }
 
+// ── Medic: 30-min self-attest fallback ───────────────────────────────────────
+function SelfAttestPanel({ bookingId, viewerId }: { bookingId: string; viewerId: string }) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [note, setNote] = useState("")
+  const [file, setFile] = useState<File | null>(null)
+  const [confirmed, setConfirmed] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const submit = async () => {
+    if (!confirmed) return setError("Confirm you're on site first.")
+    setBusy(true)
+    setError(null)
+    try {
+      // Optional photo → owner's own folder in the private attestations bucket.
+      let photoPath: string | null = null
+      if (file) {
+        const supabase = createClient()
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg"
+        const path = `${viewerId}/checkin_${bookingId}_${Date.now()}.${ext}`
+        const { error: upErr } = await supabase.storage
+          .from("check-in-attestations")
+          .upload(path, file, { upsert: false, contentType: file.type || undefined })
+        if (upErr) {
+          setError("Photo upload failed — you can attest without it.")
+          setBusy(false)
+          return
+        }
+        photoPath = path
+      }
+      const geo = await getGeo()
+      const res = await fetch("/api/shifts/self-attest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId, note: note.trim() || undefined, photoPath, ...(geo ?? {}) }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(json?.reason || "Could not record your self-attest check-in.")
+        setBusy(false)
+        return
+      }
+      router.refresh()
+    } catch {
+      setError("Network error — please try again.")
+      setBusy(false)
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="font-mono text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-4 self-center"
+      >
+        Can&apos;t reach the organizer? Self-attest you&apos;re on site
+      </button>
+    )
+  }
+
+  return (
+    <div className="border border-risk-medium/30 bg-risk-medium/5 flex flex-col">
+      <div className="border-b border-risk-medium/20 px-5 py-3">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-risk-medium">Self-attest check-in</span>
+      </div>
+      <div className="px-5 py-5 flex flex-col gap-4">
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Use this only if the organizer can&apos;t verify you on site. It records a lower-assurance,
+          self-attested check-in with your location — the organizer is notified. Add a photo to
+          strengthen it.
+        </p>
+
+        <div className="flex flex-col gap-2">
+          <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1.5">
+            <Camera className="w-3 h-3" /> On-site photo <span className="text-muted-foreground/60 normal-case tracking-normal">(optional)</span>
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="font-mono text-xs text-muted-foreground file:mr-3 file:border file:border-input-border file:bg-input file:px-3 file:py-1.5 file:font-mono file:text-[10px] file:uppercase file:tracking-wider file:text-foreground"
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Note <span className="text-muted-foreground/60 normal-case tracking-normal">(optional)</span>
+          </label>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            maxLength={600}
+            rows={2}
+            placeholder="e.g. Arrived at the medical tent; organizer not reachable by phone."
+            className="w-full px-3 py-2.5 bg-input border border-input-border text-foreground placeholder:text-placeholder font-mono text-sm resize-none focus:outline-none focus:border-primary"
+          />
+        </div>
+
+        <label className="flex items-start gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={confirmed}
+            onChange={(e) => setConfirmed(e.target.checked)}
+            className="mt-0.5 accent-primary"
+          />
+          <span className="text-xs text-muted-foreground leading-relaxed">
+            I confirm I am physically on site for this shift. I understand this is recorded as a
+            self-attested check-in.
+          </span>
+        </label>
+
+        {error && <p className="font-mono text-xs text-destructive">{error}</p>}
+
+        <div className="flex gap-2">
+          <Button
+            disabled={busy || !confirmed}
+            onClick={submit}
+            className="rounded-none font-mono text-xs uppercase tracking-wider"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
+            {busy ? "Recording…" : "Self-attest check-in"}
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => setOpen(false)}
+            className="rounded-none font-mono text-xs uppercase tracking-wider"
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Organizer: verify the medic's code ───────────────────────────────────────
-function VerifyPanel({ bookingId, phase, counterpartName }: { bookingId: string; phase: "check_in" | "check_out"; counterpartName: string }) {
+function VerifyPanel({
+  bookingId,
+  phase,
+  counterpartName,
+  startsAtISO,
+}: {
+  bookingId: string
+  phase: "check_in" | "check_out"
+  counterpartName: string
+  startsAtISO: string | null
+}) {
   const router = useRouter()
   const [code, setCode] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Client-side display of the 60-min gate (server is authoritative). Only on the
+  // check-in leg, and only when a start time is set.
+  const opensAtMs =
+    phase === "check_in" && startsAtISO ? Date.parse(startsAtISO) - 60 * 60_000 : NaN
+  const gated = Number.isFinite(opensAtMs) && Date.now() < opensAtMs
 
   const submit = async () => {
     if (code.length !== 6) return setError("Enter the 6-digit code from the medic's screen.")
@@ -137,6 +372,21 @@ function VerifyPanel({ bookingId, phase, counterpartName }: { bookingId: string;
       setError("Network error — please try again.")
       setBusy(false)
     }
+  }
+
+  if (gated) {
+    return (
+      <section className="flex flex-col gap-4">
+        <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Verify medic on site</h2>
+        <div className="border border-border bg-card px-6 py-8 flex flex-col items-center gap-3 text-center">
+          <Clock className="w-5 h-5 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground max-w-xs">
+            Check-in opens 60 minutes before the shift — at{" "}
+            <span className="text-foreground font-mono">{fmtTime(new Date(opensAtMs).toISOString())}</span>.
+          </p>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -200,6 +450,194 @@ function StaticStars({ overall }: { overall: number }) {
   )
 }
 
+// ── Review edit form (my published review, within 24h) ───────────────────────
+function ReviewEditForm({
+  review,
+  viewerRole,
+  onDone,
+}: {
+  review: ShiftReview
+  viewerRole: "organizer" | "emt"
+  onDone: () => void
+}) {
+  const router = useRouter()
+  const dims = dimensionsFor(viewerRole)
+  const [overall, setOverall] = useState(review.overall)
+  const [scores, setScores] = useState<Record<string, number>>({ ...review.subscores })
+  const [text, setText] = useState(review.body ?? "")
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const setScore = (k: string, v: number) => setScores((s) => ({ ...s, [k]: v }))
+  const allRated = overall >= 1 && dims.every((d) => (scores[d.key] ?? 0) >= 1)
+
+  const submit = async () => {
+    setError(null)
+    const check = validateReviewText(text, viewerRole)
+    if (!check.ok) return setError(check.errors[0])
+    setBusy(true)
+    try {
+      const res = await fetch("/api/reviews/edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId: review.id, overall, subscores: scores, body: text }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(json?.errors?.[0] || json?.reason || "Could not save your changes.")
+        setBusy(false)
+        return
+      }
+      router.refresh()
+      onDone()
+    } catch {
+      setError("Network error — please try again.")
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="border border-border bg-card">
+      <div className="border-b border-border px-5 py-3">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-primary">Edit your review</span>
+      </div>
+      <div className="px-5 py-5 flex flex-col gap-5">
+        <div className="flex items-center justify-between gap-4">
+          <label className="font-mono text-[10px] uppercase tracking-widest text-foreground">Overall</label>
+          <ScoreSelect value={overall} onChange={setOverall} />
+        </div>
+        <Separator />
+        {dims.map((d) => (
+          <div key={d.key} className="flex items-center justify-between gap-4">
+            <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{d.label}</label>
+            <ScoreSelect value={scores[d.key] ?? 0} onChange={(v) => setScore(d.key, v)} />
+          </div>
+        ))}
+        <div className="flex flex-col gap-2">
+          <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Comments <span className="text-muted-foreground/60 normal-case tracking-normal">(optional)</span>
+          </label>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={MAX_REVIEW_LENGTH}
+            rows={3}
+            className="w-full px-3 py-2.5 bg-input border border-input-border text-foreground placeholder:text-placeholder font-mono text-sm resize-none focus:outline-none focus:border-primary"
+          />
+          <span className="font-mono text-[10px] text-muted-foreground text-right tabular-nums">{text.length}/{MAX_REVIEW_LENGTH}</span>
+        </div>
+        {error && <p className="font-mono text-xs text-destructive">{error}</p>}
+        <div className="flex gap-2">
+          <Button disabled={!allRated || busy} onClick={submit} className="rounded-none font-mono text-xs uppercase tracking-wider">
+            <Check className="w-3.5 h-3.5 mr-1.5" />
+            {busy ? "Saving…" : "Save changes"}
+          </Button>
+          <Button variant="ghost" onClick={onDone} className="rounded-none font-mono text-xs uppercase tracking-wider">
+            Cancel
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Reply form (the subject replies to a published review of them) ───────────
+function ReplyForm({
+  reviewId,
+  replierRole,
+  existing,
+}: {
+  reviewId: string
+  replierRole: "organizer" | "emt"
+  existing: ShiftReply | null
+}) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState(existing?.body ?? "")
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const submit = async () => {
+    setError(null)
+    const check = validateReviewText(text, replierRole)
+    if (!check.ok) return setError(check.errors[0])
+    if (!text.trim()) return setError("Write a reply first.")
+    setBusy(true)
+    try {
+      const res = await fetch("/api/reviews/reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId, body: text }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(json?.errors?.[0] || json?.reason || "Could not post your reply.")
+        setBusy(false)
+        return
+      }
+      router.refresh()
+      setOpen(false)
+      setBusy(false)
+    } catch {
+      setError("Network error — please try again.")
+      setBusy(false)
+    }
+  }
+
+  // Existing reply, not editing → show it with an edit affordance.
+  if (existing && !open) {
+    return (
+      <div className="mt-2 border-l-2 border-border pl-3 flex flex-col gap-1">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Your reply</span>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="font-mono text-[10px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+          >
+            <Pencil className="w-3 h-3" /> Edit
+          </button>
+        </div>
+        <p className="text-sm text-muted-foreground leading-relaxed">{existing.body}</p>
+      </div>
+    )
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-2 font-mono text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-4 self-start"
+      >
+        Reply publicly
+      </button>
+    )
+  }
+
+  return (
+    <div className="mt-2 flex flex-col gap-2">
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        maxLength={1000}
+        rows={2}
+        placeholder="A brief, professional response. Public — keep it about the working relationship."
+        className="w-full px-3 py-2.5 bg-input border border-input-border text-foreground placeholder:text-placeholder font-mono text-sm resize-none focus:outline-none focus:border-primary"
+      />
+      {error && <p className="font-mono text-xs text-destructive">{error}</p>}
+      <div className="flex gap-2">
+        <Button size="sm" disabled={busy} onClick={submit} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+          {busy ? "Posting…" : existing ? "Save reply" : "Post reply"}
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => setOpen(false)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+          Cancel
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 // ── Reviews (double-blind) ───────────────────────────────────────────────────
 function ReviewSection({
   bookingId,
@@ -207,12 +645,16 @@ function ReviewSection({
   counterpartName,
   myReview,
   counterpartReview,
+  replyToMyReview,
+  myReplyToTheirReview,
 }: {
   bookingId: string
   viewerRole: "organizer" | "emt"
   counterpartName: string
   myReview: ShiftReview | null
   counterpartReview: ShiftReview | null
+  replyToMyReview: ShiftReply | null
+  myReplyToTheirReview: ShiftReply | null
 }) {
   const router = useRouter()
   const dims = dimensionsFor(viewerRole)
@@ -222,16 +664,15 @@ function ReviewSection({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [phiConfirm, setPhiConfirm] = useState(false) // medic PHI interstitial gate
+  const [editing, setEditing] = useState(false)
 
   const setScore = (k: string, v: number) => setScores((s) => ({ ...s, [k]: v }))
-
   const allRated = overall >= 1 && dims.every((d) => (scores[d.key] ?? 0) >= 1)
 
   const submit = async () => {
     setError(null)
     const check = validateReviewText(text, viewerRole)
     if (!check.ok) return setError(check.errors[0])
-    // PHI interstitial for the medic — warn once, require confirmation.
     if (viewerRole === "emt" && check.warnings.length > 0 && !phiConfirm) {
       setPhiConfirm(true)
       return
@@ -257,6 +698,13 @@ function ReviewSection({
   }
 
   const subjectLabel = viewerRole === "organizer" ? "medic" : "organizer"
+  // I can edit my published review for 24h after it publishes (pending reviews
+  // are always editable). The server + DB guard enforce the real lock.
+  const myPublishedMs = myReview?.published_at ? Date.parse(myReview.published_at) : NaN
+  const canEditMine =
+    !!myReview &&
+    (myReview.status !== "published" ||
+      (Number.isFinite(myPublishedMs) && Date.now() < myPublishedMs + EDIT_WINDOW_MS))
 
   return (
     <section className="flex flex-col gap-4">
@@ -264,24 +712,49 @@ function ReviewSection({
 
       {/* Your review */}
       {myReview ? (
-        <div className="border border-border bg-card px-5 py-4 flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-3">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Your review of the {subjectLabel}</span>
-            <span className={cn(
-              "font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5",
-              myReview.status === "published" ? "border-risk-low/30 bg-risk-low/5 text-risk-low" : "border-risk-medium/30 bg-risk-medium/5 text-risk-medium"
-            )}>
-              {myReview.status === "published" ? "Published" : "Awaiting reveal"}
-            </span>
+        editing ? (
+          <ReviewEditForm review={myReview} viewerRole={viewerRole} onDone={() => setEditing(false)} />
+        ) : (
+          <div className="border border-border bg-card px-5 py-4 flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Your review of the {subjectLabel}</span>
+              <div className="flex items-center gap-2">
+                {canEditMine && (
+                  <button
+                    type="button"
+                    onClick={() => setEditing(true)}
+                    className="font-mono text-[10px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                  >
+                    <Pencil className="w-3 h-3" /> Edit
+                  </button>
+                )}
+                <span className={cn(
+                  "font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5",
+                  myReview.status === "published" ? "border-risk-low/30 bg-risk-low/5 text-risk-low" : "border-risk-medium/30 bg-risk-medium/5 text-risk-medium"
+                )}>
+                  {myReview.status === "published" ? "Published" : "Awaiting reveal"}
+                </span>
+              </div>
+            </div>
+            <StaticStars overall={myReview.overall} />
+            {myReview.body && <p className="text-sm text-muted-foreground leading-relaxed">{myReview.body}</p>}
+            {myReview.status === "published" && canEditMine && (
+              <p className="font-mono text-[10px] text-muted-foreground">Editable for 24 hours after publishing.</p>
+            )}
+            {myReview.status !== "published" && (
+              <p className="font-mono text-[10px] text-muted-foreground">
+                Hidden from {counterpartName} until they submit theirs (or 14 days pass) — then both reveal together.
+              </p>
+            )}
+            {/* The counterpart's reply to my review (read-only). */}
+            {replyToMyReview && (
+              <div className="mt-1 border-l-2 border-border pl-3 flex flex-col gap-1">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{counterpartName} replied</span>
+                <p className="text-sm text-muted-foreground leading-relaxed">{replyToMyReview.body}</p>
+              </div>
+            )}
           </div>
-          <StaticStars overall={myReview.overall} />
-          {myReview.body && <p className="text-sm text-muted-foreground leading-relaxed">{myReview.body}</p>}
-          {myReview.status !== "published" && (
-            <p className="font-mono text-[10px] text-muted-foreground">
-              Hidden from {counterpartName} until they submit theirs (or 14 days pass) — then both reveal together.
-            </p>
-          )}
-        </div>
+        )
       ) : (
         <div className="border border-border bg-card">
           <div className="border-b border-border px-5 py-3">
@@ -352,12 +825,13 @@ function ReviewSection({
         </div>
       )}
 
-      {/* Counterpart review — only when published */}
+      {/* Counterpart review — only when published. I'm its subject, so I can reply. */}
       {counterpartReview ? (
         <div className="border border-border bg-card px-5 py-4 flex flex-col gap-2">
           <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{counterpartName}&apos;s review</span>
           <StaticStars overall={counterpartReview.overall} />
           {counterpartReview.body && <p className="text-sm text-muted-foreground leading-relaxed">{counterpartReview.body}</p>}
+          <ReplyForm reviewId={counterpartReview.id} replierRole={viewerRole} existing={myReplyToTheirReview} />
         </div>
       ) : (
         <p className="font-mono text-[10px] text-muted-foreground">
@@ -368,20 +842,37 @@ function ReviewSection({
   )
 }
 
-export function ShiftClient({ bookingId, viewerRole, status, counterpartName, myReview, counterpartReview }: ShiftClientProps) {
+export function ShiftClient({
+  bookingId,
+  viewerRole,
+  viewerId,
+  status,
+  startsAtISO,
+  offeredRate,
+  counterpartName,
+  myReview,
+  counterpartReview,
+  replyToMyReview,
+  myReplyToTheirReview,
+}: ShiftClientProps) {
   // Check-in / check-out phase from the current booking status.
   const phase: "check_in" | "check_out" | null =
     status === "accepted" ? "check_in" : status === "checked_in" ? "check_out" : null
 
   if (status === "completed") {
     return (
-      <ShiftClientCompleted
-        bookingId={bookingId}
-        viewerRole={viewerRole}
-        counterpartName={counterpartName}
-        myReview={myReview}
-        counterpartReview={counterpartReview}
-      />
+      <div className="flex flex-col gap-8">
+        <StatusRail status="completed" />
+        <ReviewSection
+          bookingId={bookingId}
+          viewerRole={viewerRole}
+          counterpartName={counterpartName}
+          myReview={myReview}
+          counterpartReview={counterpartReview}
+          replyToMyReview={replyToMyReview}
+          myReplyToTheirReview={myReplyToTheirReview}
+        />
+      </div>
     )
   }
 
@@ -390,10 +881,14 @@ export function ShiftClient({ bookingId, viewerRole, status, counterpartName, my
       <div className="flex flex-col gap-8">
         <StatusRail status={status} />
         {viewerRole === "emt" ? (
-          <CheckInCodePanel bookingId={bookingId} phase={phase} />
+          <CheckInCodePanel bookingId={bookingId} viewerId={viewerId} phase={phase} />
         ) : (
-          <VerifyPanel bookingId={bookingId} phase={phase} counterpartName={counterpartName} />
+          <VerifyPanel bookingId={bookingId} phase={phase} counterpartName={counterpartName} startsAtISO={startsAtISO} />
         )}
+        {/* Payment coordination — Phase 1 settles off-platform. */}
+        <p className="font-mono text-[10px] text-muted-foreground leading-relaxed border-t border-border pt-4">
+          Agreed at ${offeredRate}/hr. Settle payment directly with your {viewerRole === "organizer" ? "medic" : "organizer"} — Standby doesn&apos;t process payments yet.
+        </p>
       </div>
     )
   }
@@ -408,21 +903,6 @@ export function ShiftClient({ bookingId, viewerRole, status, counterpartName, my
           ? "This is an open slot — accept an applicant from the event page."
           : "This shift isn't active."}
       </p>
-    </div>
-  )
-}
-
-function ShiftClientCompleted(props: {
-  bookingId: string
-  viewerRole: "organizer" | "emt"
-  counterpartName: string
-  myReview: ShiftReview | null
-  counterpartReview: ShiftReview | null
-}) {
-  return (
-    <div className="flex flex-col gap-8">
-      <StatusRail status="completed" />
-      <ReviewSection {...props} />
     </div>
   )
 }

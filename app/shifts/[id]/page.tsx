@@ -7,7 +7,7 @@ import { formatEventDate } from "@/lib/bookings"
 import { buttonVariants } from "@/components/ui/button"
 import { CertBadge } from "@/components/CertBadge"
 import { cn } from "@/lib/utils"
-import { ShiftClient, type ShiftReview } from "./shift-client"
+import { ShiftClient, type ShiftReview, type ShiftReply } from "./shift-client"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = { title: "Shift — Standby" }
@@ -19,6 +19,7 @@ interface ShiftBooking {
   event_name: string
   event_type: string
   event_date: string
+  starts_at: string | null
   location: string
   duration_hours: number
   offered_rate: number
@@ -36,7 +37,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
   // Participant-only RLS: a non-participant reads null → 404.
   const { data: bk } = await supabase
     .from("bookings")
-    .select("id, organizer_id, emt_id, event_name, event_type, event_date, location, duration_hours, offered_rate, status")
+    .select("id, organizer_id, emt_id, event_name, event_type, event_date, starts_at, location, duration_hours, offered_rate, status")
     .eq("id", id)
     .maybeSingle()
 
@@ -69,12 +70,33 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
         ? supabase.from("emt_profiles").select("cert_level").eq("user_id", booking.emt_id).maybeSingle()
         : Promise.resolve({ data: null as { cert_level: string | null } | null }),
       // My own review (any status — authors read their own).
-      supabase.from("reviews").select("id, overall, subscores, body, status").eq("booking_id", id).eq("author_user_id", user.id).maybeSingle(),
+      supabase.from("reviews").select("id, overall, subscores, body, status, published_at, edited_at").eq("booking_id", id).eq("author_user_id", user.id).maybeSingle(),
       // Counterpart's review — only visible once published (double-blind).
       counterpartId
-        ? supabase.from("reviews").select("id, overall, subscores, body, status").eq("booking_id", id).eq("author_user_id", counterpartId).eq("status", "published").maybeSingle()
+        ? supabase.from("reviews").select("id, overall, subscores, body, status, published_at, edited_at").eq("booking_id", id).eq("author_user_id", counterpartId).eq("status", "published").maybeSingle()
         : Promise.resolve({ data: null }),
     ])
+
+  const myReview = (myReviewRow as ShiftReview | null) ?? null
+  const counterpartReview = (theirReviewRow as ShiftReview | null) ?? null
+
+  // Replies to either review. RLS: a reply is visible when its parent is
+  // published (public) or the caller authored it. My reply to their review and
+  // the counterpart's reply to my review both resolve here.
+  const reviewIds = [myReview?.id, counterpartReview?.id].filter(Boolean) as string[]
+  const { data: replyRows } = reviewIds.length
+    ? await supabase
+        .from("review_replies")
+        .select("id, review_id, author_user_id, body, edited_at, created_at")
+        .in("review_id", reviewIds)
+    : { data: [] as ShiftReply[] }
+  const replies = (replyRows as ShiftReply[] | null) ?? []
+  // The counterpart's reply to MY review (read-only for me), and MY reply to
+  // THEIR review (which I can post/edit).
+  const replyToMyReview = myReview ? replies.find((r) => r.review_id === myReview.id) ?? null : null
+  const myReplyToTheirReview = counterpartReview
+    ? replies.find((r) => r.review_id === counterpartReview.id && r.author_user_id === user.id) ?? null
+    : null
 
   const counterpartName = counterpartProfile?.full_name ?? (viewerRole === "organizer" ? "Medic" : "Organizer")
 
@@ -107,10 +129,15 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
         <ShiftClient
           bookingId={booking.id}
           viewerRole={viewerRole}
+          viewerId={user.id}
           status={booking.status}
+          startsAtISO={booking.starts_at}
+          offeredRate={booking.offered_rate}
           counterpartName={counterpartName}
-          myReview={(myReviewRow as ShiftReview | null) ?? null}
-          counterpartReview={(theirReviewRow as ShiftReview | null) ?? null}
+          myReview={myReview}
+          counterpartReview={counterpartReview}
+          replyToMyReview={replyToMyReview}
+          myReplyToTheirReview={myReplyToTheirReview}
         />
       </div>
     </main>

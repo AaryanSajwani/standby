@@ -43,6 +43,7 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
   // Prefilled from the event; editable so an organizer can post a slot even when
   // the event row is sparse (event_date / attendance are nullable).
   const [eventDate, setEventDate] = useState(event.eventDate ?? "")
+  const [startTime, setStartTime] = useState("")
   const [location, setLocation] = useState(event.venueAddress ?? "")
   const [attendance, setAttendance] = useState(
     event.expectedAttendance ? String(event.expectedAttendance) : ""
@@ -65,6 +66,12 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
     setSubmitting(true)
     setError(null)
     const supabase = createClient()
+    // Optional start time → timestamptz for the check-in window (0013).
+    const startsAtISO = (() => {
+      if (!eventDate || !startTime) return null
+      const d = new Date(`${eventDate}T${startTime}`)
+      return Number.isNaN(d.getTime()) ? null : d.toISOString()
+    })()
     // organizer_insert_open_slot (migration 0011): status must be 'open',
     // emt_id null, and the event must belong to the caller.
     const { error: insertError } = await supabase.from("bookings").insert({
@@ -74,6 +81,7 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
       event_name: event.name,
       event_type: event.eventType,
       event_date: eventDate,
+      starts_at: startsAtISO,
       location: location.trim(),
       expected_attendance: Number(attendance),
       duration_hours: durationNum,
@@ -88,6 +96,7 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
     }
     setSubmitting(false)
     setOpen(false)
+    setStartTime("")
     setDuration("")
     setRate("")
     setNotes("")
@@ -159,6 +168,13 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
                 Event date <span className="text-primary">*</span>
               </label>
               <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="rounded-none font-mono text-sm h-10" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Start time <span className="text-muted-foreground/60 normal-case tracking-normal">(optional)</span>
+              </label>
+              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="rounded-none font-mono text-sm h-10" />
+              <span className="font-mono text-[10px] text-muted-foreground leading-relaxed">Sets the on-site check-in window (opens 60 min before).</span>
             </div>
             <div className="flex flex-col gap-2">
               <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">

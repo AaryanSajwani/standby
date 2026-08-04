@@ -37,6 +37,7 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
   const [eventName, setEventName] = useState("")
   const [eventType, setEventType] = useState("")
   const [eventDate, setEventDate] = useState("")
+  const [startTime, setStartTime] = useState("")
   const [location, setLocation] = useState("")
   const [attendance, setAttendance] = useState("")
   const [duration, setDuration] = useState("")
@@ -66,6 +67,15 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
 
   const durationNum = Number(duration)
   const estimatedTotal = durationNum > 0 ? Math.round(durationNum * hourlyRate) : 0
+
+  // Combine date + optional start time into a timestamptz. Left null when the
+  // organizer skips the time — the check-in window + self-attest fallback simply
+  // don't apply to a timeless booking (bookings.starts_at nullable, migration 0013).
+  const startsAtISO = (() => {
+    if (!eventDate || !startTime) return null
+    const d = new Date(`${eventDate}T${startTime}`)
+    return Number.isNaN(d.getTime()) ? null : d.toISOString()
+  })()
 
   const valid =
     eventName.trim() &&
@@ -105,6 +115,7 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
         event_name: eventName.trim(),
         event_type: eventType,
         event_date: eventDate,
+        starts_at: startsAtISO,
         location: location.trim(),
         expected_attendance: Number(attendance),
         duration_hours: durationNum,
@@ -240,6 +251,22 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
               />
             </div>
 
+            <div className="flex flex-col gap-2">
+              <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Start time{" "}
+                <span className="text-muted-foreground/60 normal-case tracking-normal">(optional)</span>
+              </label>
+              <Input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="rounded-none font-mono text-sm h-10"
+              />
+              <span className="font-mono text-[10px] text-muted-foreground leading-relaxed">
+                Sets the on-site check-in window (opens 60 min before).
+              </span>
+            </div>
+
             <div className="flex flex-col gap-2 md:col-span-2">
               <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 Location <span className="text-primary">*</span>
@@ -318,6 +345,13 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
             >
               {submitting ? "Sending…" : "Send request"}
             </Button>
+          </div>
+          {/* Payment coordination — Phase 1 settles off-platform. */}
+          <div className="border-t border-border px-5 py-3">
+            <p className="font-mono text-[10px] text-muted-foreground leading-relaxed">
+              {emtName} keeps 100% of their posted rate. You&apos;ll settle payment directly with your
+              medic — Standby doesn&apos;t process payments yet.
+            </p>
           </div>
         </div>
       )}

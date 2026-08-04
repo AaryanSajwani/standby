@@ -24,6 +24,7 @@ them in the Supabase SQL editor (the same place the auth migration lives).
 | `0010_checkin_and_reviews.sql` | PR B: shift_verification_secrets, check_ins, reviews (+revisions/replies/reports) with the double-blind read policy, emt_reliability_stats view | **Not yet applied** | Depends on 0009; apply with PR B app code. Hardened 2026-07-27 after adversarial review — see note below |
 | `0011_open_claim_applications.sql` | PR A open path: `booking_applications` (medics request open slots) + a sibling bookings INSERT policy for `open` slots | **Not yet applied** | Depends on 0009 (the `open` status + superset trigger). Apply with the open-claim app code. Organizer accept/reject is a service-role action (multi-row atomic — see `lib/bookings/applications.ts` `planAcceptance`) |
 | `0012_open_slot_visibility.sql` | PR A open path (gap fix): SELECT policy so medics can SEE open slots — required for the board AND for 0011's application-insert EXISTS check to pass | **Not yet applied** | Depends on 0009 + 0011. Apply AFTER 0011. Without it the medic apply-insert is rejected by its own RLS (medic can't SELECT the open booking). Additive permissive policy |
+| `0013_shift_time_and_self_attest.sql` | PR B follow-up: `bookings.starts_at` (shift start timestamp) + private `check-in-attestations` Storage bucket (owner-folder, append-only) | **Not yet applied** | No — nullable column (NULL = no time gate, exactly pre-0013 behavior) + additive bucket. Ships WITH the app code that reads `starts_at` (shift page selects it), so apply before/with that deploy |
 
 > **0010 review-security hardening (2026-07-27).** An adversarial review found four
 > real defects in the *reviews* surface, all now fixed IN THIS FILE (before it was ever
@@ -108,8 +109,8 @@ them in the Supabase SQL editor (the same place the auth migration lives).
   `POST /api/shifts/verify` (organizer verifies → writes `check_ins` + transitions
   accepted→checked_in / checked_in→completed). The verify route rate-limits
   attempts per (booking, organizer) — the brute-force cap the code module requires.
-  Geolocation captured best-effort. **Deferred:** QR camera scanning and the
-  30-min self-attest fallback (manual entry is the shipped path; noted in TASKS.md).
+  Geolocation captured best-effort. **Deferred:** QR camera scanning (manual
+  entry is the shipped path; noted in TASKS.md).
 - **Reviews:** double-blind. Submit via `POST /api/reviews` (server-side
   content-guard + structural RLS insert); both-submitted publishes eagerly, and
   `GET /api/cron/publish-reviews` (daily, `vercel.json`, `CRON_SECRET`-gated) is the
@@ -122,6 +123,31 @@ them in the Supabase SQL editor (the same place the auth migration lives).
 - **Test the blind window with a direct client query**, not the UI (§ verification).
 - **Env needed:** `CRON_SECRET` (Vercel Cron auth) + the existing
   `SUPABASE_SERVICE_ROLE_KEY`. Without them the flow degrades (logged skip).
+
+### 0013 — Shift start time + self-attest fallback (PR B follow-up)
+- **Time gate (60 min before start):** `lib/shifts/timing.ts` (unit-tested) defines
+  the windows; enforced server-side in `POST /api/shifts/code` (medic) and
+  `POST /api/shifts/verify` (organizer). `bookings.starts_at` is **nullable** — a
+  booking with no start time has NO gate (check-in anytime), exactly the pre-0013
+  behavior, so legacy rows are untouched. Start time is collected (optional) in both
+  creation forms: `app/emt/[id]/request-emt.tsx` and `app/events/[id]/open-slot-manager.tsx`.
+- **30-min self-attest fallback:** `POST /api/shifts/self-attest` — when no organizer
+  verification lands within 30 min of start, the assigned medic attests they're on
+  site with best-effort geo, an optional Storage photo (uploaded client-side to the
+  medic's own folder in `check-in-attestations`), and an optional note. Records a
+  `check_ins` row (`method='fallback'`, `verification_quality='self_attested'`) and
+  transitions accepted→checked_in via the service role (guarded on prior status →
+  idempotent). Organizer is emailed (best-effort, `lib/notifications.ts`
+  `selfAttestCheckInEmail`). UI: the self-attest panel in `app/shifts/[id]/shift-client.tsx`,
+  shown to the medic only once 30 min past start.
+- **Review edit (24h) + reply** (NO new migration — uses 0010 tables): `POST
+  /api/reviews/edit` (author edits own review while pending or ≤24h after publish;
+  DB guard is the real lock; appends a `review_revisions` row) and `POST
+  /api/reviews/reply` (the review's subject posts/edits one public reply). UI: inline
+  edit + reply on `/shifts/[id]`; replies also render read-only on `/emt/[id]`.
+- Reads degrade gracefully if `starts_at` is null; the fallback + gate simply don't
+  engage. **This whole batch ships together** — the shift page selects `starts_at`,
+  so 0013 must be applied before/with the deploy.
 
 ## Still needs a provider key (not a migration)
 - **Email notifications (§5): SHIPPED 2026-07-22.** Resend key is in env (local + Vercel);

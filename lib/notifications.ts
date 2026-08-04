@@ -142,3 +142,23 @@ export function bookingDecisionEmail(
     ),
   }
 }
+
+// Sent to the ORGANIZER when a medic uses the 30-min self-attest fallback (the
+// organizer didn't verify on site within 30 min of start). It's an FYI + a nudge
+// to confirm check-out later — the in-app shift page carries the geo/photo/note.
+export function selfAttestCheckInEmail(
+  b: BookingEmailData,
+  emtName: string,
+  origin: string,
+  bookingId: string
+) {
+  return {
+    subject: `${emtName} self-attested check-in — ${b.eventName}`,
+    html: shell(
+      "Your medic self-attested on-site check-in",
+      `${esc(emtName)} confirmed they're on site for this shift using the self-attest fallback — this happens when no on-site verification was recorded within 30 minutes of start. Their location (and photo, if provided) is on the shift page. Verify check-out with them when the shift ends.`,
+      bookingRows(b, [["Medic", esc(emtName)], ["Check-in", "Self-attested"]]),
+      { label: "Open the shift", url: `${origin}/shifts/${bookingId}` }
+    ),
+  }
+}
