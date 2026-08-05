@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { planAcceptance, type ApplicationRow } from "@/lib/bookings/applications"
 import { assertTransition } from "@/lib/bookings/state-machine"
+import { openSlotAcceptedEmail, sendEmail, type BookingEmailData } from "@/lib/notifications"
 
 // POST { applicationId }
 //
@@ -151,6 +152,43 @@ export async function POST(request: Request) {
     metadata: { application_id: plan.acceptId, rejected: plan.rejectIds.length },
   })
   if (trailErr) console.error("[accept-application] audit insert failed (continuing):", trailErr.message)
+
+  // Best-effort: email the accepted medic they got the slot. Open-claim's
+  // counterpart to the direct-request "requested" email. Resolve the medic's
+  // email server-side with the service role (never returned to the caller), and
+  // rebuild the content from the DB row. Failure never blocks the accept.
+  try {
+    const [{ data: fullBooking }, medicUser, orgProfile] = await Promise.all([
+      admin
+        .from("bookings")
+        .select("event_name, event_date, location, duration_hours, offered_rate, notes")
+        .eq("id", app.booking_id)
+        .maybeSingle(),
+      admin.auth.admin.getUserById(app.emt_id as string),
+      admin.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
+    ])
+    const medicEmail = medicUser.data.user?.email
+    if (fullBooking && medicEmail) {
+      const data: BookingEmailData = {
+        eventName: fullBooking.event_name,
+        eventDate: fullBooking.event_date,
+        location: fullBooking.location,
+        durationHours: Number(fullBooking.duration_hours) || 0,
+        offeredRate: fullBooking.offered_rate,
+        notes: fullBooking.notes,
+      }
+      const origin = process.env.SITE_URL ?? new URL(request.url).origin
+      const { subject, html } = openSlotAcceptedEmail(
+        data,
+        orgProfile.data?.full_name || "The organizer",
+        origin,
+        app.booking_id as string
+      )
+      void sendEmail(medicEmail, subject, html)
+    }
+  } catch (e) {
+    console.error("[accept-application] medic notify failed (continuing):", e)
+  }
 
   return NextResponse.json({
     ok: true,

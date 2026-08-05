@@ -143,6 +143,22 @@ export function bookingDecisionEmail(
   }
 }
 
+// Sent to the MEDIC when an organizer accepts their request to fill an open slot.
+// The open-claim counterpart of bookingRequestedEmail: the direct-request flow
+// emails the medic a REQUEST (they then accept); open-claim inverts it — the
+// medic already requested, so this confirms they got the slot.
+export function openSlotAcceptedEmail(b: BookingEmailData, organizerName: string, origin: string, bookingId: string) {
+  return {
+    subject: `You're confirmed — ${b.eventName}`,
+    html: shell(
+      "Your open-slot request was accepted",
+      `${esc(organizerName)} accepted your request to cover this shift — you're confirmed. Open the shift to check in on site and add it to your calendar.`,
+      bookingRows(b, [["From", esc(organizerName)], ["Status", "Confirmed"]]),
+      { label: "Open the shift", url: `${origin}/shifts/${bookingId}` }
+    ),
+  }
+}
+
 // Sent to the ORGANIZER when a medic uses the 30-min self-attest fallback (the
 // organizer didn't verify on site within 30 min of start). It's an FYI + a nudge
 // to confirm check-out later — the in-app shift page carries the geo/photo/note.

@@ -11,6 +11,24 @@ export type BookingStatus =
   | "completed"
   | "declined"
   | "cancelled"
+  // Negative terminal outcomes (0009 lifecycle). `cancelled_organizer` /
+  // `cancelled_emt` split who cancelled; `no_show_emt` is an organizer-marked
+  // no-show. These feed the reliability signal and render as their own pills.
+  | "cancelled_organizer"
+  | "cancelled_emt"
+  | "no_show_emt"
+
+// True for statuses that are a negative/cancelled terminal outcome — rendered
+// muted in lists and excluded from active work.
+export function isNegativeTerminal(status: BookingStatus): boolean {
+  return (
+    status === "declined" ||
+    status === "cancelled" ||
+    status === "cancelled_organizer" ||
+    status === "cancelled_emt" ||
+    status === "no_show_emt"
+  )
+}
 
 // Explicit column list — same allowlist convention as EMT_PUBLIC_COLUMNS.
 export const BOOKING_COLUMNS =

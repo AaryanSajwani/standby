@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { validateReviewText, MAX_REVIEW_LENGTH } from "@/lib/reviews/content-guard"
 import { dimensionsFor } from "@/lib/reviews/dimensions"
+import { ReportReviewButton } from "@/components/reviews/ReportReviewButton"
 
 export interface ShiftReview {
   id: string
@@ -415,6 +416,99 @@ function VerifyPanel({
         <p className="font-mono text-[10px] text-muted-foreground text-center">Codes expire every 60s — use the one showing now.</p>
       </div>
     </section>
+  )
+}
+
+// ── Shift issue actions (mark no-show / cancel) ──────────────────────────────
+function ShiftIssueActions({
+  bookingId,
+  viewerRole,
+}: {
+  bookingId: string
+  viewerRole: "organizer" | "emt"
+}) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [pending, setPending] = useState<null | "no_show_emt" | "cancelled_organizer" | "cancelled_emt">(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const run = async (action: "no_show_emt" | "cancelled_organizer" | "cancelled_emt") => {
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch("/api/bookings/status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId, action }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(json?.reason || "Could not update the shift.")
+        setBusy(false)
+        return
+      }
+      router.refresh()
+    } catch {
+      setError("Network error — please try again.")
+      setBusy(false)
+    }
+  }
+
+  const label = (a: typeof pending) =>
+    a === "no_show_emt" ? "mark the medic a no-show" : "cancel this shift"
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-destructive underline underline-offset-4 self-start"
+      >
+        Report an issue
+      </button>
+    )
+  }
+
+  return (
+    <div className="border border-border bg-card px-5 py-4 flex flex-col gap-3">
+      <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Report an issue</span>
+      {pending ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs text-muted-foreground">
+            Confirm you want to {label(pending)}. This is recorded and affects the medic&apos;s reliability record.
+          </p>
+          <div className="flex gap-2">
+            <Button size="sm" disabled={busy} onClick={() => run(pending)} className="rounded-none font-mono text-[10px] uppercase tracking-wider bg-destructive hover:bg-destructive/90">
+              {busy ? "Working…" : "Confirm"}
+            </Button>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={() => setPending(null)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+              Back
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {viewerRole === "organizer" && (
+            <Button size="sm" variant="outline" onClick={() => setPending("no_show_emt")} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+              Mark no-show
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setPending(viewerRole === "organizer" ? "cancelled_organizer" : "cancelled_emt")}
+            className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+          >
+            Cancel shift
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setOpen(false)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+            Never mind
+          </Button>
+        </div>
+      )}
+      {error && <p className="font-mono text-xs text-destructive">{error}</p>}
+    </div>
   )
 }
 
@@ -828,7 +922,10 @@ function ReviewSection({
       {/* Counterpart review — only when published. I'm its subject, so I can reply. */}
       {counterpartReview ? (
         <div className="border border-border bg-card px-5 py-4 flex flex-col gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{counterpartName}&apos;s review</span>
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{counterpartName}&apos;s review</span>
+            <ReportReviewButton reviewId={counterpartReview.id} />
+          </div>
           <StaticStars overall={counterpartReview.overall} />
           {counterpartReview.body && <p className="text-sm text-muted-foreground leading-relaxed">{counterpartReview.body}</p>}
           <ReplyForm reviewId={counterpartReview.id} replierRole={viewerRole} existing={myReplyToTheirReview} />
@@ -885,6 +982,8 @@ export function ShiftClient({
         ) : (
           <VerifyPanel bookingId={bookingId} phase={phase} counterpartName={counterpartName} startsAtISO={startsAtISO} />
         )}
+        {/* No-show / cancel — only legal before check-in. */}
+        {status === "accepted" && <ShiftIssueActions bookingId={bookingId} viewerRole={viewerRole} />}
         {/* Payment coordination — Phase 1 settles off-platform. */}
         <p className="font-mono text-[10px] text-muted-foreground leading-relaxed border-t border-border pt-4">
           Agreed at ${offeredRate}/hr. Settle payment directly with your {viewerRole === "organizer" ? "medic" : "organizer"} — Standby doesn&apos;t process payments yet.

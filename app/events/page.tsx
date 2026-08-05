@@ -2,7 +2,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { Calendar, MapPin, Users, Clock, FileText } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
-import { BOOKING_COLUMNS, formatEventDate, mapBooking, type RawBooking, type Booking } from "@/lib/bookings"
+import { BOOKING_COLUMNS, formatEventDate, mapBooking, isNegativeTerminal, type RawBooking, type Booking } from "@/lib/bookings"
 import { joinedFullName, fetchCertLevels } from "@/lib/emt"
 import { CertBadge } from "@/components/CertBadge"
 import { EVENT_TYPE_LABELS } from "@/lib/assessment"
@@ -23,6 +23,9 @@ const STATUS_STYLES: Record<Booking["status"], { label: string; className: strin
   completed:  { label: "Completed",  className: "border-border text-foreground" },
   declined:   { label: "Declined",   className: "border-border text-muted-foreground" },
   cancelled:  { label: "Cancelled",  className: "border-border text-muted-foreground" },
+  cancelled_organizer: { label: "Cancelled", className: "border-border text-muted-foreground" },
+  cancelled_emt:       { label: "Cancelled by medic", className: "border-border text-muted-foreground" },
+  no_show_emt:         { label: "No-show", className: "border-risk-high/30 bg-risk-high/5 text-risk-high" },
 }
 
 export default async function EventsPage() {
@@ -230,7 +233,7 @@ export default async function EventsPage() {
           <div className="flex flex-col gap-px">
             {bookings.map((b) => {
               const status = STATUS_STYLES[b.status]
-              const muted = b.status === "declined" || b.status === "cancelled"
+              const muted = isNegativeTerminal(b.status)
               return (
                 <div key={b.id} className={`border border-border bg-card flex flex-col gap-0 ${muted ? "opacity-40" : ""}`}>
                   <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-4">

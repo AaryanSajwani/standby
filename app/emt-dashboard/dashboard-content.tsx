@@ -8,7 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { AddToCalendarButton } from "@/components/AddToCalendarButton"
 import { CertBadge } from "@/components/CertBadge"
-import type { Booking, BookingStatus } from "@/lib/bookings"
+import { isNegativeTerminal, type Booking, type BookingStatus } from "@/lib/bookings"
 import type { AvailabilityDate } from "@/lib/availability"
 import { AvailabilityCalendar } from "@/components/AvailabilityCalendar"
 import { cn } from "@/lib/utils"
@@ -31,11 +31,12 @@ function RequestCard({
   const isPastAcc   = (req.status === "accepted" || req.status === "checked_in") && past
   const isCompleted = req.status === "completed"
   const isDeclined  = req.status === "declined"
-  const isCancelled = req.status === "cancelled"
+  const isNoShow    = req.status === "no_show_emt"
+  const isCancelled = req.status === "cancelled" || req.status === "cancelled_organizer" || req.status === "cancelled_emt"
   const shiftHref   = `/shifts/${req.id}`
 
   return (
-    <div className={`border border-border bg-card flex flex-col gap-0 transition-opacity ${isDeclined || isCancelled ? "opacity-40" : ""}`}>
+    <div className={`border border-border bg-card flex flex-col gap-0 transition-opacity ${isDeclined || isCancelled || isNoShow ? "opacity-40" : ""}`}>
       <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-4">
         <div className="flex flex-col gap-1 min-w-0">
           <span className="text-foreground font-medium text-base leading-tight truncate">{req.eventName}</span>
@@ -70,6 +71,11 @@ function RequestCard({
           {isCancelled && (
             <span className="font-mono text-[10px] uppercase tracking-widest border border-border text-muted-foreground px-2 py-0.5">
               Cancelled
+            </span>
+          )}
+          {isNoShow && (
+            <span className="font-mono text-[10px] uppercase tracking-widest border border-risk-high/30 bg-risk-high/5 text-risk-high px-2 py-0.5">
+              No-show
             </span>
           )}
         </div>
@@ -273,7 +279,7 @@ export function DashboardContent({ displayName, verified, available, certLevel, 
   const completed = requests
     .filter((r) => r.status === "completed")
     .sort((a, b) => (b.dateISO || "").localeCompare(a.dateISO || "")) // most recent first
-  const resolved = requests.filter((r) => r.status === "declined" || r.status === "cancelled")
+  const resolved = requests.filter((r) => isNegativeTerminal(r.status))
 
   // Optimistic status update — revert on failure
   const updateStatus = async (id: string, status: BookingStatus) => {

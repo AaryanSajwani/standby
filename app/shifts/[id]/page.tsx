@@ -117,7 +117,13 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
           <h1 className="text-foreground text-2xl md:text-3xl font-semibold leading-tight">{booking.event_name}</h1>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-2">
-              {viewerRole === "organizer" ? counterpartName : counterpartName}
+              {viewerRole === "emt" && counterpartId ? (
+                <Link href={`/organizer/${counterpartId}`} className="hover:text-foreground underline underline-offset-2 decoration-dotted">
+                  {counterpartName}
+                </Link>
+              ) : (
+                counterpartName
+              )}
               {viewerRole === "organizer" && <CertBadge level={medicProfile?.cert_level ?? null} />}
             </span>
             <span className="inline-flex items-center gap-1"><Calendar className="w-3 h-3" />{formatEventDate(booking.event_date)}</span>

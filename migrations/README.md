@@ -24,7 +24,8 @@ them in the Supabase SQL editor (the same place the auth migration lives).
 | `0010_checkin_and_reviews.sql` | PR B: shift_verification_secrets, check_ins, reviews (+revisions/replies/reports) with the double-blind read policy, emt_reliability_stats view | **Not yet applied** | Depends on 0009; apply with PR B app code. Hardened 2026-07-27 after adversarial review — see note below |
 | `0011_open_claim_applications.sql` | PR A open path: `booking_applications` (medics request open slots) + a sibling bookings INSERT policy for `open` slots | **Not yet applied** | Depends on 0009 (the `open` status + superset trigger). Apply with the open-claim app code. Organizer accept/reject is a service-role action (multi-row atomic — see `lib/bookings/applications.ts` `planAcceptance`) |
 | `0012_open_slot_visibility.sql` | PR A open path (gap fix): SELECT policy so medics can SEE open slots — required for the board AND for 0011's application-insert EXISTS check to pass | **Not yet applied** | Depends on 0009 + 0011. Apply AFTER 0011. Without it the medic apply-insert is rejected by its own RLS (medic can't SELECT the open booking). Additive permissive policy |
-| `0013_shift_time_and_self_attest.sql` | PR B follow-up: `bookings.starts_at` (shift start timestamp) + private `check-in-attestations` Storage bucket (owner-folder, append-only) | **Not yet applied** | No — nullable column (NULL = no time gate, exactly pre-0013 behavior) + additive bucket. Ships WITH the app code that reads `starts_at` (shift page selects it), so apply before/with that deploy |
+| `0013_shift_time_and_self_attest.sql` | PR B follow-up: `bookings.starts_at` (shift start timestamp) + private `check-in-attestations` Storage bucket (owner-folder, append-only) | **Applied** (2026-08-04) | No — nullable column (NULL = no time gate, exactly pre-0013 behavior) + additive bucket |
+| `0014_moderation_org_reputation_reliability.sql` | PR B follow-up: public read of review-subject names (organizer reputation) + windowed reliability columns (`late_cancel_90d`, `no_show_365d`) on `emt_reliability_stats` | **Not yet applied** | No — additive permissive policy + recreated aggregate-only view. Degrades gracefully if unapplied (organizer name falls back to generic; windowed counts unavailable), but apply with the app code for full function |
 
 > **0010 review-security hardening (2026-07-27).** An adversarial review found four
 > real defects in the *reviews* surface, all now fixed IN THIS FILE (before it was ever
@@ -148,6 +149,34 @@ them in the Supabase SQL editor (the same place the auth migration lives).
 - Reads degrade gracefully if `starts_at` is null; the fallback + gate simply don't
   engage. **This whole batch ships together** — the shift page selects `starts_at`,
   so 0013 must be applied before/with the deploy.
+
+### 0014 — Moderation + organizer reputation + reliability windowing (PR B follow-up)
+- **#5 Report-a-review moderation** (NO schema — `review_reports` exists in 0010):
+  `POST /api/reviews/report` (any signed-in user flags a published review;
+  `components/reviews/ReportReviewButton.tsx` on `/shifts/[id]`, `/emt/[id]`,
+  `/organizer/[id]`). Admin surface `/admin/reviews` + `POST
+  /api/admin/reviews/moderate` (dismiss / remove / restore) — soft-hide only
+  (reviews.status → removed via service role; never hard-deleted). Admin identity
+  is the **`ADMIN_EMAILS`** env allowlist (`lib/admin.ts`), enforced in the page,
+  the route, AND `proxy.ts`. **Set `ADMIN_EMAILS` in Vercel** (comma-separated) or
+  the moderation surface is inert.
+- **#6 Public organizer reputation** (`0014` §1): a scoped profiles public-read
+  (`review_subjects_public_read`) exposes a review SUBJECT's name, so
+  `/organizer/[id]` can show an organizer's medic→organizer reviews to a browsing
+  medic. Linked from the medic's `/shifts/[id]` header. No computed reliability for
+  organizers — reputation is published reviews only.
+- **#7 Reliability windowing** (`0014` §2): `emt_reliability_stats` recreated with
+  `late_cancel_90d` (90-day) + `no_show_365d` (365-day) windowed columns (still
+  aggregate-only + definer + public). `/emt/[id]` now shows the windowed figures.
+- **#8 cancelled_emt / no_show_emt actions** (NO schema — transitions already legal
+  in the 0009 trigger): `POST /api/bookings/status` (service-role, participant- and
+  actor-authorized) marks no-show / cancels; UI on `/shifts/[id]` (organizer:
+  mark-no-show + cancel; medic: cancel) while status is `accepted`. `BookingStatus`
+  widened + status pills added across events/schedule/dashboard.
+- **#9 Open-slot acceptance email** (app-only): `accept-application` now emails the
+  accepted medic (`openSlotAcceptedEmail`, best-effort, service-role email lookup).
+- **Env needed:** `ADMIN_EMAILS` (moderation) + the existing
+  `SUPABASE_SERVICE_ROLE_KEY` / Resend. Degrades gracefully without them.
 
 ## Still needs a provider key (not a migration)
 - **Email notifications (§5): SHIPPED 2026-07-22.** Resend key is in env (local + Vercel);

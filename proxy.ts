@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 import { clientIp, rateLimit } from "@/lib/rate-limit"
 import { safeInternalPath } from "@/lib/security"
+import { isAdminEmail } from "@/lib/admin"
 
 // Per-IP request budgets (fixed 60s windows, per server instance — see
 // lib/rate-limit.ts for the honest scope of that guarantee). Budgets are
@@ -115,6 +116,23 @@ export async function proxy(request: NextRequest) {
     url.searchParams.set("role", "organizer")
     url.searchParams.set("next", "/schedule")
     return NextResponse.redirect(url)
+  }
+
+  // Protect /admin — must be signed in AND on the admin allowlist. A signed-in
+  // non-admin is bounced home (the page also 404s as defense in depth).
+  if (pathname.startsWith("/admin")) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/auth"
+      url.searchParams.set("next", pathname)
+      return NextResponse.redirect(url)
+    }
+    if (!isAdminEmail(user.email)) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/"
+      url.search = ""
+      return NextResponse.redirect(url)
+    }
   }
 
   // Protect /onboarding — must be signed in

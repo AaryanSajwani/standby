@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server"
 import { CERT_DISPLAY, EMT_PUBLIC_COLUMNS, joinedFullName } from "@/lib/emt"
 import { fetchUpcomingAvailability, formatAvailabilityDate } from "@/lib/availability"
 import { ratingDisplay, formatRate } from "@/lib/reviews/reliability"
+import { ReportReviewButton } from "@/components/reviews/ReportReviewButton"
 import { RequestEmt } from "./request-emt"
 
 // Platform-mean prior for star shrinkage until there's enough data to compute a
@@ -121,7 +122,7 @@ export default async function EMTProfilePage({
   // Reputation (real profiles only): reliability is COMPUTED from bookings and
   // shown above star averages; reviews are the published double-blind pair. Mock
   // sample profiles carry NO reputation — never fabricate trust signals.
-  type RelRow = { completed_count: number; committed_count: number; no_show_count: number; late_cancel_count: number; check_in_count: number }
+  type RelRow = { completed_count: number; committed_count: number; no_show_count: number; late_cancel_count: number; check_in_count: number; late_cancel_90d: number; no_show_365d: number }
   type PubReview = { id: string; overall: number; body: string | null; author_role: string }
   let reliability: RelRow | null = null
   let publishedReviews: PubReview[] = []
@@ -130,7 +131,7 @@ export default async function EMTProfilePage({
   const replyByReview = new Map<string, string>()
   if (isReal) {
     const [{ data: rel }, { data: revs }] = await Promise.all([
-      supabase.from("emt_reliability_stats").select("completed_count, committed_count, no_show_count, late_cancel_count, check_in_count").eq("emt_id", id).maybeSingle(),
+      supabase.from("emt_reliability_stats").select("completed_count, committed_count, no_show_count, late_cancel_count, check_in_count, late_cancel_90d, no_show_365d").eq("emt_id", id).maybeSingle(),
       supabase.from("reviews").select("id, overall, body, author_role").eq("subject_user_id", id).eq("status", "published").order("published_at", { ascending: false }),
     ])
     reliability = (rel as RelRow | null) ?? null
@@ -270,8 +271,8 @@ export default async function EMTProfilePage({
                   {[
                     { label: "Completed shifts", value: String(reliability?.completed_count ?? 0) },
                     { label: "Completion rate", value: formatRate(completionRate) },
-                    { label: "No-shows", value: String(reliability?.no_show_count ?? 0) },
-                    { label: "Late cancellations", value: String(reliability?.late_cancel_count ?? 0) },
+                    { label: "No-shows (365d)", value: String(reliability?.no_show_365d ?? 0) },
+                    { label: "Late cancels (90d)", value: String(reliability?.late_cancel_90d ?? 0) },
                   ].map((s) => (
                     <div key={s.label} className="bg-card px-5 py-4 flex flex-col gap-1">
                       <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">{s.label}</span>
@@ -316,9 +317,12 @@ export default async function EMTProfilePage({
                               <Star key={n} className={cn("w-3 h-3", r.overall >= n ? "text-primary fill-primary" : "text-border")} />
                             ))}
                           </span>
-                          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                            {r.author_role === "organizer" ? "From an organizer" : "From a medic"}
-                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                              {r.author_role === "organizer" ? "From an organizer" : "From a medic"}
+                            </span>
+                            <ReportReviewButton reviewId={r.id} />
+                          </div>
                         </div>
                         {r.body && <p className="text-sm text-muted-foreground leading-relaxed">{r.body}</p>}
                         {reply && (

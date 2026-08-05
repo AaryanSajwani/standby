@@ -49,6 +49,9 @@ const STATUS_STYLES: Record<Booking["status"], { label: string; className: strin
   completed:  { label: "Completed",  className: "border-border text-foreground" },
   declined:   { label: "Declined",   className: "border-border text-muted-foreground" },
   cancelled:  { label: "Cancelled",  className: "border-border text-muted-foreground" },
+  cancelled_organizer: { label: "Cancelled", className: "border-border text-muted-foreground" },
+  cancelled_emt:       { label: "Cancelled by medic", className: "border-border text-muted-foreground" },
+  no_show_emt:         { label: "No-show", className: "border-risk-high/30 bg-risk-high/5 text-risk-high" },
 }
 
 const riskClassFor = (score: number) =>
