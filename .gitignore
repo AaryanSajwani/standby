@@ -36,17 +36,15 @@ next-env.d.ts
 emt-staffing-marketplace-personnel-page/
 .vercel
 
-# Private project files (context only, not for repo)
-Standby Logo.png
-Standby_Product_Blueprint.md
-Standby - Startup Overview.pdf
+# Local-only context / planning / strategy / spec docs — NEVER on the public repo.
+# Everything private lives in _private/ so ONE rule covers it. A per-file list is how
+# STANDBY-IMPROVEMENTS.md and the mis-cased logo slipped through before — keep new
+# private docs inside _private/ rather than adding filenames here.
+_private/
 
-# Internal planning / strategy docs — keep local, never on a public repo
-TASKS.md
-standby-autonomous-progress.md
-standby-build-prompts.md
-standby-payments-full-spec.md
-standby-phase2-when-you-need-it.md
+# Design source-of-truth asset kept at repo root (see CLAUDE.md "Brand"); untracked,
+# not for the public repo. Exact filename — note the capital B in "StandBy".
+StandBy Logo.png
 
 # Separate sub-project (own lockfile, not a workspace)
 pointer-ai-landing-page/
