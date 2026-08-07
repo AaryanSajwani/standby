@@ -63,6 +63,9 @@ export interface AssessmentResult {
   riskLevel: RiskLevel
   rationale: string
   riskFactors: { crowd: number; environmental: number; activity: number }
+  // Readiness offset added on top of the weighted factors (missing AED / plan /
+  // clear access). Surfaced live in the intake RiskProfilePanel breakdown.
+  penalty: number
   staffing: { emtCount: number; certLevel: CertLevel; hours: number; estimatedCost: string }
   recommendedCertLevels: CertLevel[]
   // Guideline basis for each recommendation — what makes the report "defensible" to an AHJ (§4.5)
@@ -178,6 +181,7 @@ export function scoreAssessment(form: AssessmentFormData): AssessmentResult {
     riskLevel,
     rationale,
     riskFactors: { crowd, environmental, activity },
+    penalty,
     staffing: { emtCount, certLevel, hours, estimatedCost },
     recommendedCertLevels,
     staffingBasis,

@@ -1,75 +1,56 @@
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
-
-interface FormData {
-  eventName: string
-  eventType: string
-  expectedAttendance: string
-  eventDate: string
-}
+import { scoreAssessment, type RiskLevel } from "@/lib/assessment"
+import type { AssessmentFormData } from "@/types/assessment"
 
 interface RiskProfilePanelProps {
-  formData: FormData
+  formData: AssessmentFormData
 }
 
-const EVENT_TYPE_RISK: Record<string, number> = {
-  "": 0,
-  "concert": 3,
-  "festival": 4,
-  "sporting-event": 3,
-  "marathon": 4,
-  "corporate": 1,
-  "wedding": 1,
-  "political-rally": 4,
-  "religious-gathering": 2,
-  "trade-show": 2,
-  "other": 2
+const LEVEL_COLOR: Record<RiskLevel, string> = {
+  LOW: "text-risk-low",
+  MODERATE: "text-risk-medium",
+  HIGH: "text-risk-high",
+  CRITICAL: "text-risk-critical",
 }
 
-function getRiskLevel(score: number): { label: string; color: string } {
-  if (score === 0) return { label: "AWAITING DATA", color: "text-muted-foreground" }
-  if (score <= 2) return { label: "LOW RISK", color: "text-risk-low" }
-  if (score <= 4) return { label: "MODERATE RISK", color: "text-risk-medium" }
-  if (score <= 6) return { label: "HIGH RISK", color: "text-risk-high" }
-  return { label: "CRITICAL RISK", color: "text-risk-critical" }
-}
-
-function getAttendanceMultiplier(attendance: number): number {
-  if (attendance === 0) return 0
-  if (attendance < 500) return 1
-  if (attendance < 2000) return 1.5
-  if (attendance < 10000) return 2
-  if (attendance < 50000) return 2.5
-  return 3
+// Score only makes sense once the two primary drivers are present; before that
+// the engine's clamped floor (~3) would read as a real number and mislead.
+function hasCore(form: AssessmentFormData): boolean {
+  return Boolean(form.eventType && form.expectedAttendance)
 }
 
 export function RiskProfilePanel({ formData }: RiskProfilePanelProps) {
-  const analysis = useMemo(() => {
-    const attendance = parseInt(formData.expectedAttendance) || 0
-    const baseRisk = EVENT_TYPE_RISK[formData.eventType] || 0
-    const multiplier = getAttendanceMultiplier(attendance)
-    const rawScore = baseRisk * multiplier
-    const normalizedScore = Math.min(Math.round(rawScore), 10)
+  // The live number: the SAME engine that runs on /results, recomputed on every
+  // keystroke across all five steps — not a step-1-only preview.
+  const result = useMemo(
+    () => (hasCore(formData) ? scoreAssessment(formData) : null),
+    [formData],
+  )
 
-    return {
-      baseRisk,
-      multiplier,
-      normalizedScore,
-      attendance,
-      ...getRiskLevel(normalizedScore)
-    }
-  }, [formData])
+  // Which of the four scoring dimensions have data yet — drives the "building"
+  // state so the breakdown fills in as the organizer advances through the tabs.
+  const crowdActive = Boolean(formData.expectedAttendance)
+  const activityActive = Boolean(formData.eventType)
+  const envActive = Boolean(
+    formData.isOutdoor ||
+      formData.expectedWeather ||
+      formData.highTempF ||
+      formData.precipitationRisk ||
+      formData.nearestHospitalMiles,
+  )
+  const readyActive = Boolean(
+    formData.hasOnSiteAED ||
+      formData.priorMedicalPlan ||
+      formData.accessRoutesClear ||
+      formData.hasSecurityPresence,
+  )
+  const completedDims = [crowdActive, activityActive, envActive, readyActive].filter(Boolean).length
 
-  const completedFields = [
-    formData.eventName,
-    formData.eventType,
-    formData.expectedAttendance,
-    formData.eventDate
-  ].filter(Boolean).length
+  const level = result ? LEVEL_COLOR[result.riskLevel] : "text-muted-foreground"
 
   const [assessmentId, setAssessmentId] = useState("STB-000000")
-
   useEffect(() => {
     setAssessmentId(`STB-${Date.now().toString(36).toUpperCase().slice(-6)}`)
   }, [])
@@ -87,12 +68,12 @@ export function RiskProfilePanel({ formData }: RiskProfilePanelProps) {
               {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className={`w-2 h-2 ${i < completedFields ? "bg-accent-functional" : "bg-border"}`}
+                  className={`w-2 h-2 ${i < completedDims ? "bg-accent-functional" : "bg-border"}`}
                 />
               ))}
             </div>
-            <span className="text-[11px] font-mono text-muted-foreground">
-              {completedFields}/4
+            <span className="text-[11px] font-mono text-muted-foreground tabular-nums">
+              {completedDims}/4
             </span>
           </div>
         </div>
@@ -103,7 +84,7 @@ export function RiskProfilePanel({ formData }: RiskProfilePanelProps) {
         {/* Main Score Display */}
         <div className="border border-border p-8 mb-8">
           <div className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
-            Preliminary Risk Score
+            Live Risk Score
           </div>
 
           {/* Scanning Line Animation */}
@@ -114,25 +95,26 @@ export function RiskProfilePanel({ formData }: RiskProfilePanelProps) {
           <div className="flex items-baseline gap-3">
             <span
               className={`text-[80px] leading-none font-mono font-light tabular-nums transition-colors duration-300 ${
-                analysis.normalizedScore > 0 ? analysis.color : "animate-pulse text-muted-foreground/20"
+                result ? level : "text-muted-foreground/20"
               }`}
             >
-              {analysis.normalizedScore > 0 ? analysis.normalizedScore : "—"}
+              {result ? result.riskScore : "—"}
             </span>
             <span className="text-muted-foreground font-mono text-2xl">/10</span>
           </div>
-          <div className={`text-sm font-mono mt-6 tracking-widest ${analysis.color}`}>
-            {analysis.label}
+          <div className={`text-sm font-mono mt-6 tracking-widest ${level}`}>
+            {result ? `${result.riskLevel} RISK` : "AWAITING DATA"}
           </div>
+          <p className="text-[11px] font-mono text-muted-foreground/70 mt-4 leading-relaxed">
+            {result
+              ? "Updates as you complete each step."
+              : "Enter event type and expected attendance to begin scoring."}
+          </p>
         </div>
 
-        {/* Data Grid - Real-time updating */}
+        {/* Data Grid - Step 1 snapshot */}
         <div className="grid grid-cols-2 border border-border">
-          <DataCell
-            label="Event"
-            value={formData.eventName || "—"}
-            truncate
-          />
+          <DataCell label="Event" value={formData.eventName || "—"} truncate />
           <DataCell
             label="Type"
             value={formData.eventType ? formData.eventType.replace("-", " ").toUpperCase() : "—"}
@@ -140,15 +122,12 @@ export function RiskProfilePanel({ formData }: RiskProfilePanelProps) {
           <DataCell
             label="Attendance"
             value={formData.expectedAttendance ? parseInt(formData.expectedAttendance).toLocaleString() : "—"}
-            highlight={analysis.attendance >= 10000}
+            highlight={(parseInt(formData.expectedAttendance) || 0) >= 10000}
           />
-          <DataCell
-            label="Date"
-            value={formData.eventDate ? formatDate(formData.eventDate) : "—"}
-          />
+          <DataCell label="Date" value={formData.eventDate ? formatDate(formData.eventDate) : "—"} />
         </div>
 
-        {/* Risk Factors - Building profile */}
+        {/* Risk Factors — the live engine breakdown, filling in per step */}
         <div className="mt-8 border border-border">
           <div className="border-b border-border px-5 py-3">
             <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
@@ -157,27 +136,29 @@ export function RiskProfilePanel({ formData }: RiskProfilePanelProps) {
           </div>
           <div className="p-5 space-y-4">
             <RiskFactor
-              label="Base Event Risk"
-              value={analysis.baseRisk > 0 ? `${analysis.baseRisk}/5` : "—"}
-              active={analysis.baseRisk > 0}
+              label="Crowd Density"
+              hint="Step 1"
+              value={result ? `${result.riskFactors.crowd}/10` : "—"}
+              active={crowdActive}
             />
             <RiskFactor
-              label="Crowd Multiplier"
-              value={analysis.multiplier > 0 ? `×${analysis.multiplier}` : "—"}
-              active={analysis.multiplier > 0}
+              label="Event Activity"
+              hint="Step 1"
+              value={result ? `${result.riskFactors.activity}/10` : "—"}
+              active={activityActive}
             />
-            <div className="border-t border-border pt-4 mt-4">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/50 mb-3">
-                Pending Assessment
-              </div>
-              <RiskFactor label="Venue Conditions" value="STEP 2" active={false} pending />
-              <div className="h-3" />
-              <RiskFactor label="Weather Exposure" value="STEP 3" active={false} pending />
-              <div className="h-3" />
-              <RiskFactor label="Medical Resources" value="STEP 4" active={false} pending />
-              <div className="h-3" />
-              <RiskFactor label="Emergency Access" value="STEP 5" active={false} pending />
-            </div>
+            <RiskFactor
+              label="Environmental"
+              hint="Steps 2–4"
+              value={result ? `${result.riskFactors.environmental}/10` : "—"}
+              active={envActive}
+            />
+            <RiskFactor
+              label="Readiness Offset"
+              hint="Steps 4–5"
+              value={result ? (result.penalty > 0 ? `+${result.penalty}` : "+0") : "—"}
+              active={readyActive}
+            />
           </div>
         </div>
       </div>
@@ -189,8 +170,9 @@ export function RiskProfilePanel({ formData }: RiskProfilePanelProps) {
             ID: <span className="text-foreground">{assessmentId}</span>
           </div>
           <div className="text-[11px] font-mono text-muted-foreground">
-            STATUS: <span className={completedFields === 4 ? "text-risk-low" : "text-risk-medium"}>
-              {completedFields === 4 ? "STEP 1 COMPLETE" : "IN PROGRESS"}
+            STATUS:{" "}
+            <span className={completedDims === 4 ? "text-risk-low" : "text-risk-medium"}>
+              {completedDims === 4 ? "ALL FACTORS IN" : result ? "SCORING LIVE" : "IN PROGRESS"}
             </span>
           </div>
         </div>
@@ -203,7 +185,7 @@ function DataCell({
   label,
   value,
   truncate = false,
-  highlight = false
+  highlight = false,
 }: {
   label: string
   value: string
@@ -218,12 +200,8 @@ function DataCell({
         {label}
       </div>
       <div
-        className={`font-mono text-sm transition-all duration-200 ${
-          isEmpty
-            ? "text-muted-foreground/20 animate-pulse"
-            : highlight
-              ? "text-risk-medium"
-              : "text-foreground"
+        className={`font-mono text-sm tabular-nums transition-all duration-200 ${
+          isEmpty ? "text-muted-foreground/30" : highlight ? "text-risk-medium" : "text-foreground"
         } ${truncate ? "truncate" : ""}`}
         title={truncate && !isEmpty ? value : undefined}
       >
@@ -235,31 +213,32 @@ function DataCell({
 
 function RiskFactor({
   label,
+  hint,
   value,
   active,
-  pending = false
 }: {
   label: string
+  hint: string
   value: string
   active: boolean
-  pending?: boolean
 }) {
   const isEmpty = value === "—"
 
   return (
     <div className="flex items-center justify-between">
-      <span className={`text-sm transition-colors duration-200 ${active ? "text-foreground" : "text-muted-foreground/60"}`}>
-        {label}
+      <span className="flex items-baseline gap-2">
+        <span className={`text-sm transition-colors duration-200 ${active ? "text-foreground" : "text-muted-foreground/60"}`}>
+          {label}
+        </span>
+        <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/40">
+          {hint}
+        </span>
       </span>
-      <span className={`font-mono text-sm transition-all duration-200 ${
-        pending
-          ? "text-muted-foreground/30"
-          : isEmpty
-            ? "text-muted-foreground/20 animate-pulse"
-            : active
-              ? "text-foreground"
-              : "text-muted-foreground/60"
-      }`}>
+      <span
+        className={`font-mono text-sm tabular-nums transition-all duration-200 ${
+          isEmpty ? "text-muted-foreground/30" : active ? "text-foreground" : "text-muted-foreground/60"
+        }`}
+      >
         {value}
       </span>
     </div>
@@ -269,11 +248,9 @@ function RiskFactor({
 function formatDate(dateString: string): string {
   try {
     const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    }).toUpperCase()
+    return date
+      .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      .toUpperCase()
   } catch {
     return dateString
   }
