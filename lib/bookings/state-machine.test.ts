@@ -23,8 +23,15 @@ const LEGAL: ReadonlyArray<[BookingState, BookingState]> = [
   ["draft", "pending"],
   ["draft", "cancelled_organizer"],
   ["open", "accepted"],
+  ["open", "invited"],
+  ["open", "retired"],
   ["open", "cancelled_organizer"],
   ["open", "expired"],
+  ["invited", "accepted"],
+  ["invited", "open"],
+  ["invited", "cancelled_organizer"],
+  ["invited", "expired"],
+  ["retired", "open"],
   ["pending", "accepted"],
   ["pending", "declined"],
   ["pending", "cancelled_organizer"],
@@ -154,6 +161,44 @@ describe("actor constraints", () => {
   it("findTransition respects the actor filter", () => {
     expect(findTransition("pending", "accepted", "emt")).toBeDefined()
     expect(findTransition("pending", "accepted", "organizer")).toBeUndefined()
+  })
+})
+
+describe("held-slot (invited) constraints — Phase 2 slots", () => {
+  it("only the organizer may invite a medic to an open slot", () => {
+    expect(canTransition("open", "invited", "organizer")).toBe(true)
+    expect(canTransition("open", "invited", "emt")).toBe(false)
+    expect(canTransition("open", "invited", "system")).toBe(false)
+  })
+
+  it("only the medic may accept a held invitation (the fill)", () => {
+    expect(canTransition("invited", "accepted", "emt")).toBe(true)
+    expect(canTransition("invited", "accepted", "organizer")).toBe(false)
+  })
+
+  it("a held slot reopens on decline (emt), rescind (organizer), or expiry (system)", () => {
+    expect(canTransition("invited", "open", "emt")).toBe(true)
+    expect(canTransition("invited", "open", "organizer")).toBe(true)
+    expect(canTransition("invited", "open", "system")).toBe(true)
+  })
+
+  it("only the system may expire a held slot past event start; only the organizer may cancel it", () => {
+    expect(canTransition("invited", "expired", "system")).toBe(true)
+    expect(canTransition("invited", "expired", "organizer")).toBe(false)
+    expect(canTransition("invited", "cancelled_organizer", "organizer")).toBe(true)
+    expect(canTransition("invited", "cancelled_organizer", "emt")).toBe(false)
+  })
+
+  it("headcount retire/revive is organizer-only and reversible", () => {
+    expect(canTransition("open", "retired", "organizer")).toBe(true)
+    expect(canTransition("open", "retired", "emt")).toBe(false)
+    expect(canTransition("retired", "open", "organizer")).toBe(true)
+    expect(canTransition("retired", "open", "emt")).toBe(false)
+  })
+
+  it("invited and retired are NOT terminal (both can still move)", () => {
+    expect(isTerminal("invited")).toBe(false)
+    expect(isTerminal("retired")).toBe(false)
   })
 })
 

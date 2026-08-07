@@ -159,6 +159,44 @@ export function openSlotAcceptedEmail(b: BookingEmailData, organizerName: string
   }
 }
 
+// Sent to the MEDIC when an organizer INVITES them to a specific slot (direct
+// request on a slot — the held `invited` state). The slot is theirs to accept
+// until it expires; the countdown lives on the dashboard. Scarce-side outreach,
+// so it leads with the offer and a clear deadline.
+export function slotInvitationEmail(
+  b: BookingEmailData,
+  organizerName: string,
+  origin: string,
+  expiresAt: string
+) {
+  const deadline = new Date(expiresAt).toLocaleString("en-US", {
+    weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+  })
+  return {
+    subject: `You're invited to cover ${b.eventName}`,
+    html: shell(
+      "You've been invited to a shift",
+      `${esc(organizerName)} invited you to cover this shift. It's held for you — accept from your dashboard before the invitation expires (${esc(deadline)}). If you don't respond, the slot reopens to others.`,
+      bookingRows(b, [["From", esc(organizerName)], ["Respond by", esc(deadline)]]),
+      { label: "View invitation", url: `${origin}/emt-dashboard` }
+    ),
+  }
+}
+
+// Sent to the MEDIC when the organizer RESCINDS a held invitation before they
+// answered. Honest + points them at other open work — never a silent drop.
+export function slotRescindedEmail(b: BookingEmailData, organizerName: string, origin: string) {
+  return {
+    subject: `Invitation withdrawn — ${b.eventName}`,
+    html: shell(
+      "An invitation was withdrawn",
+      `${esc(organizerName)} withdrew their invitation for this shift before it was accepted. No action is needed — browse other open shifts that fit you.`,
+      bookingRows(b),
+      { label: "Browse open shifts", url: `${origin}/open-shifts` }
+    ),
+  }
+}
+
 // Sent to the ORGANIZER when a medic uses the 30-min self-attest fallback (the
 // organizer didn't verify on site within 30 min of start). It's an FYI + a nudge
 // to confirm check-out later — the in-app shift page carries the geo/photo/note.

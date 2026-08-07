@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { planAcceptance, type ApplicationRow } from "@/lib/bookings/applications"
 import { assertTransition } from "@/lib/bookings/state-machine"
+import { planFill, type MedicBooking } from "@/lib/bookings/fill"
 import { openSlotAcceptedEmail, sendEmail, type BookingEmailData } from "@/lib/notifications"
 
 // POST { applicationId }
@@ -97,14 +98,44 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "not_applicable", reason: (e as Error).message }, { status: 409 })
   }
 
+  // Validate the chosen medic through the SINGLE fill path (staffing-slots #1):
+  // verified · cert valid at the shift date · no overlapping committed shift —
+  // and snapshot their posted rate. Reads use the service role (license_expiry is
+  // credential PII; overlap needs the medic's full booking set).
+  const [{ data: slotRow }, { data: medic }, { data: others }] = await Promise.all([
+    admin.from("bookings").select("status, invited_emt_id, starts_at, event_date, duration_hours").eq("id", app.booking_id).maybeSingle(),
+    admin.from("emt_profiles").select("verified, license_expiry, hourly_rate").eq("user_id", app.emt_id).maybeSingle(),
+    admin
+      .from("bookings")
+      .select("status, starts_at, event_date, duration_hours")
+      .eq("emt_id", app.emt_id)
+      .in("status", ["accepted", "confirmed", "checked_in"])
+      .neq("id", app.booking_id),
+  ])
+  if (!slotRow) return NextResponse.json({ error: "not_found" }, { status: 404 })
+  const fill = planFill(
+    {
+      status: slotRow.status,
+      invited_emt_id: slotRow.invited_emt_id,
+      starts_at: slotRow.starts_at,
+      event_date: slotRow.event_date,
+      duration_hours: Number(slotRow.duration_hours) || 0,
+    },
+    medic ? { verified: medic.verified, license_expiry: medic.license_expiry, hourly_rate: Number(medic.hourly_rate) } : null,
+    app.emt_id as string,
+    "application",
+    (others ?? []) as MedicBooking[]
+  )
+  if (!fill.ok) return NextResponse.json({ error: fill.error }, { status: 409 })
+
   // Apply the plan. Supabase JS has no multi-statement transaction, so order the
   // writes so a partial failure is recoverable and never double-books:
-  //   1. Move the booking open → accepted and set emt_id. This is the guarded,
-  //      single-winner step — the 0009 trigger only allows open → accepted once,
-  //      so a concurrent second accept on the same slot fails here.
+  //   1. Move the booking open → accepted, set emt_id, and snapshot rate_cents.
+  //      This is the guarded, single-winner step — the 0009 trigger only allows
+  //      open → accepted once, so a concurrent second accept fails here.
   const { data: updatedRows, error: bookingUpdErr } = await admin
     .from("bookings")
-    .update({ emt_id: app.emt_id, status: "accepted" })
+    .update({ emt_id: app.emt_id, status: "accepted", rate_cents: fill.plan.rate_cents, accepted_at: new Date().toISOString() })
     .eq("id", app.booking_id)
     .eq("status", "open") // guard: only transition from open (idempotency / race)
     .select("id")

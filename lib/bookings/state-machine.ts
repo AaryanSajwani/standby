@@ -39,6 +39,7 @@
 export const BOOKING_STATES = [
   "draft", // organizer is assembling the request; not yet visible to any medic
   "open", // posted as an open slot, no medic yet (open-claim model)
+  "invited", // organizer invited a specific medic; slot HELD awaiting their reply (Phase 2 slots)
   "pending", // sent directly to a chosen medic, awaiting their answer (LIVE model)
   "accepted", // medic accepted/claimed; shift is on but not yet organizer-confirmed
   "confirmed", // organizer confirmed the medic; locked in for both sides
@@ -49,6 +50,7 @@ export const BOOKING_STATES = [
   "cancelled_emt", // medic backed out (terminal)
   "no_show_emt", // medic never appeared (terminal)
   "expired", // open slot / direct request went unanswered past event start (terminal)
+  "retired", // slot removed to reduce headcount; revivable back to open (Phase 2 slots)
 ] as const
 
 export type BookingState = (typeof BOOKING_STATES)[number]
@@ -76,8 +78,28 @@ export const BOOKING_TRANSITIONS: Record<BookingState, readonly TransitionRule[]
     // (0011); the organizer accepts one applicant, which sets emt_id and moves the
     // booking here. Acceptance is initiated by the organizer, not an EMT self-claim.
     { to: "accepted", by: ["organizer"], reason: "Organizer accepted a medic's claim request" },
+    // DIRECT-REQUEST on a slot (Phase 2): the organizer invites ONE specific medic,
+    // which HOLDS the slot as `invited` until the medic replies. Distinct from
+    // open→accepted (that path fills immediately from an application).
+    { to: "invited", by: ["organizer"], reason: "Organizer invited a medic to the slot (held)" },
+    { to: "retired", by: ["organizer"], reason: "Slot retired to reduce headcount" },
     { to: "cancelled_organizer", by: ["organizer"], reason: "Organizer withdrew the open slot" },
     { to: "expired", by: ["system"], reason: "Slot went unclaimed past event start" },
+  ],
+  // HELD slot (Phase 2). One live invitation at a time. The medic accepts (fills)
+  // or the invitation is RELEASED back to `open` — by the medic (decline), the
+  // organizer (rescind), or the system (expiry). Routes pass the precise audit
+  // reason; the map's single open-bound rule keeps destinations unique (no dupes).
+  invited: [
+    { to: "accepted", by: ["emt"], reason: "Medic accepted the invitation" },
+    { to: "open", by: ["emt", "organizer", "system"], reason: "Invitation released (declined, rescinded, or expired); slot reopened" },
+    { to: "cancelled_organizer", by: ["organizer"], reason: "Organizer cancelled the held slot" },
+    { to: "expired", by: ["system"], reason: "Held slot passed the event start unfilled" },
+  ],
+  // Parking state for a slot removed by a headcount decrease. Revivable to `open`
+  // (headcount increase revives retired slots ascending before appending new ones).
+  retired: [
+    { to: "open", by: ["organizer"], reason: "Slot revived to increase headcount" },
   ],
   pending: [
     { to: "accepted", by: ["emt"], reason: "Medic accepted the direct request" },
