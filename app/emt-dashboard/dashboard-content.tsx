@@ -1,14 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { useRef, useState } from "react"
-import { Calendar, MapPin, Users, Clock, Check, X, AlertTriangle, Pencil, ShieldCheck, Star } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { Calendar, MapPin, Users, Clock, Check, X, AlertTriangle, Pencil, ShieldCheck, Star, Timer } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { AddToCalendarButton } from "@/components/AddToCalendarButton"
 import { CertBadge } from "@/components/CertBadge"
-import { isNegativeTerminal, type Booking, type BookingStatus } from "@/lib/bookings"
+import { isNegativeTerminal, invitationToAcceptedBooking, type Booking, type BookingStatus, type Invitation } from "@/lib/bookings"
 import type { AvailabilityDate } from "@/lib/availability"
 import { AvailabilityCalendar } from "@/components/AvailabilityCalendar"
 import { cn } from "@/lib/utils"
@@ -155,6 +155,128 @@ function RequestCard({
   )
 }
 
+// Live countdown to an invitation's expiry. Mounts blank then ticks each minute,
+// so there's no server/client time mismatch (this is a "use client" tree).
+function InvitationCountdown({ expiresAt }: { expiresAt: string | null }) {
+  const [now, setNow] = useState<number | null>(null)
+  useEffect(() => {
+    setNow(Date.now())
+    const t = setInterval(() => setNow(Date.now()), 60_000)
+    return () => clearInterval(t)
+  }, [])
+  if (!expiresAt) return null
+  if (now === null) {
+    return <span className="font-mono text-xs text-muted-foreground tabular-nums">…</span>
+  }
+  const ms = Date.parse(expiresAt) - now
+  if (ms <= 0) {
+    return <span className="font-mono text-xs text-risk-high tabular-nums">Expired</span>
+  }
+  const h = Math.floor(ms / 3_600_000)
+  const m = Math.floor((ms % 3_600_000) / 60_000)
+  const urgent = ms < 3 * 3_600_000
+  return (
+    <span className={`font-mono text-xs tabular-nums flex items-center gap-1.5 ${urgent ? "text-risk-high" : "text-risk-medium"}`}>
+      <Timer className="w-3 h-3" />
+      Expires in {h > 0 ? `${h}h ${m}m` : `${m}m`}
+    </span>
+  )
+}
+
+function InvitationCard({
+  inv,
+  onAccept,
+  onDecline,
+  busy,
+}: {
+  inv: Invitation
+  onAccept: (id: string) => void
+  onDecline: (id: string) => void
+  busy: boolean
+}) {
+  return (
+    <div className="border border-primary/40 bg-card flex flex-col">
+      <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-4">
+        <div className="flex flex-col gap-1 min-w-0">
+          <span className="text-foreground font-medium text-base leading-tight truncate">{inv.eventName}</span>
+          <span className="text-muted-foreground text-xs font-mono">
+            {inv.eventType} · Invited by {inv.counterpartName}
+            {inv.slotIndex != null && ` · Position ${inv.slotIndex}`}
+          </span>
+        </div>
+        <span className="font-mono text-[10px] uppercase tracking-widest border border-primary/40 bg-primary/5 text-primary px-2 py-0.5 shrink-0">
+          Invitation
+        </span>
+      </div>
+
+      <Separator />
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-y md:divide-y-0 divide-border">
+        {[
+          { icon: <Calendar className="w-3 h-3" />, label: "Date", value: inv.date },
+          { icon: <MapPin className="w-3 h-3" />, label: "Location", value: inv.location },
+          { icon: <Users className="w-3 h-3" />, label: "Attendance", value: inv.attendance.toLocaleString() },
+          { icon: <Clock className="w-3 h-3" />, label: "Duration", value: `${inv.durationHours} hrs` },
+        ].map(({ icon, label, value }) => (
+          <div key={label} className="flex flex-col gap-1 px-4 py-3">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+              {icon}{label}
+            </span>
+            <span className="font-mono text-sm tabular-nums text-foreground">{value}</span>
+          </div>
+        ))}
+      </div>
+
+      <Separator />
+
+      <div className="flex flex-col md:flex-row gap-0 divide-y md:divide-y-0 md:divide-x divide-border">
+        <div className="flex flex-col justify-center gap-1 px-5 py-4 md:w-40 shrink-0">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Rate</span>
+          <div className="flex items-baseline gap-1">
+            <span className="font-mono text-2xl tabular-nums font-bold text-foreground">${inv.hourlyRate}</span>
+            <span className="font-mono text-xs text-muted-foreground">/hr</span>
+          </div>
+          <InvitationCountdown expiresAt={inv.expiresAt} />
+        </div>
+        <div className="flex-1 flex flex-col justify-center gap-1 px-5 py-4">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Notes from organizer</span>
+          <p className="text-sm text-muted-foreground leading-relaxed">{inv.notes ?? "No notes provided."}</p>
+        </div>
+        <div className="flex flex-col justify-center gap-2 px-5 py-4 md:w-44 shrink-0">
+          <Button
+            disabled={busy}
+            className="w-full rounded-none font-mono text-xs uppercase tracking-wider"
+            onClick={() => onAccept(inv.id)}
+          >
+            <Check className="w-3.5 h-3.5 mr-1.5" />Accept
+          </Button>
+          <Button
+            variant="outline"
+            disabled={busy}
+            className="w-full rounded-none font-mono text-xs uppercase tracking-wider"
+            onClick={() => onDecline(inv.id)}
+          >
+            <X className="w-3.5 h-3.5 mr-1.5" />Decline
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Map the invitation route's typed errors to medic-facing copy.
+function inviteErrorMessage(code: string | undefined, action: "accept" | "decline"): string {
+  switch (code) {
+    case "expired": return "This invitation has expired."
+    case "not_invited": return "This invitation was just withdrawn."
+    case "CERT_EXPIRES_BEFORE_EVENT": return "Your certification expires before this event."
+    case "MEDIC_DOUBLE_BOOKED": return "You already have a shift that overlaps this one."
+    case "MEDIC_NOT_VERIFIED": return "Your account isn't verified yet."
+    case "SLOT_NOT_AVAILABLE": return "This slot is no longer available."
+    default: return action === "accept" ? "Could not accept the invitation." : "Could not decline the invitation."
+  }
+}
+
 interface DashboardContentProps {
   displayName: string
   verified: boolean
@@ -163,11 +285,14 @@ interface DashboardContentProps {
   hourlyRate: number | null
   userId: string
   bookings: Booking[]
+  invitations: Invitation[]
   availability: AvailabilityDate[]
 }
 
-export function DashboardContent({ displayName, verified, available, certLevel, hourlyRate, userId, bookings, availability }: DashboardContentProps) {
+export function DashboardContent({ displayName, verified, available, certLevel, hourlyRate, userId, bookings, invitations, availability }: DashboardContentProps) {
   const [requests, setRequests] = useState<Booking[]>(bookings)
+  const [invites, setInvites] = useState<Invitation[]>(invitations)
+  const [respondingId, setRespondingId] = useState<string | null>(null)
   const [isAvailable, setIsAvailable] = useState(available)
   const [error, setError] = useState<string | null>(null)
 
@@ -312,6 +437,45 @@ export function DashboardContent({ displayName, verified, available, certLevel, 
   const accept  = (id: string) => updateStatus(id, "accepted")
   const decline = (id: string) => updateStatus(id, "declined")
 
+  // Held-invitation response → the Phase 2 route (service-role validated fill on
+  // accept). Optimistic: drop it from the invitations list; on accept, also add it
+  // to the accepted requests so it appears under upcoming shifts immediately.
+  const respondInvite = async (bookingId: string, action: "accept" | "decline") => {
+    if (respondingId) return
+    setRespondingId(bookingId)
+    setError(null)
+    const target = invites.find((i) => i.id === bookingId)
+    const prevInvites = invites
+    setInvites((prev) => prev.filter((i) => i.id !== bookingId))
+
+    let res: Response
+    try {
+      res = await fetch("/api/bookings/invitation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId, action }),
+      })
+    } catch {
+      setInvites(prevInvites)
+      setError("Network error — please try again.")
+      setRespondingId(null)
+      return
+    }
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { error?: string }
+      setInvites(prevInvites)
+      setError(inviteErrorMessage(data.error, action))
+      setRespondingId(null)
+      return
+    }
+
+    if (action === "accept" && target) {
+      setRequests((prev) => [invitationToAcceptedBooking(target), ...prev])
+    }
+    setRespondingId(null)
+  }
+
   const toggleAvailable = async () => {
     const next = !isAvailable
     setIsAvailable(next)
@@ -400,6 +564,30 @@ export function DashboardContent({ displayName, verified, available, certLevel, 
             <span className="font-mono text-3xl tabular-nums font-bold text-foreground">${Math.round(totalEarnings).toLocaleString()}</span>
           </div>
         </div>
+
+        {/* Pending invitations — highest-intent surface: an organizer held a slot for you */}
+        {invites.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center gap-2.5">
+              <h2 className="font-mono text-xs uppercase tracking-widest text-primary">Pending invitations</h2>
+              <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{invites.length}</span>
+            </div>
+            <p className="text-sm text-muted-foreground -mt-2">
+              An organizer invited you to cover a specific shift — it&apos;s held for you until the invitation expires.
+            </p>
+            <div className="flex flex-col gap-4">
+              {invites.map((inv) => (
+                <InvitationCard
+                  key={inv.id}
+                  inv={inv}
+                  onAccept={(id) => respondInvite(id, "accept")}
+                  onDecline={(id) => respondInvite(id, "decline")}
+                  busy={respondingId === inv.id}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Posted rate — owner-editable */}
         <section className="flex flex-col gap-4">

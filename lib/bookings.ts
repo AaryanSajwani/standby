@@ -99,6 +99,77 @@ export function mapBooking(
   }
 }
 
+// ── Held invitation: a slot the organizer invited THIS medic to (Phase 2) ────
+// A booking with status='invited' and invited_emt_id = the medic. The medic sees
+// it via the emt_select_invited RLS policy (0016). Distinct from Booking (which is
+// their own emt_id rows); an invitation isn't theirs until they accept.
+export interface Invitation {
+  id: string
+  eventName: string
+  eventType: string
+  date: string
+  dateISO: string
+  location: string
+  attendance: number
+  durationHours: number
+  hourlyRate: number
+  notes: string | null
+  counterpartName: string // organizer
+  slotIndex: number | null
+  expiresAt: string | null // invitation_expires_at (ISO)
+}
+
+export interface RawInvitation {
+  id: string
+  event_name: string
+  event_type: string
+  event_date: string
+  location: string
+  expected_attendance: number
+  duration_hours: number
+  offered_rate: number
+  notes: string | null
+  slot_index: number | null
+  invitation_expires_at: string | null
+}
+
+export function mapInvitation(row: RawInvitation, organizerName: string): Invitation {
+  return {
+    id: row.id,
+    eventName: row.event_name,
+    eventType: row.event_type,
+    date: formatEventDate(row.event_date),
+    dateISO: row.event_date,
+    location: row.location,
+    attendance: row.expected_attendance,
+    durationHours: Number(row.duration_hours),
+    hourlyRate: row.offered_rate,
+    notes: row.notes,
+    counterpartName: organizerName,
+    slotIndex: row.slot_index,
+    expiresAt: row.invitation_expires_at,
+  }
+}
+
+/** After a medic accepts, the invitation becomes one of their accepted bookings. */
+export function invitationToAcceptedBooking(inv: Invitation): Booking {
+  return {
+    id: inv.id,
+    eventName: inv.eventName,
+    eventType: inv.eventType,
+    date: inv.date,
+    dateISO: inv.dateISO,
+    location: inv.location,
+    attendance: inv.attendance,
+    durationHours: inv.durationHours,
+    hourlyRate: inv.hourlyRate,
+    notes: inv.notes,
+    status: "accepted",
+    counterpartName: inv.counterpartName,
+    certLevel: null,
+  }
+}
+
 // ── Open-claim: an applicant on an organizer's open slot ─────────────────────
 // One row per medic who requested to fill a given open booking (migration 0011
 // booking_applications, joined to the medic's public profile + emt_profiles).
