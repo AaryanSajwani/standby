@@ -2,13 +2,37 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Check, Users, Clock, MapPin, Calendar, X } from "lucide-react"
+import { Plus, Check, Users, Clock, MapPin, Calendar, X, UserPlus, Search } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { CertBadge } from "@/components/CertBadge"
+import { joinedFullName } from "@/lib/emt"
 import { formatEventDate, type Applicant } from "@/lib/bookings"
+
+// A verified medic the organizer can invite to an open slot.
+interface PickMedic {
+  userId: string
+  name: string
+  cert: string | null
+  rate: number | null
+  city: string | null
+  state: string | null
+}
+
+// Map the /api/bookings/invite typed errors to organizer-facing copy.
+function inviteErrorMessage(code: string | undefined): string {
+  switch (code) {
+    case "applicant_exists": return "This medic already applied — accept their application instead."
+    case "CERT_EXPIRES_BEFORE_EVENT": return "That medic's certification expires before this event."
+    case "MEDIC_DOUBLE_BOOKED": return "That medic already has an overlapping shift."
+    case "MEDIC_NOT_VERIFIED": return "That medic isn't verified."
+    case "too_late": return "Too close to the event start to invite."
+    case "not_open": return "This slot is no longer open."
+    default: return "Could not send the invitation."
+  }
+}
 
 export interface OpenSlot {
   id: string
@@ -122,6 +146,76 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
     } catch {
       setError("Network error — please try again.")
       setAcceptingId(null)
+    }
+  }
+
+  // ── Direct invite: hold an open slot for a specific verified medic ──────────
+  const [invitePanelSlot, setInvitePanelSlot] = useState<string | null>(null)
+  const [medics, setMedics] = useState<PickMedic[] | null>(null)
+  const [medicsLoading, setMedicsLoading] = useState(false)
+  const [medicSearch, setMedicSearch] = useState("")
+  const [invitingEmtId, setInvitingEmtId] = useState<string | null>(null)
+
+  const toggleInvitePanel = async (slotId: string) => {
+    setError(null)
+    if (invitePanelSlot === slotId) {
+      setInvitePanelSlot(null)
+      return
+    }
+    setInvitePanelSlot(slotId)
+    setMedicSearch("")
+    // Fetch verified medics once (same public-read source as /personnel).
+    if (medics === null && !medicsLoading) {
+      setMedicsLoading(true)
+      const supabase = createClient()
+      const { data, error: mErr } = await supabase
+        .from("emt_profiles")
+        .select("user_id, cert_level, hourly_rate, city, state, profiles!inner ( full_name )")
+        .eq("verified", true)
+        .order("created_at", { ascending: false })
+        .limit(100)
+      if (mErr) {
+        setError("Could not load medics — please try again.")
+        setMedicsLoading(false)
+        return
+      }
+      setMedics(
+        (data ?? []).map((row) => ({
+          userId: row.user_id as string,
+          name: joinedFullName(row.profiles) ?? "Unknown EMT",
+          cert: (row.cert_level as string | null) ?? null,
+          rate: (row.hourly_rate as number | null) ?? null,
+          city: (row.city as string | null) ?? null,
+          state: (row.state as string | null) ?? null,
+        }))
+      )
+      setMedicsLoading(false)
+    }
+  }
+
+  const invite = async (slotId: string, emtId: string) => {
+    if (invitingEmtId) return
+    setInvitingEmtId(emtId)
+    setError(null)
+    try {
+      const res = await fetch("/api/bookings/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: slotId, emtId }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(json?.reason || inviteErrorMessage(json?.error))
+        setInvitingEmtId(null)
+        return
+      }
+      // The slot is now 'invited' — it drops out of the open-slots list on refresh.
+      setInvitePanelSlot(null)
+      setInvitingEmtId(null)
+      router.refresh()
+    } catch {
+      setError("Network error — please try again.")
+      setInvitingEmtId(null)
     }
   }
 
@@ -243,9 +337,21 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
                     <Clock className="w-3 h-3" />{slot.durationHours} hrs
                   </span>
                   <span className="font-mono text-xs text-foreground tabular-nums">${slot.hourlyRate}/hr</span>
-                  <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground tabular-nums">
-                    {pending.length} {pending.length === 1 ? "applicant" : "applicants"}
-                  </span>
+                  <div className="ml-auto flex items-center gap-3">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground tabular-nums">
+                      {pending.length} {pending.length === 1 ? "applicant" : "applicants"}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => toggleInvitePanel(slot.id)}
+                      className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+                    >
+                      {invitePanelSlot === slot.id
+                        ? <><X className="w-3 h-3 mr-1.5" />Close</>
+                        : <><UserPlus className="w-3 h-3 mr-1.5" />Invite a medic</>}
+                    </Button>
+                  </div>
                 </div>
 
                 {pending.length > 0 && <Separator />}
@@ -280,6 +386,64 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
                 {pending.length === 0 && (
                   <div className="border-t border-border px-5 py-4">
                     <p className="text-sm text-muted-foreground">No applicants yet — verified EMTs will see this on the open-shift board.</p>
+                  </div>
+                )}
+
+                {invitePanelSlot === slot.id && (
+                  <div className="border-t border-border px-5 py-4 flex flex-col gap-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                      <input
+                        value={medicSearch}
+                        onChange={(e) => setMedicSearch(e.target.value)}
+                        placeholder="Search verified medics by name…"
+                        className="w-full h-10 pl-9 pr-3 bg-input border border-input-border text-foreground placeholder:text-placeholder font-mono text-sm focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                    {medicsLoading && <p className="font-mono text-xs text-muted-foreground">Loading medics…</p>}
+                    {!medicsLoading && medics && (() => {
+                      const appliedIds = new Set(slot.applicants.map((a) => a.emtId))
+                      const q = medicSearch.trim().toLowerCase()
+                      const results = medics
+                        .filter((m) => !appliedIds.has(m.userId))
+                        .filter((m) => !q || m.name.toLowerCase().includes(q))
+                        .slice(0, 8)
+                      if (results.length === 0) {
+                        return <p className="font-mono text-xs text-muted-foreground">No matching verified medics.</p>
+                      }
+                      return (
+                        <div className="flex flex-col gap-px">
+                          {results.map((m) => (
+                            <div key={m.userId} className="flex items-center gap-3 border border-border bg-background px-4 py-3">
+                              <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-foreground text-sm font-medium truncate">{m.name}</span>
+                                  <CertBadge level={m.cert} />
+                                </div>
+                                <span className="font-mono text-[11px] text-muted-foreground tabular-nums inline-flex items-center gap-2 flex-wrap">
+                                  {m.rate != null && <span>Posted rate ${m.rate}/hr</span>}
+                                  {(m.city || m.state) && (
+                                    <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{[m.city, m.state].filter(Boolean).join(", ")}</span>
+                                  )}
+                                </span>
+                              </div>
+                              <Button
+                                size="sm"
+                                disabled={invitingEmtId !== null}
+                                onClick={() => invite(slot.id, m.userId)}
+                                className="rounded-none font-mono text-[10px] uppercase tracking-wider shrink-0"
+                              >
+                                <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                                {invitingEmtId === m.userId ? "Inviting…" : "Invite"}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    })()}
+                    <p className="font-mono text-[10px] text-muted-foreground leading-relaxed">
+                      Inviting holds the slot for that medic for 24 hours (or until 12 h before start). They accept from their dashboard — meanwhile the slot stays open to other applicants.
+                    </p>
                   </div>
                 )}
               </div>
