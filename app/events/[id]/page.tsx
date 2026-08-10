@@ -4,10 +4,11 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ArrowLeft, Calendar, MapPin, Users, FileText } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
-import { BOOKING_COLUMNS, formatEventDate, mapBooking, type RawBooking, type Booking, type Applicant } from "@/lib/bookings"
+import { BOOKING_COLUMNS, formatEventDate, mapBooking, type RawBooking, type Applicant } from "@/lib/bookings"
 import { joinedFullName, fetchCertLevels } from "@/lib/emt"
 import { CertBadge } from "@/components/CertBadge"
 import { OpenSlotManager, type OpenSlot } from "./open-slot-manager"
+import { HeldSlots, type HeldSlot } from "./held-slots"
 import { EVENT_TYPE_LABELS } from "@/lib/assessment"
 import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -41,18 +42,23 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return { title: event ? `${event.name} — Standby` : "Event — Standby" }
 }
 
-const STATUS_STYLES: Record<Booking["status"], { label: string; className: string }> = {
-  open:       { label: "Open slot",  className: "border-primary/30 bg-primary/5 text-primary" },
-  pending:    { label: "Pending",    className: "border-risk-medium/30 bg-risk-medium/5 text-risk-medium" },
-  accepted:   { label: "Confirmed",  className: "border-risk-low/30 bg-risk-low/5 text-risk-low" },
-  checked_in: { label: "Checked in", className: "border-risk-low/30 bg-risk-low/5 text-risk-low" },
-  completed:  { label: "Completed",  className: "border-border text-foreground" },
-  declined:   { label: "Declined",   className: "border-border text-muted-foreground" },
-  cancelled:  { label: "Cancelled",  className: "border-border text-muted-foreground" },
-  cancelled_organizer: { label: "Cancelled", className: "border-border text-muted-foreground" },
-  cancelled_emt:       { label: "Cancelled by medic", className: "border-border text-muted-foreground" },
-  no_show_emt:         { label: "No-show", className: "border-risk-high/30 bg-risk-high/5 text-risk-high" },
+// Booking status ramp (ui-conventions addendum). `accepted` (= the spec's
+// "assigned") is HUELESS — green is reserved for checked_in (on-site = complete).
+// checked_in / no_show carry the status-confirm / status-fault tokens plus a 3px
+// left rule on the card. `rule` is the card-level accent; `badge` styles the pill.
+const STATUS_STYLES: Record<string, { label: string; badge: string; rule?: string }> = {
+  open:       { label: "Open slot",  badge: "border-border text-muted-foreground" },
+  pending:    { label: "Pending",    badge: "border-risk-medium/30 bg-risk-medium/5 text-risk-medium" },
+  accepted:   { label: "Confirmed",  badge: "border-border text-foreground" },
+  checked_in: { label: "Checked in", badge: "border-status-confirm/40 text-status-confirm", rule: "border-l-[3px] border-l-status-confirm" },
+  completed:  { label: "Completed",  badge: "border-border text-muted-foreground" },
+  declined:   { label: "Declined",   badge: "border-border text-muted-foreground" },
+  cancelled:  { label: "Cancelled",  badge: "border-border text-muted-foreground" },
+  cancelled_organizer: { label: "Cancelled", badge: "border-border text-muted-foreground" },
+  cancelled_emt:       { label: "Cancelled by medic", badge: "border-border text-muted-foreground" },
+  no_show_emt:         { label: "No-show", badge: "border-status-fault/40 text-status-fault", rule: "border-l-[3px] border-l-status-fault" },
 }
+const DEFAULT_STATUS = { label: "—", badge: "border-border text-muted-foreground" } as const
 
 const riskClassFor = (score: number) =>
   score <= 3 ? "border-risk-low/30 bg-risk-low/5 text-risk-low" :
@@ -118,10 +124,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     )
   )
 
-  // Open-claim: open slots (emt_id null) are managed separately from the assigned
-  // roster — each gathers its applicants for the organizer to accept one.
+  // Slots split three ways by state so each renders in its own section:
+  //   • open    → OpenSlotManager (post / review applicants / invite)
+  //   • invited → HeldSlots (held for a specific medic; rescindable) — fetched
+  //               separately below because the held columns (invited_emt_id,
+  //               invitation_expires_at, slot_index) aren't in BOOKING_COLUMNS.
+  //   • else    → the assigned roster. NOTE: `invited` MUST be excluded here —
+  //               it has no STATUS_STYLES entry and would otherwise fall through
+  //               the roster's status lookup.
   const openBookings = roster.filter((b) => b.status === "open")
-  const assignedRoster = roster.filter((b) => b.status !== "open")
+  const assignedRoster = roster.filter((b) => b.status !== "open" && (b.status as string) !== "invited")
 
   const openSlots: OpenSlot[] = []
   if (openBookings.length > 0) {
@@ -179,6 +191,37 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       })
     }
   }
+
+  // Held invitations — slots this organizer is holding for a specific medic
+  // (status='invited'). Separate query because the held columns aren't in
+  // BOOKING_COLUMNS. The organizer owns the event, so RLS ("events owner all" /
+  // organizer_select_own) returns these rows; the invited medic's name comes from
+  // the profiles FK. No credential PII — display fields only.
+  const { data: rawHeld } = await supabase
+    .from("bookings")
+    .select(
+      "id, event_date, duration_hours, offered_rate, slot_index, invitation_expires_at, invited_emt_id, invited:profiles!bookings_invited_emt_id_fkey ( full_name )"
+    )
+    .eq("organizer_id", user.id)
+    .eq("event_id", id)
+    .eq("status", "invited")
+    .order("invitation_expires_at", { ascending: true })
+
+  const heldCertByEmt = await fetchCertLevels(
+    supabase,
+    (rawHeld ?? []).map((r) => r.invited_emt_id as string | null).filter(Boolean) as string[]
+  )
+
+  const heldSlots: HeldSlot[] = (rawHeld ?? []).map((r) => ({
+    id: r.id as string,
+    dateISO: r.event_date as string,
+    durationHours: Number(r.duration_hours) || 0,
+    hourlyRate: (r.offered_rate as number) ?? 0,
+    slotIndex: (r.slot_index as number | null) ?? null,
+    expiresAt: (r.invitation_expires_at as string | null) ?? null,
+    invitedName: joinedFullName(r.invited) ?? "Invited medic",
+    certLevel: heldCertByEmt.get(r.invited_emt_id as string) ?? null,
+  }))
 
   const shortDate = (ts: string) =>
     new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -258,6 +301,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           openSlots={openSlots}
         />
 
+        {/* Held invitations — slots held for a specific medic, awaiting their reply */}
+        <HeldSlots slots={heldSlots} />
+
         {/* Staffing roster — assigned bookings (direct requests + accepted open slots) */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
@@ -279,9 +325,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           ) : (
             <div className="flex flex-col gap-px">
               {assignedRoster.map((b) => {
-                const status = STATUS_STYLES[b.status]
+                const status = STATUS_STYLES[b.status] ?? DEFAULT_STATUS
                 return (
-                  <div key={b.id} className="border border-border bg-card flex flex-col md:flex-row md:items-center justify-between gap-3 px-5 py-4">
+                  <div key={b.id} className={`border border-border bg-card flex flex-col md:flex-row md:items-center justify-between gap-3 px-5 py-4 ${status.rule ?? ""}`}>
                     <div className="flex flex-col gap-1 min-w-0">
                       <span className="text-foreground font-medium leading-tight truncate flex items-center gap-2">
                         <span className="truncate">{b.counterpartName}</span>
@@ -309,7 +355,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                           counterpartName={b.counterpartName}
                         />
                       )}
-                      <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 ${status.className}`}>
+                      <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 ${status.badge}`}>
                         {status.label}
                       </span>
                     </div>

@@ -61,6 +61,27 @@
   --nav-foreground: #041228;
   --nav-muted: #5C6678;
   --nav-border: #E3E5E9;
+
+  /* ── Booking / slot status ramp (ui-conventions addendum, 2026-08-06) ────────
+     Scoped to booking + slot state ONLY — NOT the risk-severity ramp (still
+     undefined; must not reuse these hues). Values here are the "on Deep Navy"
+     variants because the app renders on the dark surface; the @media print block
+     flips them to the light-surface variants for the AHJ PDF export.
+     `invited` carries NO hue — the diagonal hatch (.slot-hatch) is its signal;
+     green is reserved for checked_in. */
+  --status-confirm: #5FC49E; /* checked_in / verified — 6.7:1 on navy */
+  --status-fault:   #E8836F; /* no_show / failed verification — 5.4:1 on navy */
+  --slot-hold-hatch: rgba(255, 255, 255, 0.10); /* hatch fill on held slots */
+
+  /* Navy-derived neutral scale (booking/slot UI). Light-surface values — derived
+     by mixing --navy (#1B2A4A) with white. Used as-is on the AHJ print surface;
+     the dark app surface renders slot borders/text with --border/--muted-foreground/
+     --foreground. Never substitute Tailwind gray/slate; never hardcode these hexes. */
+  --navy:    #1B2A4A;
+  --navy-70: #5F6A80; /* minimum for text on white — 5.4:1, passes AA */
+  --navy-55: #828A9B; /* borders/dividers only — 3.5:1, fails AA for copy */
+  --navy-35: #AFB4C0; /* solid 1px borders on light surfaces */
+  --navy-20: #D1D4DB; /* dashed borders, empty-state outlines */
 }
 
 .dark {
@@ -152,6 +173,13 @@
   --color-nav-foreground: var(--nav-foreground);
   --color-nav-muted: var(--nav-muted);
   --color-nav-border: var(--nav-border);
+  --color-status-confirm: var(--status-confirm);
+  --color-status-fault: var(--status-fault);
+  --color-navy: var(--navy);
+  --color-navy-70: var(--navy-70);
+  --color-navy-55: var(--navy-55);
+  --color-navy-35: var(--navy-35);
+  --color-navy-20: var(--navy-20);
 }
 
 @layer base {
@@ -179,6 +207,19 @@
   animation: standby-pulse 2s ease-in-out infinite;
 }
 
+/* ── Held-slot hatch — the ONLY permitted repeating-linear-gradient ─────────────
+   A 1px hatch line every 6px at 45°. This is a DATA ENCODING (the pending signal
+   on `invited` slots), not decoration — it is the documented exception to the
+   no-gradient rule and survives colorblindness + grayscale print. Do not flatten
+   it to a solid fill. See the ui-conventions addendum. */
+.slot-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 5px,
+    var(--slot-hold-hatch) 5px 6px
+  );
+}
+
 /* ── Print: AHJ report export (window.print → Save as PDF) ──────────────────────
    Browsers drop dark backgrounds when printing, so flip the tokens to a light,
    ink-friendly theme. App chrome (nav, footer, buttons, CTAs) is hidden per element
@@ -197,6 +238,10 @@
     --border: #d4d4d8;
     --surface: #ffffff;
     --surface-elevated: #f4f4f5;
+    /* Slot status ramp → light-surface variants for the printed AHJ report. */
+    --status-confirm: #1F7A5C; /* 5.3:1 on white */
+    --status-fault:   #A63A2E; /* 6.4:1 on white */
+    --slot-hold-hatch: rgba(27, 42, 74, 0.08);
   }
   body {
     background: #fff !important;

@@ -194,8 +194,11 @@ function InvitationCard({
   onDecline: (id: string) => void
   busy: boolean
 }) {
+  // Held = hueless + diagonal hatch (the pending signal). Green reads as complete
+  // and is reserved for checked_in; red is CTA-scarce (the Accept button owns it).
+  // The hatch survives colorblindness and grayscale print (ui-conventions addendum).
   return (
-    <div className="border border-primary/40 bg-card flex flex-col">
+    <div className="slot-hatch border border-border bg-card flex flex-col">
       <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-4">
         <div className="flex flex-col gap-1 min-w-0">
           <span className="text-foreground font-medium text-base leading-tight truncate">{inv.eventName}</span>
@@ -204,7 +207,7 @@ function InvitationCard({
             {inv.slotIndex != null && ` · Position ${inv.slotIndex}`}
           </span>
         </div>
-        <span className="font-mono text-[10px] uppercase tracking-widest border border-primary/40 bg-primary/5 text-primary px-2 py-0.5 shrink-0">
+        <span className="font-mono text-[10px] uppercase tracking-widest border border-border text-muted-foreground px-2 py-0.5 shrink-0">
           Invitation
         </span>
       </div>
