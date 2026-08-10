@@ -8,8 +8,12 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
-export interface OpenShift {
-  id: string
+// One card per EVENT (not per slot). `openCount` / `invitedCount` drive the split
+// ("1 open · 2 awaiting reply") so a medic can gauge their odds before applying.
+// `applyBookingId` is the specific open slot an apply/withdraw targets under the
+// hood — never surfaced (no position numbers on the EMT side).
+export interface OpenShiftEvent {
+  key: string
   eventName: string
   eventType: string
   date: string
@@ -18,7 +22,10 @@ export interface OpenShift {
   durationHours: number
   hourlyRate: number
   notes: string | null
-  /** The viewer's own application on this slot, if any. */
+  openCount: number
+  invitedCount: number
+  applyBookingId: string
+  /** The viewer's own application on this event, if any. */
   applicationId: string | null
   applicationStatus: "applied" | "accepted" | "rejected" | "withdrawn" | "expired" | null
 }
@@ -26,22 +33,22 @@ export interface OpenShift {
 interface OpenShiftBoardProps {
   viewerId: string
   verified: boolean
-  shifts: OpenShift[]
+  shifts: OpenShiftEvent[]
 }
 
 export function OpenShiftBoard({ viewerId, verified, shifts: initial }: OpenShiftBoardProps) {
-  const [shifts, setShifts] = useState<OpenShift[]>(initial)
-  const [busyId, setBusyId] = useState<string | null>(null)
+  const [shifts, setShifts] = useState<OpenShiftEvent[]>(initial)
+  const [busyKey, setBusyKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  // Optional message, keyed by shift id while its compose box is open.
+  // Optional message, keyed by the event's card key while its compose box is open.
   const [composing, setComposing] = useState<string | null>(null)
   const [message, setMessage] = useState("")
 
-  const patch = (id: string, next: Partial<OpenShift>) =>
-    setShifts((prev) => prev.map((s) => (s.id === id ? { ...s, ...next } : s)))
+  const patch = (key: string, next: Partial<OpenShiftEvent>) =>
+    setShifts((prev) => prev.map((s) => (s.key === key ? { ...s, ...next } : s)))
 
-  const apply = async (shift: OpenShift) => {
-    setBusyId(shift.id)
+  const apply = async (shift: OpenShiftEvent) => {
+    setBusyKey(shift.key)
     setError(null)
     const supabase = createClient()
     // booking_applications applicant insert (0011): verified EMT, status
@@ -49,23 +56,23 @@ export function OpenShiftBoard({ viewerId, verified, shifts: initial }: OpenShif
     // visibility from 0012 is what lets the policy's EXISTS check pass.
     const { data, error: insertError } = await supabase
       .from("booking_applications")
-      .insert({ booking_id: shift.id, emt_id: viewerId, message: message.trim() || null })
+      .insert({ booking_id: shift.applyBookingId, emt_id: viewerId, message: message.trim() || null })
       .select("id")
       .single()
     if (insertError) {
       setError(insertError.message)
-      setBusyId(null)
+      setBusyKey(null)
       return
     }
-    patch(shift.id, { applicationId: data.id, applicationStatus: "applied" })
+    patch(shift.key, { applicationId: data.id, applicationStatus: "applied" })
     setComposing(null)
     setMessage("")
-    setBusyId(null)
+    setBusyKey(null)
   }
 
-  const withdraw = async (shift: OpenShift) => {
+  const withdraw = async (shift: OpenShiftEvent) => {
     if (!shift.applicationId) return
-    setBusyId(shift.id)
+    setBusyKey(shift.key)
     setError(null)
     const supabase = createClient()
     // Guard trigger (0011) allows only applied → withdrawn from the client.
@@ -75,11 +82,11 @@ export function OpenShiftBoard({ viewerId, verified, shifts: initial }: OpenShif
       .eq("id", shift.applicationId)
     if (updErr) {
       setError(updErr.message)
-      setBusyId(null)
+      setBusyKey(null)
       return
     }
-    patch(shift.id, { applicationStatus: "withdrawn" })
-    setBusyId(null)
+    patch(shift.key, { applicationStatus: "withdrawn" })
+    setBusyKey(null)
   }
 
   if (shifts.length === 0) {
@@ -119,11 +126,17 @@ export function OpenShiftBoard({ viewerId, verified, shifts: initial }: OpenShif
           const terminal = s.applicationStatus === "withdrawn" || s.applicationStatus === "rejected" || s.applicationStatus === "expired"
           const est = Math.round(s.hourlyRate * s.durationHours)
           return (
-            <div key={s.id} className="border border-border bg-card flex flex-col">
+            <div key={s.key} className="border border-border bg-card flex flex-col">
               <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-4">
-                <div className="flex flex-col gap-1 min-w-0">
+                <div className="flex flex-col gap-1.5 min-w-0">
                   <span className="text-foreground font-medium text-base leading-tight truncate">{s.eventName}</span>
                   <span className="text-muted-foreground text-xs font-mono">{s.eventType}</span>
+                  {/* The split — counts only, never who was invited. Show the
+                      awaiting-reply figure only when there are held slots. */}
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground tabular-nums">
+                    {s.openCount} open
+                    {s.invitedCount > 0 && ` · ${s.invitedCount} awaiting reply`}
+                  </span>
                 </div>
                 <div className="flex flex-col items-end gap-0.5 shrink-0">
                   <div className="flex items-baseline gap-1">
@@ -164,7 +177,7 @@ export function OpenShiftBoard({ viewerId, verified, shifts: initial }: OpenShif
 
               <div className="px-5 py-4 flex flex-col gap-3">
                 {/* Optional message compose */}
-                {composing === s.id && (
+                {composing === s.key && (
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
@@ -193,26 +206,26 @@ export function OpenShiftBoard({ viewerId, verified, shifts: initial }: OpenShif
                       <Button
                         size="sm"
                         variant="outline"
-                        disabled={busyId === s.id}
+                        disabled={busyKey === s.key}
                         onClick={() => withdraw(s)}
                         className="rounded-none font-mono text-[10px] uppercase tracking-wider"
                       >
                         <X className="w-3.5 h-3.5 mr-1.5" />
-                        {busyId === s.id ? "Withdrawing…" : "Withdraw request"}
+                        {busyKey === s.key ? "Withdrawing…" : "Withdraw request"}
                       </Button>
                     ) : !terminal && verified ? (
-                      composing === s.id ? (
+                      composing === s.key ? (
                         <>
                           <Button size="sm" variant="ghost" onClick={() => { setComposing(null); setMessage("") }} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
                             Cancel
                           </Button>
-                          <Button size="sm" disabled={busyId === s.id} onClick={() => apply(s)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+                          <Button size="sm" disabled={busyKey === s.key} onClick={() => apply(s)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
                             <Check className="w-3.5 h-3.5 mr-1.5" />
-                            {busyId === s.id ? "Sending…" : "Send request"}
+                            {busyKey === s.key ? "Sending…" : "Send request"}
                           </Button>
                         </>
                       ) : (
-                        <Button size="sm" onClick={() => setComposing(s.id)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+                        <Button size="sm" onClick={() => setComposing(s.key)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
                           Request to fill
                         </Button>
                       )
