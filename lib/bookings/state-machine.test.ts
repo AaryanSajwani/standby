@@ -38,6 +38,7 @@ const LEGAL: ReadonlyArray<[BookingState, BookingState]> = [
   ["pending", "expired"],
   ["accepted", "confirmed"],
   ["accepted", "checked_in"],
+  ["accepted", "open"], // Phase 3: organizer unassigns the medic; slot reopens
   ["accepted", "cancelled_organizer"],
   ["accepted", "cancelled_emt"],
   ["accepted", "no_show_emt"],

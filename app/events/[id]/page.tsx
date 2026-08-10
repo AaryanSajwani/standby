@@ -9,6 +9,7 @@ import { joinedFullName, fetchCertLevels } from "@/lib/emt"
 import { CertBadge } from "@/components/CertBadge"
 import { OpenSlotManager, type OpenSlot } from "./open-slot-manager"
 import { HeldSlots, type HeldSlot } from "./held-slots"
+import { RemoveMedicButton } from "./remove-medic-button"
 import { EVENT_TYPE_LABELS } from "@/lib/assessment"
 import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -354,6 +355,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                           durationHours={b.durationHours}
                           counterpartName={b.counterpartName}
                         />
+                      )}
+                      {b.status === "accepted" && (
+                        <RemoveMedicButton bookingId={b.id} medicName={b.counterpartName} />
                       )}
                       <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 ${status.badge}`}>
                         {status.label}

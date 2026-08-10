@@ -197,6 +197,23 @@ export function slotRescindedEmail(b: BookingEmailData, organizerName: string, o
   }
 }
 
+// Sent to a medic whose CONFIRMED shift was removed by the organizer (Phase 3
+// unassign). Distinct from slotRescindedEmail (which is a held invitation pulled
+// before acceptance) — this medic had an accepted booking, so the tone
+// acknowledges that and points them at other work. Silent removal burns the
+// scarce side; this notice is mandatory.
+export function slotUnassignedEmail(b: BookingEmailData, organizerName: string, origin: string) {
+  return {
+    subject: `Shift no longer assigned — ${b.eventName}`,
+    html: shell(
+      "A confirmed shift was removed",
+      `${esc(organizerName)} removed you from this shift, so it's no longer on your schedule. This isn't a reflection on you — organizers adjust coverage for many reasons. Other open shifts are waiting.`,
+      bookingRows(b),
+      { label: "Browse open shifts", url: `${origin}/open-shifts` }
+    ),
+  }
+}
+
 // Sent to the ORGANIZER when a medic uses the 30-min self-attest fallback (the
 // organizer didn't verify on site within 30 min of start). It's an FYI + a nudge
 // to confirm check-out later — the in-app shift page carries the geo/photo/note.

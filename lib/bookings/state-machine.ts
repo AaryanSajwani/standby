@@ -113,6 +113,10 @@ export const BOOKING_TRANSITIONS: Record<BookingState, readonly TransitionRule[]
     // …while the live direct-request flow treats `accepted` as the locked state,
     // so check-in may proceed straight from here too.
     { to: "checked_in", by: ["organizer", "emt"], reason: "Medic verified on site" },
+    // Phase 3 removal: the organizer unassigns the medic and the slot reopens at
+    // the SAME index. Only from `accepted` — a checked_in medic cannot be
+    // unassigned (that's a different problem). Notifies the removed medic.
+    { to: "open", by: ["organizer"], reason: "Organizer removed the medic; slot reopened" },
     { to: "cancelled_organizer", by: ["organizer"], reason: "Organizer cancelled the shift" },
     { to: "cancelled_emt", by: ["emt"], reason: "Medic backed out of the shift" },
     { to: "no_show_emt", by: ["organizer", "system"], reason: "Medic did not appear" },
