@@ -35,7 +35,7 @@ export function isNegativeTerminal(status: BookingStatus): boolean {
 // kept through the expand→contract window (migration 0020) as a fallback until it
 // is dropped in 0021. mapBooking() prefers rate_cents.
 export const BOOKING_COLUMNS =
-  "id, event_name, event_type, event_date, location, expected_attendance, duration_hours, offered_rate, rate_cents, notes, status, created_at"
+  "id, event_name, event_type, event_date, starts_at, location, expected_attendance, duration_hours, offered_rate, rate_cents, notes, status, created_at"
 
 // The booking's effective hourly rate in DOLLARS, derived from the integer-cents
 // source of truth (rate_cents) with the legacy offered_rate as a transition
@@ -50,6 +50,7 @@ export interface RawBooking {
   event_name: string
   event_type: string
   event_date: string
+  starts_at: string | null
   location: string
   expected_attendance: number
   duration_hours: number
@@ -66,6 +67,7 @@ export interface Booking {
   eventType: string
   date: string
   dateISO: string // raw event_date (YYYY-MM-DD) for calendar export
+  startsAtISO: string | null // explicit shift start (timestamptz) — null = date-only
   location: string
   attendance: number
   durationHours: number
@@ -100,6 +102,7 @@ export function mapBooking(
     eventType: row.event_type,
     date: formatEventDate(row.event_date),
     dateISO: row.event_date,
+    startsAtISO: row.starts_at,
     location: row.location,
     attendance: row.expected_attendance,
     durationHours: Number(row.duration_hours),
@@ -172,6 +175,7 @@ export function invitationToAcceptedBooking(inv: Invitation): Booking {
     eventType: inv.eventType,
     date: inv.date,
     dateISO: inv.dateISO,
+    startsAtISO: null, // invitations don't carry the explicit start; set on refetch
     location: inv.location,
     attendance: inv.attendance,
     durationHours: inv.durationHours,

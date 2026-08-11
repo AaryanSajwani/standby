@@ -11,6 +11,7 @@ import { OpenSlotManager, type OpenSlot } from "./open-slot-manager"
 import { HeldSlots, type HeldSlot } from "./held-slots"
 import { RemoveMedicButton } from "./remove-medic-button"
 import { HeadcountControl } from "./headcount-control"
+import { CheckInCodeEntry } from "./check-in-code-entry"
 import { EVENT_TYPE_LABELS } from "@/lib/assessment"
 import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -357,42 +358,55 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             <div className="flex flex-col gap-px">
               {assignedRoster.map((b) => {
                 const status = STATUS_STYLES[b.status] ?? DEFAULT_STATUS
+                // On-site check-in/out happens inline below the row (no drilling into
+                // the shift page). accepted → check-in, checked_in → check-out.
+                const codePhase = b.status === "accepted" ? "check_in" : b.status === "checked_in" ? "check_out" : null
                 return (
-                  <div key={b.id} className={`border border-border bg-card flex flex-col md:flex-row md:items-center justify-between gap-3 px-5 py-4 ${status.rule ?? ""}`}>
-                    <div className="flex flex-col gap-1 min-w-0">
-                      <span className="text-foreground font-medium leading-tight truncate flex items-center gap-2">
-                        <span className="truncate">{b.counterpartName}</span>
-                        <CertBadge level={b.certLevel} />
-                      </span>
-                      <span className="text-muted-foreground text-xs font-mono tabular-nums">
-                        {b.date} · {b.durationHours} hrs · ${b.hourlyRate}/hr
-                      </span>
+                  <div key={b.id} className={`border border-border bg-card flex flex-col ${status.rule ?? ""}`}>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-5 py-4">
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <span className="text-foreground font-medium leading-tight truncate flex items-center gap-2">
+                          <span className="truncate">{b.counterpartName}</span>
+                          <CertBadge level={b.certLevel} />
+                        </span>
+                        <span className="text-muted-foreground text-xs font-mono tabular-nums">
+                          {b.date} · {b.durationHours} hrs · ${b.hourlyRate}/hr
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {(b.status === "accepted" || b.status === "checked_in" || b.status === "completed") && (
+                          <Link
+                            href={`/shifts/${b.id}`}
+                            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}
+                          >
+                            {b.status === "completed" ? "Review" : "Shift page"}
+                          </Link>
+                        )}
+                        {b.status === "accepted" && (
+                          <AddToCalendarButton
+                            eventName={b.eventName}
+                            dateISO={b.dateISO}
+                            location={b.location}
+                            durationHours={b.durationHours}
+                            counterpartName={b.counterpartName}
+                          />
+                        )}
+                        {b.status === "accepted" && (
+                          <RemoveMedicButton bookingId={b.id} medicName={b.counterpartName} />
+                        )}
+                        <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 ${status.badge}`}>
+                          {status.label}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {(b.status === "accepted" || b.status === "checked_in" || b.status === "completed") && (
-                        <Link
-                          href={`/shifts/${b.id}`}
-                          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}
-                        >
-                          {b.status === "accepted" ? "Verify check-in" : b.status === "checked_in" ? "Verify check-out" : "Review"}
-                        </Link>
-                      )}
-                      {b.status === "accepted" && (
-                        <AddToCalendarButton
-                          eventName={b.eventName}
-                          dateISO={b.dateISO}
-                          location={b.location}
-                          durationHours={b.durationHours}
-                          counterpartName={b.counterpartName}
-                        />
-                      )}
-                      {b.status === "accepted" && (
-                        <RemoveMedicButton bookingId={b.id} medicName={b.counterpartName} />
-                      )}
-                      <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-0.5 ${status.badge}`}>
-                        {status.label}
-                      </span>
-                    </div>
+                    {codePhase && (
+                      <CheckInCodeEntry
+                        bookingId={b.id}
+                        phase={codePhase}
+                        medicName={b.counterpartName}
+                        startsAtISO={b.startsAtISO}
+                      />
+                    )}
                   </div>
                 )
               })}
