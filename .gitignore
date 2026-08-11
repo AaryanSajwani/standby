@@ -29,6 +29,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Stray npm lockfile — this is a pnpm project (pnpm-lock.yaml is the source of
+# truth per CLAUDE.md). A package-lock.json makes Vercel's package-manager
+# detection ambiguous and re-triggers the workspace-root warning.
+package-lock.json
+
+# Leftover Claude Security scan output (self-ignored, kept out of the tree)
+CLAUDE-SECURITY-*/
+
 # Claude Code
 .claude/
 
