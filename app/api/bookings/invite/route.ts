@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   // it must still be open. organizer_select_own (0008) hides it from everyone else.
   const { data: booking, error: bkErr } = await supabase
     .from("bookings")
-    .select("id, organizer_id, status, event_id, starts_at, event_date, duration_hours, event_name, location, offered_rate, notes")
+    .select("id, organizer_id, status, event_id, starts_at, event_date, duration_hours, event_name, location, offered_rate, rate_cents, notes")
     .eq("id", bookingId)
     .maybeSingle()
   if (bkErr || !booking) return NextResponse.json({ error: "not_found" }, { status: 404 })
@@ -162,7 +162,7 @@ export async function POST(request: Request) {
         eventDate: booking.event_date,
         location: booking.location,
         durationHours: Number(booking.duration_hours) || 0,
-        offeredRate: booking.offered_rate,
+        offeredRate: booking.rate_cents != null ? booking.rate_cents / 100 : booking.offered_rate,
         notes: booking.notes,
       }
       const origin = process.env.SITE_URL ?? new URL(request.url).origin

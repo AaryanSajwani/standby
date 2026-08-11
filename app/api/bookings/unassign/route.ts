@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
   const { data: booking, error: bkErr } = await admin
     .from("bookings")
-    .select("id, organizer_id, emt_id, status, starts_at, event_date, duration_hours, event_name, location, offered_rate, notes")
+    .select("id, organizer_id, emt_id, status, starts_at, event_date, duration_hours, event_name, location, offered_rate, rate_cents, notes")
     .eq("id", bookingId)
     .maybeSingle()
   if (bkErr || !booking) return NextResponse.json({ error: "not_found" }, { status: 404 })
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
         eventDate: booking.event_date,
         location: booking.location,
         durationHours: Number(booking.duration_hours) || 0,
-        offeredRate: booking.offered_rate,
+        offeredRate: booking.rate_cents != null ? booking.rate_cents / 100 : booking.offered_rate,
         notes: booking.notes,
       }
       const origin = process.env.SITE_URL ?? new URL(request.url).origin

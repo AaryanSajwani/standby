@@ -3,7 +3,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { ArrowLeft, Calendar, MapPin, Clock } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
-import { formatEventDate } from "@/lib/bookings"
+import { formatEventDate, bookingRateDollars } from "@/lib/bookings"
 import { buttonVariants } from "@/components/ui/button"
 import { CertBadge } from "@/components/CertBadge"
 import { cn } from "@/lib/utils"
@@ -23,6 +23,7 @@ interface ShiftBooking {
   location: string
   duration_hours: number
   offered_rate: number
+  rate_cents: number | null
   status: string
 }
 
@@ -37,7 +38,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
   // Participant-only RLS: a non-participant reads null → 404.
   const { data: bk } = await supabase
     .from("bookings")
-    .select("id, organizer_id, emt_id, event_name, event_type, event_date, starts_at, location, duration_hours, offered_rate, status")
+    .select("id, organizer_id, emt_id, event_name, event_type, event_date, starts_at, location, duration_hours, offered_rate, rate_cents, status")
     .eq("id", id)
     .maybeSingle()
 
@@ -128,7 +129,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
             </span>
             <span className="inline-flex items-center gap-1"><Calendar className="w-3 h-3" />{formatEventDate(booking.event_date)}</span>
             <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{booking.location}</span>
-            <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" />{booking.duration_hours} hrs · ${booking.offered_rate}/hr</span>
+            <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" />{booking.duration_hours} hrs · ${bookingRateDollars(booking.rate_cents, booking.offered_rate)}/hr</span>
           </div>
         </div>
 
@@ -138,7 +139,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
           viewerId={user.id}
           status={booking.status}
           startsAtISO={booking.starts_at}
-          offeredRate={booking.offered_rate}
+          offeredRate={bookingRateDollars(booking.rate_cents, booking.offered_rate)}
           counterpartName={counterpartName}
           myReview={myReview}
           counterpartReview={counterpartReview}

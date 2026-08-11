@@ -109,7 +109,8 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
       location: location.trim(),
       expected_attendance: Number(attendance),
       duration_hours: durationNum,
-      offered_rate: rateNum,
+      offered_rate: rateNum, // legacy dollars — dropped in 0021 (contract)
+      rate_cents: Math.round(rateNum * 100), // forward integer-cents rate field
       notes: notes.trim() || null,
       status: "open",
     })

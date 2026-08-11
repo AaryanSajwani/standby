@@ -31,8 +31,19 @@ export function isNegativeTerminal(status: BookingStatus): boolean {
 }
 
 // Explicit column list — same allowlist convention as EMT_PUBLIC_COLUMNS.
+// rate_cents is the forward rate field (integer cents); offered_rate (dollars) is
+// kept through the expand→contract window (migration 0020) as a fallback until it
+// is dropped in 0021. mapBooking() prefers rate_cents.
 export const BOOKING_COLUMNS =
-  "id, event_name, event_type, event_date, location, expected_attendance, duration_hours, offered_rate, notes, status, created_at"
+  "id, event_name, event_type, event_date, location, expected_attendance, duration_hours, offered_rate, rate_cents, notes, status, created_at"
+
+// The booking's effective hourly rate in DOLLARS, derived from the integer-cents
+// source of truth (rate_cents) with the legacy offered_rate as a transition
+// fallback. One place converts cents→dollars for display so the ×100 lives here,
+// not scattered across every card.
+export function bookingRateDollars(rateCents: number | null | undefined, offeredRate: number): number {
+  return rateCents != null ? rateCents / 100 : offeredRate
+}
 
 export interface RawBooking {
   id: string
@@ -43,6 +54,7 @@ export interface RawBooking {
   expected_attendance: number
   duration_hours: number
   offered_rate: number
+  rate_cents: number | null
   notes: string | null
   status: BookingStatus
   created_at: string
@@ -91,7 +103,7 @@ export function mapBooking(
     location: row.location,
     attendance: row.expected_attendance,
     durationHours: Number(row.duration_hours),
-    hourlyRate: row.offered_rate,
+    hourlyRate: bookingRateDollars(row.rate_cents, row.offered_rate),
     notes: row.notes,
     status: row.status,
     counterpartName,
@@ -128,6 +140,7 @@ export interface RawInvitation {
   expected_attendance: number
   duration_hours: number
   offered_rate: number
+  rate_cents: number | null
   notes: string | null
   slot_index: number | null
   invitation_expires_at: string | null
@@ -143,7 +156,7 @@ export function mapInvitation(row: RawInvitation, organizerName: string): Invita
     location: row.location,
     attendance: row.expected_attendance,
     durationHours: Number(row.duration_hours),
-    hourlyRate: row.offered_rate,
+    hourlyRate: bookingRateDollars(row.rate_cents, row.offered_rate),
     notes: row.notes,
     counterpartName: organizerName,
     slotIndex: row.slot_index,

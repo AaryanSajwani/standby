@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   // Load under RLS — a non-participant can't even see the row.
   const { data: bk, error: bkError } = await supabase
     .from("bookings")
-    .select("id, organizer_id, emt_id, event_name, event_date, location, duration_hours, offered_rate, notes, status")
+    .select("id, organizer_id, emt_id, event_name, event_date, location, duration_hours, offered_rate, rate_cents, notes, status")
     .eq("id", bookingId)
     .maybeSingle()
   if (bkError || !bk) return NextResponse.json({ error: "not_found" }, { status: 404 })
@@ -104,7 +104,7 @@ export async function POST(request: Request) {
     eventDate: bk.event_date,
     location: bk.location,
     durationHours: Number(bk.duration_hours) || 0,
-    offeredRate: bk.offered_rate,
+    offeredRate: bk.rate_cents != null ? bk.rate_cents / 100 : bk.offered_rate,
     notes: bk.notes,
   }
   // Email CTA links: prefer the canonical origin over the request's Host

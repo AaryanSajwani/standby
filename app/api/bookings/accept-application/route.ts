@@ -192,7 +192,7 @@ export async function POST(request: Request) {
     const [{ data: fullBooking }, medicUser, orgProfile] = await Promise.all([
       admin
         .from("bookings")
-        .select("event_name, event_date, location, duration_hours, offered_rate, notes")
+        .select("event_name, event_date, location, duration_hours, offered_rate, rate_cents, notes")
         .eq("id", app.booking_id)
         .maybeSingle(),
       admin.auth.admin.getUserById(app.emt_id as string),
@@ -205,7 +205,7 @@ export async function POST(request: Request) {
         eventDate: fullBooking.event_date,
         location: fullBooking.location,
         durationHours: Number(fullBooking.duration_hours) || 0,
-        offeredRate: fullBooking.offered_rate,
+        offeredRate: fullBooking.rate_cents != null ? fullBooking.rate_cents / 100 : fullBooking.offered_rate,
         notes: fullBooking.notes,
       }
       const origin = process.env.SITE_URL ?? new URL(request.url).origin

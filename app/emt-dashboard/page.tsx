@@ -42,7 +42,7 @@ export default async function EMTDashboardPage() {
   const { data: rawInvites, error: inviteErr } = await supabase
     .from("bookings")
     .select(
-      "id, event_name, event_type, event_date, location, expected_attendance, duration_hours, offered_rate, notes, slot_index, invitation_expires_at, organizer:profiles!bookings_organizer_id_fkey ( full_name )"
+      "id, event_name, event_type, event_date, location, expected_attendance, duration_hours, offered_rate, rate_cents, notes, slot_index, invitation_expires_at, organizer:profiles!bookings_organizer_id_fkey ( full_name )"
     )
     .eq("invited_emt_id", user.id)
     .eq("status", "invited")
