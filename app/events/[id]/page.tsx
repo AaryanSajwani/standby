@@ -10,6 +10,7 @@ import { CertBadge } from "@/components/CertBadge"
 import { OpenSlotManager, type OpenSlot } from "./open-slot-manager"
 import { HeldSlots, type HeldSlot } from "./held-slots"
 import { RemoveMedicButton } from "./remove-medic-button"
+import { HeadcountControl } from "./headcount-control"
 import { EVENT_TYPE_LABELS } from "@/lib/assessment"
 import { buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -23,6 +24,8 @@ interface EventRow {
   event_date: string | null
   venue_address: string | null
   expected_attendance: number | null
+  required_medics: number | null
+  recommended_staffing: Record<string, number> | null
 }
 
 // RLS ("events owner all") returns the row only to its organizer; everyone else gets null.
@@ -30,7 +33,7 @@ const getEvent = cache(async (id: string): Promise<EventRow | null> => {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from("events")
-    .select("id, name, event_type, event_date, venue_address, expected_attendance")
+    .select("id, name, event_type, event_date, venue_address, expected_attendance, required_medics, recommended_staffing")
     .eq("id", id)
     .maybeSingle()
   if (error) console.error("[/events/[id]] event query failed:", error.message)
@@ -134,7 +137,23 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   //               it has no STATUS_STYLES entry and would otherwise fall through
   //               the roster's status lookup.
   const openBookings = roster.filter((b) => b.status === "open")
-  const assignedRoster = roster.filter((b) => b.status !== "open" && (b.status as string) !== "invited")
+  // Assigned roster excludes open, invited (own section), AND retired (not rendered).
+  const assignedRoster = roster.filter(
+    (b) => b.status !== "open" && (b.status as string) !== "invited" && (b.status as string) !== "retired"
+  )
+
+  // Headcount counts. A "live" position is a real slot (open/held/confirmed/done);
+  // `retired` is parked (revivable). `filled` = confirmed. These drive the staffing
+  // summary + the set_event_headcount stepper (planHeadcount mirrors the definer).
+  const LIVE = new Set(["open", "invited", "accepted", "checked_in", "completed", "no_show_emt"])
+  const FILLED = new Set(["accepted", "checked_in", "completed"])
+  const liveCount = roster.filter((b) => LIVE.has(b.status)).length
+  const openCount = roster.filter((b) => b.status === "open").length
+  const retiredCount = roster.filter((b) => (b.status as string) === "retired").length
+  const filledCount = roster.filter((b) => FILLED.has(b.status)).length
+  const recommendedTotal = event.recommended_staffing
+    ? Object.values(event.recommended_staffing).reduce((sum, n) => sum + (Number(n) || 0), 0)
+    : null
 
   const openSlots: OpenSlot[] = []
   if (openBookings.length > 0) {
@@ -287,6 +306,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             </div>
           )}
         </section>
+
+        {/* Staffing headcount — lead with filled/target; adjust to revive/append/retire.
+            Shown once the event has at least one position (its slot template). */}
+        {liveCount + retiredCount > 0 && (
+          <HeadcountControl
+            eventId={id}
+            filled={filledCount}
+            required={event.required_medics}
+            state={{ live: liveCount, open: openCount, retired: retiredCount, recommendedTotal }}
+          />
+        )}
 
         {/* Open slots (open-claim) — post a slot, review applicants, accept one */}
         <OpenSlotManager
