@@ -131,7 +131,9 @@ sample data sits behind a "Sample profiles" banner with no trust signals. Frame 
 `/personnel` is public, so it belongs in both nav states); signed-in →
 app nav (organizer: Events · New assessment · Personnel · Schedule; EMT: Dashboard · Personnel).
 Every nav link resolves to a real route — no stubs. Post-auth landing: organizer → `/events`,
-EMT → `/emt-dashboard`.
+EMT → `/emt-dashboard`. **No "System Online" indicator in EITHER nav state** (removed 2026-08-14):
+a decorative "online" dot in every user's chrome read as AI-template filler. The only system-status
+signal lives on `/admin`, where it's meaningful (service-role connectivity + open-report counts).
 
 **Monetization — two-part, buyer-side (revised 2026-06-14).** (1) *Transactional*: a transparent
 **buyer-side** commission — the EMT keeps 100% of their posted rate; Standby's fee is added on top
