@@ -1,5 +1,6 @@
 import { LandingHero } from "@/components/landing/landing-hero"
-import { LandingHowItWorks } from "@/components/landing/landing-how-it-works"
+import { LiveAssessment } from "@/components/landing/live-assessment"
+import { FounderBar } from "@/components/landing/founder-bar"
 import { LandingBento } from "@/components/landing/landing-bento"
 import { LandingMethodology } from "@/components/landing/landing-methodology"
 import { LandingPricing } from "@/components/landing/landing-pricing"
@@ -24,8 +25,14 @@ export default async function HomePage() {
           <LandingHero emtHref={emtHref} />
         </main>
 
+        {/* Lead with proof, not process — the real assessment carries "how it works",
+            so it owns the #how-it-works anchor the nav links to. */}
         <AnimatedSection id="how-it-works" className="relative z-10 max-w-[1320px] mx-auto mt-8 md:mt-16" delay={0.2}>
-          <LandingHowItWorks />
+          <LiveAssessment />
+        </AnimatedSection>
+
+        <AnimatedSection className="relative z-10 max-w-[1320px] mx-auto mt-2 md:mt-4" delay={0.2}>
+          <FounderBar />
         </AnimatedSection>
 
         <AnimatedSection id="features-section" className="relative z-10 max-w-[1320px] mx-auto mt-8 md:mt-16" delay={0.2}>

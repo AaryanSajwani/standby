@@ -6,9 +6,9 @@ import { ChevronDown } from "lucide-react"
 
 const FAQ_DATA = [
   {
-    question: "What is Standby and who is it for?",
+    question: "Do I need a permit or AHJ sign-off for my event?",
     answer:
-      "Standby is an event medical risk assessment and EMT staffing platform built for event coordinators, safety officers, and medical directors. Whether you're running a 500-person corporate event or a 50,000-person music festival, Standby generates a defensible risk assessment and matched staffing configuration in minutes.",
+      "Standby doesn't issue permits — your venue and local jurisdiction decide whether you need one. What it does is produce the documentation those reviewers ask for: a risk classification and a staffing plan where every number is tied to a published guideline. Use it to prepare your coverage plan before you file, or to answer “why this many medics?” during review. It's built for event coordinators, safety officers, and medical directors running anything from a 500-person corporate event to a 50,000-person festival.",
   },
   {
     question: "How does the risk scoring work?",

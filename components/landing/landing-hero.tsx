@@ -2,6 +2,7 @@ import React from "react"
 import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { HeroRiskCard } from "./risk-preview"
 
 interface LandingHeroProps {
   emtHref?: string
@@ -50,15 +51,11 @@ export function LandingHero({ emtHref = "/auth?role=emt&next=/emt-dashboard" }: 
       {/* Hero Content — text left, assessment visual right */}
       <div className="relative z-10 w-full h-full flex items-center justify-between gap-10 px-2 md:px-12 lg:px-16 text-left">
         <div className="space-y-4 md:space-y-5 lg:space-y-6 max-w-md md:max-w-[460px] lg:max-w-[560px]">
-          <div className="inline-flex items-center gap-2 border border-primary/30 bg-primary/5 rounded-full px-3 py-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-standby-pulse" />
-            <span className="text-xs font-mono text-primary tracking-widest uppercase">Event Medical Risk Platform</span>
-          </div>
           <h1 className="text-foreground text-3xl md:text-4xl lg:text-6xl font-semibold leading-tight">
             Medical coverage that starts before the event does.
           </h1>
           <p className="text-muted-foreground text-base md:text-base lg:text-lg font-medium leading-relaxed">
-            Standby turns event details into a defensible medical risk score, staffing configuration, and matched EMT roster — in one workflow.
+            Most events figure out staffing by gut feel and a phone call. Standby scores your event&apos;s actual risk — crowd density, activity type, environment — and tells you exactly how many EMTs you need, then gets you licensed ones.
           </p>
           <div className="flex flex-col gap-3 pt-1">
             <div className="flex items-center gap-3">
@@ -75,73 +72,12 @@ export function LandingHero({ emtHref = "/auth?role=emt&next=/emt-dashboard" }: 
           </div>
         </div>
 
-        {/* Assessment card mockup — md+ only */}
+        {/* The real live-scoring panel (engine-driven), md+ only */}
         <div className="hidden md:block relative w-[330px] lg:w-[392px] shrink-0">
           {/* soft red glow seating the card */}
           <div className="absolute -inset-10 bg-primary/[0.07] blur-3xl rounded-full pointer-events-none" />
-
-          <div className="relative border border-border bg-card rounded-xl overflow-hidden">
-            {/* header */}
-            <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Risk Assessment</span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-risk-low animate-standby-pulse" />
-                <span className="font-mono text-[10px] uppercase tracking-widest text-risk-low">Live</span>
-              </span>
-            </div>
-
-            {/* event + score */}
-            <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-4">
-              <div className="flex flex-col gap-1 min-w-0">
-                <span className="text-foreground text-sm font-medium truncate">Lakeview Summer Festival</span>
-                <span className="font-mono text-xs text-muted-foreground">Festival · 8,500 attendees · 6 hrs</span>
-              </div>
-              <div className="text-right shrink-0">
-                <div className="font-mono text-3xl font-bold tabular-nums text-primary leading-none">74</div>
-                <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mt-1">/ 100 · High</div>
-              </div>
-            </div>
-
-            {/* score bar */}
-            <div className="px-5 pb-4">
-              <div className="h-1.5 w-full bg-border/60 rounded-full overflow-hidden">
-                <div className="h-full w-[74%] rounded-full bg-gradient-to-r from-risk-low via-risk-medium to-primary" />
-              </div>
-            </div>
-
-            {/* risk factors */}
-            <div className="border-t border-border px-5 py-4 flex flex-col gap-2.5">
-              {[
-                { label: "Crowd density", width: "82%", color: "bg-risk-high" },
-                { label: "Environmental exposure", width: "55%", color: "bg-risk-medium" },
-                { label: "Activity profile", width: "30%", color: "bg-risk-low" },
-              ].map(({ label, width, color }) => (
-                <div key={label} className="flex items-center gap-3">
-                  <span className="flex-1 text-xs text-muted-foreground">{label}</span>
-                  <div className="w-24 lg:w-28 h-1 bg-border/60 rounded-full overflow-hidden shrink-0">
-                    <div className={`h-full rounded-full ${color}`} style={{ width }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* staffing recommendation */}
-            <div className="border-t border-border px-5 py-3.5 flex items-center justify-between gap-3">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Recommended</span>
-              <span className="font-mono text-xs text-foreground">12× EMT-B · ALS advisory</span>
-            </div>
-          </div>
-
-          {/* matched-EMT toast overlapping the card */}
-          <div className="absolute -left-6 lg:-left-12 -bottom-7 flex items-center gap-3 border border-border bg-card rounded-lg shadow-xl shadow-black/40 px-4 py-3">
-            <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0">
-              <span className="font-mono text-xs font-bold text-primary">MR</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-medium text-foreground leading-tight">M. Rivera matched</span>
-              <span className="font-mono text-[10px] text-muted-foreground">EMT-B · 2.1 mi away</span>
-            </div>
-            <span className="w-1.5 h-1.5 rounded-full bg-risk-low shrink-0" />
+          <div className="relative">
+            <HeroRiskCard />
           </div>
         </div>
       </div>

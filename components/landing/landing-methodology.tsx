@@ -10,9 +10,9 @@ export function LandingMethodology() {
                 Why it's defensible
               </span>
               <div className="relative z-10 w-full max-w-[1024px] text-center text-foreground leading-7 md:leading-10 lg:leading-[56px] font-medium text-lg md:text-3xl lg:text-[44px] text-balance">
-                When an AHJ asks &ldquo;why this many medics?&rdquo;, &ldquo;the model said so&rdquo; isn&apos;t an answer.
-                Standby ties every staffing number to published mass-gathering medicine guidance —
-                so your coverage plan holds up before anyone questions it.
+                AHJs, insurers, and permit reviewers ask &ldquo;why this many medics?&rdquo; Standby&apos;s answer is
+                always the same one: the published mass-gathering medicine guideline that generated the number,
+                cited by name.
               </div>
               <div className="relative z-10 flex flex-col items-center gap-1.5">
                 <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">

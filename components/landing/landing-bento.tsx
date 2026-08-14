@@ -3,8 +3,6 @@ import RiskScoringIllustration from "./bento/risk-scoring"
 import EMTMarketplaceIllustration from "./bento/emt-marketplace"
 import ComplianceReportsIllustration from "./bento/compliance-reports"
 import StaffingConfigIllustration from "./bento/staffing-config"
-import EventIntelligenceIllustration from "./bento/event-intelligence"
-import InstantMatchingIllustration from "./bento/instant-matching"
 
 const BentoCard = ({
   title,
@@ -52,16 +50,6 @@ const CARDS = [
     description: "Precise staffing ratios based on attendance, venue, and event type.",
     Component: StaffingConfigIllustration,
   },
-  {
-    title: "Event intelligence.",
-    description: "Patient-presentation benchmarks from event-medicine research, by event type.",
-    Component: EventIntelligenceIllustration,
-  },
-  {
-    title: "Instant EMT matching.",
-    description: "Connect with local EMTs who specialize in your event category.",
-    Component: InstantMatchingIllustration,
-  },
 ]
 
 export function LandingBento() {
@@ -72,14 +60,14 @@ export function LandingBento() {
         <div className="self-stretch py-8 md:py-14 flex flex-col justify-center items-center gap-2 z-10">
           <div className="flex flex-col justify-start items-center gap-4">
             <h2 className="w-full max-w-[700px] text-center text-foreground text-4xl md:text-6xl font-semibold leading-tight md:leading-[66px]">
-              Everything your event medical coverage needs
+              How the numbers get chosen.
             </h2>
             <p className="w-full max-w-[600px] text-center text-muted-foreground text-lg md:text-xl font-medium leading-relaxed">
-              From multi-factor risk scoring to AHJ-ready documentation, Standby covers the entire event medical workflow in a single platform.
+              Every staffing recommendation traces back to a specific risk factor. Nothing here is a guess dressed up as a percentage.
             </p>
           </div>
         </div>
-        <div className="self-stretch grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 z-10">
+        <div className="self-stretch grid grid-cols-1 md:grid-cols-2 gap-6 z-10 max-w-[900px] mx-auto">
           {CARDS.map((card) => (
             <BentoCard key={card.title} {...card} />
           ))}
