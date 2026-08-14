@@ -127,17 +127,8 @@ export function NavBar() {
       </div>
 
       <div className="flex items-center gap-3 md:gap-4">
-        {/* System status — app chrome only, not on the marketing nav */}
-        {isSignedIn && (
-          <>
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-risk-low animate-standby-pulse" />
-              <span className="text-xs font-mono text-nav-muted tracking-wider">System Online</span>
-            </div>
-            <Separator orientation="vertical" className="h-4 hidden sm:block bg-nav-border" />
-          </>
-        )}
-
+        {/* System-status indicator lives on /admin now — a decorative "online" dot
+            in every signed-in user's chrome read as AI-template filler. */}
         {!loaded ? (
           // Reserve space until auth resolves — avoids a sign-in → app-nav flash
           <span className="font-mono text-xs text-nav-muted tracking-wide">…</span>
