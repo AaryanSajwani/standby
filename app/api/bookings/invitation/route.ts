@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   // Service-role read (the invited medic can't see this row under current RLS).
   const { data: booking, error: bkErr } = await admin
     .from("bookings")
-    .select("id, organizer_id, emt_id, invited_emt_id, status, invitation_expires_at, starts_at, event_date, duration_hours, event_name, location, offered_rate, rate_cents, notes")
+    .select("id, organizer_id, emt_id, invited_emt_id, status, invitation_expires_at, starts_at, event_date, duration_hours, event_name, location, rate_cents, notes")
     .eq("id", bookingId)
     .maybeSingle()
   if (bkErr || !booking) return NextResponse.json({ error: "not_found" }, { status: 404 })
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     eventDate: booking.event_date,
     location: booking.location,
     durationHours: Number(booking.duration_hours) || 0,
-    offeredRate: booking.rate_cents != null ? booking.rate_cents / 100 : booking.offered_rate,
+    offeredRate: (booking.rate_cents ?? 0) / 100,
     notes: booking.notes,
   }
   const origin = process.env.SITE_URL ?? new URL(request.url).origin

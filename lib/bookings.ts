@@ -31,18 +31,17 @@ export function isNegativeTerminal(status: BookingStatus): boolean {
 }
 
 // Explicit column list — same allowlist convention as EMT_PUBLIC_COLUMNS.
-// rate_cents is the forward rate field (integer cents); offered_rate (dollars) is
-// kept through the expand→contract window (migration 0020) as a fallback until it
-// is dropped in 0021. mapBooking() prefers rate_cents.
+// rate_cents (integer cents) is the sole rate field since the 0021 contract
+// dropped the legacy dollars `offered_rate`.
 export const BOOKING_COLUMNS =
-  "id, event_name, event_type, event_date, starts_at, location, expected_attendance, duration_hours, offered_rate, rate_cents, notes, status, created_at"
+  "id, event_name, event_type, event_date, starts_at, location, expected_attendance, duration_hours, rate_cents, notes, status, created_at"
 
 // The booking's effective hourly rate in DOLLARS, derived from the integer-cents
-// source of truth (rate_cents) with the legacy offered_rate as a transition
-// fallback. One place converts cents→dollars for display so the ×100 lives here,
-// not scattered across every card.
-export function bookingRateDollars(rateCents: number | null | undefined, offeredRate: number): number {
-  return rateCents != null ? rateCents / 100 : offeredRate
+// source of truth (rate_cents). One place converts cents→dollars for display so
+// the ×100 lives here, not scattered across every card. Post-0021 rate_cents is
+// NOT NULL, so the null branch is a defensive fallback only.
+export function bookingRateDollars(rateCents: number | null | undefined): number {
+  return rateCents != null ? rateCents / 100 : 0
 }
 
 export interface RawBooking {
@@ -54,7 +53,6 @@ export interface RawBooking {
   location: string
   expected_attendance: number
   duration_hours: number
-  offered_rate: number
   rate_cents: number | null
   notes: string | null
   status: BookingStatus
@@ -106,7 +104,7 @@ export function mapBooking(
     location: row.location,
     attendance: row.expected_attendance,
     durationHours: Number(row.duration_hours),
-    hourlyRate: bookingRateDollars(row.rate_cents, row.offered_rate),
+    hourlyRate: bookingRateDollars(row.rate_cents),
     notes: row.notes,
     status: row.status,
     counterpartName,
@@ -142,7 +140,6 @@ export interface RawInvitation {
   location: string
   expected_attendance: number
   duration_hours: number
-  offered_rate: number
   rate_cents: number | null
   notes: string | null
   slot_index: number | null
@@ -159,7 +156,7 @@ export function mapInvitation(row: RawInvitation, organizerName: string): Invita
     location: row.location,
     attendance: row.expected_attendance,
     durationHours: Number(row.duration_hours),
-    hourlyRate: bookingRateDollars(row.rate_cents, row.offered_rate),
+    hourlyRate: bookingRateDollars(row.rate_cents),
     notes: row.notes,
     counterpartName: organizerName,
     slotIndex: row.slot_index,

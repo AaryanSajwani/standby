@@ -221,7 +221,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const { data: rawHeld } = await supabase
     .from("bookings")
     .select(
-      "id, event_date, duration_hours, offered_rate, rate_cents, slot_index, invitation_expires_at, invited_emt_id, invited:profiles!bookings_invited_emt_id_fkey ( full_name )"
+      "id, event_date, duration_hours, rate_cents, slot_index, invitation_expires_at, invited_emt_id, invited:profiles!bookings_invited_emt_id_fkey ( full_name )"
     )
     .eq("organizer_id", user.id)
     .eq("event_id", id)
@@ -237,7 +237,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
     id: r.id as string,
     dateISO: r.event_date as string,
     durationHours: Number(r.duration_hours) || 0,
-    hourlyRate: bookingRateDollars(r.rate_cents as number | null, (r.offered_rate as number) ?? 0),
+    hourlyRate: bookingRateDollars(r.rate_cents as number | null),
     slotIndex: (r.slot_index as number | null) ?? null,
     expiresAt: (r.invitation_expires_at as string | null) ?? null,
     invitedName: joinedFullName(r.invited) ?? "Invited medic",

@@ -119,8 +119,7 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
         location: location.trim(),
         expected_attendance: Number(attendance),
         duration_hours: durationNum,
-        offered_rate: hourlyRate, // legacy dollars — dropped in 0021 (contract)
-        rate_cents: Math.round(hourlyRate * 100), // forward integer-cents rate field
+        rate_cents: Math.round(hourlyRate * 100), // integer-cents rate field (sole rate field since 0021)
         notes: notes.trim() || null,
       })
       .select("id")

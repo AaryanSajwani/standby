@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
   const { data: booking, error: bkErr } = await admin
     .from("bookings")
-    .select("id, organizer_id, emt_id, status, starts_at, event_date, duration_hours, event_name, location, offered_rate, rate_cents, notes")
+    .select("id, organizer_id, emt_id, status, starts_at, event_date, duration_hours, event_name, location, rate_cents, notes")
     .eq("id", bookingId)
     .maybeSingle()
   if (bkErr || !booking) return NextResponse.json({ error: "not_found" }, { status: 404 })
@@ -76,11 +76,13 @@ export async function POST(request: Request) {
   const removedMedicId = booking.emt_id // capture before we null it
   const hoursToStart = booking.starts_at ? (new Date(booking.starts_at).getTime() - Date.now()) / 3_600_000 : null
 
-  // Reopen the slot at the same index. Null the confirmed medic + the snapshotted
-  // rate. Guarded on status='accepted' so a concurrent check-in/cancel loses.
+  // Reopen the slot at the same index. Null the confirmed medic; KEEP rate_cents
+  // (post-0021 it is NOT NULL — the reopened slot stays advertisable at the last
+  // rate, and the next fill re-snapshots it). Guarded on status='accepted' so a
+  // concurrent check-in/cancel loses.
   const { data: updated, error: updErr } = await admin
     .from("bookings")
-    .update({ status: "open", emt_id: null, rate_cents: null, accepted_at: null })
+    .update({ status: "open", emt_id: null, accepted_at: null })
     .eq("id", bookingId)
     .eq("status", "accepted")
     .select("id")
@@ -112,7 +114,7 @@ export async function POST(request: Request) {
         eventDate: booking.event_date,
         location: booking.location,
         durationHours: Number(booking.duration_hours) || 0,
-        offeredRate: booking.rate_cents != null ? booking.rate_cents / 100 : booking.offered_rate,
+        offeredRate: (booking.rate_cents ?? 0) / 100,
         notes: booking.notes,
       }
       const origin = process.env.SITE_URL ?? new URL(request.url).origin

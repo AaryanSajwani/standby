@@ -22,7 +22,6 @@ interface ShiftBooking {
   starts_at: string | null
   location: string
   duration_hours: number
-  offered_rate: number
   rate_cents: number | null
   status: string
 }
@@ -38,7 +37,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
   // Participant-only RLS: a non-participant reads null → 404.
   const { data: bk } = await supabase
     .from("bookings")
-    .select("id, organizer_id, emt_id, event_name, event_type, event_date, starts_at, location, duration_hours, offered_rate, rate_cents, status")
+    .select("id, organizer_id, emt_id, event_name, event_type, event_date, starts_at, location, duration_hours, rate_cents, status")
     .eq("id", id)
     .maybeSingle()
 
@@ -129,7 +128,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
             </span>
             <span className="inline-flex items-center gap-1"><Calendar className="w-3 h-3" />{formatEventDate(booking.event_date)}</span>
             <span className="inline-flex items-center gap-1"><MapPin className="w-3 h-3" />{booking.location}</span>
-            <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" />{booking.duration_hours} hrs · ${bookingRateDollars(booking.rate_cents, booking.offered_rate)}/hr</span>
+            <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" />{booking.duration_hours} hrs · ${bookingRateDollars(booking.rate_cents)}/hr</span>
           </div>
         </div>
 
@@ -139,7 +138,7 @@ export default async function ShiftPage({ params }: { params: Promise<{ id: stri
           viewerId={user.id}
           status={booking.status}
           startsAtISO={booking.starts_at}
-          offeredRate={bookingRateDollars(booking.rate_cents, booking.offered_rate)}
+          offeredRate={bookingRateDollars(booking.rate_cents)}
           counterpartName={counterpartName}
           myReview={myReview}
           counterpartReview={counterpartReview}

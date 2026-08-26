@@ -63,7 +63,7 @@ export async function POST(request: Request) {
   // Load under RLS (emt_select_assigned → only the assigned medic sees it).
   const { data: bk } = await supabase
     .from("bookings")
-    .select("id, organizer_id, emt_id, event_name, event_date, location, duration_hours, offered_rate, rate_cents, notes, status, starts_at")
+    .select("id, organizer_id, emt_id, event_name, event_date, location, duration_hours, rate_cents, notes, status, starts_at")
     .eq("id", bookingId)
     .maybeSingle()
   if (!bk) return NextResponse.json({ error: "not_found" }, { status: 404 })
@@ -173,7 +173,7 @@ export async function POST(request: Request) {
         eventDate: bk.event_date,
         location: bk.location,
         durationHours: Number(bk.duration_hours) || 0,
-        offeredRate: bk.rate_cents != null ? bk.rate_cents / 100 : bk.offered_rate,
+        offeredRate: (bk.rate_cents ?? 0) / 100,
         notes: bk.notes,
       }
       const origin = process.env.SITE_URL ?? new URL(request.url).origin
