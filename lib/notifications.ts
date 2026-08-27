@@ -59,7 +59,16 @@ function fmtDate(iso: string): string {
 
 // Light theme on purpose — email clients butcher dark backgrounds. Brand shows
 // up as the navy text + red accent, mono for data values, sharp corners.
-function shell(heading: string, intro: string, rows: [string, string][], cta: { label: string; url: string }): string {
+const DEFAULT_FOOTER =
+  "Standby is a decision-support and staffing platform, not a medical provider. This notification reflects a booking request in the app — the app is the source of truth for its current status."
+
+function shell(
+  heading: string,
+  intro: string,
+  rows: [string, string][],
+  cta: { label: string; url: string },
+  footer: string = DEFAULT_FOOTER
+): string {
   const rowsHtml = rows
     .map(
       ([k, v]) => `
@@ -83,7 +92,7 @@ function shell(heading: string, intro: string, rows: [string, string][], cta: { 
         <a href="${cta.url}" style="display:inline-block;background:#F04249;color:#ffffff;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;text-decoration:none;padding:12px 24px;">${cta.label}</a>
       </td></tr>
       <tr><td style="padding:16px 28px;border-top:1px solid #e2e4e8;">
-        <p style="margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.5;color:#9ca3af;">Standby is a decision-support and staffing platform, not a medical provider. This notification reflects a booking request in the app — the app is the source of truth for its current status.</p>
+        <p style="margin:0;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.5;color:#9ca3af;">${footer}</p>
       </td></tr>
     </table>
   </td></tr></table>
@@ -230,6 +239,24 @@ export function selfAttestCheckInEmail(
       `${esc(emtName)} confirmed they're on site for this shift using the self-attest fallback — this happens when no on-site verification was recorded within 30 minutes of start. Their location (and photo, if provided) is on the shift page. Verify check-out with them when the shift ends.`,
       bookingRows(b, [["Medic", esc(emtName)], ["Check-in", "Self-attested"]]),
       { label: "Open the shift", url: `${origin}/shifts/${bookingId}` }
+    ),
+  }
+}
+
+// Sent to an EMT applicant when an admin REJECTS their credential verification
+// with a reason (the "reject and send email" path — plain reject sends nothing).
+// The reason is admin-written free text headed into HTML: escape it. Honest and
+// non-final — points them at re-submitting corrected credentials.
+export function emtVerificationRejectedEmail(name: string | null, reason: string, origin: string) {
+  const greeting = name ? `, ${esc(name)}` : ""
+  return {
+    subject: "Update on your Standby EMT verification",
+    html: shell(
+      "We couldn't verify your credentials yet",
+      `Thanks for applying to join Standby as a verified EMT${greeting}. After reviewing what you submitted, we weren't able to approve your profile at this time. The specific reason is below — if you can address it, you're welcome to re-submit your credentials and we'll review again.`,
+      [["Reason", esc(reason)]],
+      { label: "Re-submit credentials", url: `${origin}/onboarding/emt` },
+      "Standby verifies EMT credentials before a profile can accept event work. If you believe this was a mistake, re-submit with corrected details and we'll take another look."
     ),
   }
 }

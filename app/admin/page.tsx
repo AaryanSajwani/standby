@@ -52,7 +52,7 @@ export default async function AdminHomePage() {
     countOf(admin, "review_reports", (q) => q.eq("status", "open")),
     countOf(admin, "reviews", (q) => q.eq("status", "published")),
     countOf(admin, "emt_profiles", (q) => q.eq("verified", true)),
-    countOf(admin, "emt_profiles", (q) => q.eq("verified", false)),
+    countOf(admin, "emt_profiles", (q) => q.eq("verification_status", "pending")),
     countOf(admin, "events"),
     countOf(admin, "bookings"),
   ])
@@ -141,6 +141,31 @@ export default async function AdminHomePage() {
                 className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}
               >
                 Open moderation
+              </Link>
+            </div>
+          </div>
+
+          <div className="border border-border bg-card flex flex-col md:flex-row md:items-center justify-between gap-3 px-5 py-4">
+            <div className="flex items-start gap-3 min-w-0">
+              <ShieldAlert className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="text-foreground font-medium leading-tight">EMT verification</span>
+                <span className="text-muted-foreground text-xs max-w-md">
+                  Review submitted credentials, then approve (grants EMT access) or reject. Rejecting can send the applicant a templated email with a reason.
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              {(pendingEmts ?? 0) > 0 && (
+                <span className="font-mono text-[10px] uppercase tracking-widest border border-primary/30 bg-primary/5 text-primary px-2 py-0.5 tabular-nums">
+                  {pendingEmts} awaiting
+                </span>
+              )}
+              <Link
+                href="/admin/verifications"
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}
+              >
+                Review credentials
               </Link>
             </div>
           </div>
