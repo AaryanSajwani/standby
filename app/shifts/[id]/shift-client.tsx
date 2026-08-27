@@ -1,8 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Check, ShieldCheck, Clock, AlertTriangle, Star, Camera, Pencil } from "lucide-react"
+import { Check, ShieldCheck, Clock, AlertTriangle, Star, Camera, Pencil, QrCode, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -64,6 +64,147 @@ function getGeo(): Promise<{ latitude: number; longitude: number; accuracy: numb
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 }
     )
   })
+}
+
+// ── QR primitives (check-in): medic shows, organizer scans ────────────────────
+// The QR encodes the SAME rotating 6-digit code the medic already displays — the
+// scanner is just a faster input path into /api/shifts/verify, not a new trust
+// path. Both libs are dynamically imported so they stay out of the initial bundle.
+
+// Renders `value` as a QR on a white tile (QR needs a light background + quiet
+// zone to scan — same reason the navy logo mark sits on a light tile).
+function QrCodeImage({ value, size = 168 }: { value: string; size?: number }) {
+  const [src, setSrc] = useState<string | null>(null)
+  useEffect(() => {
+    let alive = true
+    void (async () => {
+      try {
+        const QR = (await import("qrcode")).default
+        const url = await QR.toDataURL(value, {
+          margin: 2,
+          width: size * 2, // 2× so it stays crisp on hi-dpi phone screens
+          color: { dark: "#000000", light: "#ffffff" },
+          errorCorrectionLevel: "M",
+        })
+        if (alive) setSrc(url)
+      } catch {
+        if (alive) setSrc(null)
+      }
+    })()
+    return () => {
+      alive = false
+    }
+  }, [value, size])
+  return (
+    <div className="bg-white border border-border p-3" style={{ width: size + 24 }}>
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element -- data URL, next/image adds nothing
+        <img src={src} alt="Check-in QR code" width={size} height={size} className="block w-full h-auto" />
+      ) : (
+        <div className="bg-muted" style={{ width: size, height: size }} />
+      )}
+    </div>
+  )
+}
+
+// Organizer camera scanner. Opens the rear camera, decodes the medic's QR with
+// jsQR, and hands the 6-digit code to onDecode. Access is gated by the browser
+// prompt + Permissions-Policy camera=(self); it always cleans up the stream on
+// unmount/stop, and surfaces a clear message so the caller's manual entry stays
+// the fallback when the camera is blocked or unsupported.
+function QrScanner({ onDecode, onClose }: { onDecode: (code: string) => void; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const rafRef = useRef<number | null>(null)
+  const doneRef = useRef(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const canvas = document.createElement("canvas")
+    const ctx = canvas.getContext("2d", { willReadFrequently: true })
+
+    const stop = () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+      streamRef.current?.getTracks().forEach((t) => t.stop())
+      streamRef.current = null
+    }
+
+    const scan = async () => {
+      const jsQR = (await import("jsqr")).default
+      const tick = () => {
+        if (cancelled || doneRef.current) return
+        const video = videoRef.current
+        if (video && video.readyState === video.HAVE_ENOUGH_DATA && ctx) {
+          canvas.width = video.videoWidth
+          canvas.height = video.videoHeight
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+          const img = ctx.getImageData(0, 0, canvas.width, canvas.height)
+          const found = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" })
+          const digits = found?.data.replace(/\D/g, "") ?? ""
+          if (digits.length >= 6) {
+            doneRef.current = true
+            stop()
+            onDecode(digits.slice(0, 6))
+            return
+          }
+        }
+        rafRef.current = requestAnimationFrame(tick)
+      }
+      rafRef.current = requestAnimationFrame(tick)
+    }
+
+    void (async () => {
+      try {
+        if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+          setError("This browser can't open the camera — enter the code by hand.")
+          return
+        }
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: false,
+        })
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop())
+          return
+        }
+        streamRef.current = stream
+        const video = videoRef.current
+        if (video) {
+          video.srcObject = stream
+          await video.play().catch(() => {})
+        }
+        void scan()
+      } catch {
+        setError("Camera access was blocked. Allow it in your browser, or enter the code by hand.")
+      }
+    })()
+
+    return () => {
+      cancelled = true
+      stop()
+    }
+  }, [onDecode])
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="relative bg-black border border-border w-full max-w-[280px] mx-auto aspect-square overflow-hidden">
+        <video ref={videoRef} playsInline muted className="w-full h-full object-cover" />
+        <div className="pointer-events-none absolute inset-6 border-2 border-white/70" />
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close scanner"
+          className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-black/60 text-white"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      <p className="font-mono text-[10px] text-muted-foreground text-center">Point the camera at the medic&apos;s check-in QR code.</p>
+      {error && <p className="font-mono text-xs text-destructive text-center">{error}</p>}
+    </div>
+  )
 }
 
 // ── Medic: rotating check-in code (with 60-min gate + self-attest fallback) ───
@@ -171,9 +312,11 @@ function CheckInCodePanel({
       </div>
       <div className="border border-border bg-card px-6 py-8 flex flex-col items-center gap-4">
         <p className="text-sm text-muted-foreground text-center max-w-xs">
-          Show this to the organizer on site — they enter it to {phase === "check_in" ? "check you in" : "check you out"}. It rotates every 60 seconds.
+          Show this to the organizer on site — they scan the code (or enter the digits) to{" "}
+          {phase === "check_in" ? "check you in" : "check you out"}. It rotates every 60 seconds.
         </p>
-        <span className="font-mono text-5xl md:text-6xl font-bold tabular-nums tracking-widest text-foreground">{pretty}</span>
+        {code && <QrCodeImage value={code} />}
+        <span className="font-mono text-4xl md:text-5xl font-bold tabular-nums tracking-widest text-foreground">{pretty}</span>
         <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground tabular-nums">
           <Clock className="w-3 h-3" />
           {code ? `Rotates in ${remaining}s` : "Loading…"}
@@ -343,6 +486,7 @@ function VerifyPanel({
   const router = useRouter()
   const [code, setCode] = useState("")
   const [busy, setBusy] = useState(false)
+  const [scanning, setScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Client-side display of the 60-min gate (server is authoritative). Only on the
@@ -351,29 +495,43 @@ function VerifyPanel({
     phase === "check_in" && startsAtISO ? Date.parse(startsAtISO) - 60 * 60_000 : NaN
   const gated = Number.isFinite(opensAtMs) && Date.now() < opensAtMs
 
-  const submit = async () => {
-    if (code.length !== 6) return setError("Enter the 6-digit code from the medic's screen.")
-    setBusy(true)
-    setError(null)
-    const geo = await getGeo()
-    try {
-      const res = await fetch("/api/shifts/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingId, code, phase, ...(geo ?? {}) }),
-      })
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        setError(json?.reason || "Verification failed. Ask for the current code and try again.")
+  // Shared by both input paths (typed digits + scanned QR). `via` only tags the
+  // check_in row; the code is verified identically against the rotating secret.
+  const submit = useCallback(
+    async (submittedCode: string, via: "manual" | "qr") => {
+      if (submittedCode.length !== 6) return setError("Enter the 6-digit code from the medic's screen.")
+      setBusy(true)
+      setError(null)
+      const geo = await getGeo()
+      try {
+        const res = await fetch("/api/shifts/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bookingId, code: submittedCode, phase, method: via, ...(geo ?? {}) }),
+        })
+        const json = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          setError(json?.reason || "Verification failed. Ask for the current code and try again.")
+          setBusy(false)
+          return
+        }
+        router.refresh()
+      } catch {
+        setError("Network error — please try again.")
         setBusy(false)
-        return
       }
-      router.refresh()
-    } catch {
-      setError("Network error — please try again.")
-      setBusy(false)
-    }
-  }
+    },
+    [bookingId, phase, router]
+  )
+
+  const onScanDecode = useCallback(
+    (scanned: string) => {
+      setScanning(false)
+      setCode(scanned)
+      void submit(scanned, "qr")
+    },
+    [submit]
+  )
 
   if (gated) {
     return (
@@ -397,8 +555,33 @@ function VerifyPanel({
       </h2>
       <div className="border border-border bg-card px-6 py-6 flex flex-col gap-4">
         <p className="text-sm text-muted-foreground">
-          Enter the 6-digit code from {counterpartName}&apos;s screen to {phase === "check_in" ? "confirm they're on site" : "close out the shift"}.
+          Scan the QR on {counterpartName}&apos;s screen — or enter the 6-digit code — to{" "}
+          {phase === "check_in" ? "confirm they're on site" : "close out the shift"}.
         </p>
+
+        {scanning ? (
+          <QrScanner onDecode={onScanDecode} onClose={() => setScanning(false)} />
+        ) : (
+          <Button
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              setError(null)
+              setScanning(true)
+            }}
+            className="rounded-none font-mono text-xs uppercase tracking-wider"
+          >
+            <Camera className="w-3.5 h-3.5 mr-1.5" />
+            Scan QR code
+          </Button>
+        )}
+
+        <div className="flex items-center gap-3">
+          <Separator className="flex-1" />
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">or enter it</span>
+          <Separator className="flex-1" />
+        </div>
+
         <input
           inputMode="numeric"
           autoComplete="one-time-code"
@@ -409,7 +592,13 @@ function VerifyPanel({
           className="w-full h-14 px-4 bg-input border border-input-border text-foreground font-mono text-3xl tabular-nums tracking-[0.3em] text-center focus:outline-none focus:border-primary"
         />
         {error && <p className="font-mono text-xs text-destructive">{error}</p>}
-        <Button disabled={busy || code.length !== 6} onClick={submit} className="rounded-none font-mono text-xs uppercase tracking-wider">
+        <Button
+          type="button"
+          disabled={busy || code.length !== 6}
+          onClick={() => submit(code, "manual")}
+          variant="outline"
+          className="rounded-none font-mono text-xs uppercase tracking-wider"
+        >
           <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
           {busy ? "Verifying…" : phase === "check_in" ? "Verify check-in" : "Verify check-out"}
         </Button>

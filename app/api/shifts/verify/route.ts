@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 })
 
-  let body: { bookingId?: unknown; code?: unknown; phase?: unknown; latitude?: unknown; longitude?: unknown; accuracy?: unknown }
+  let body: { bookingId?: unknown; code?: unknown; phase?: unknown; method?: unknown; latitude?: unknown; longitude?: unknown; accuracy?: unknown }
   try {
     body = await request.json()
   } catch {
@@ -46,6 +46,11 @@ export async function POST(request: Request) {
   const bookingId = typeof body.bookingId === "string" ? body.bookingId : ""
   const code = typeof body.code === "string" ? body.code : ""
   const phase = body.phase as Phase
+  // How the code reached the organizer — "qr" when scanned from the medic's
+  // screen, else manual entry. Recorded on the check_in; the verification itself
+  // is identical either way (same rotating secret). Allowlisted so a client can't
+  // write an arbitrary method value.
+  const method = body.method === "qr" ? "qr" : "manual"
   if (!UUID_RE.test(bookingId) || !PHASES.includes(phase)) {
     return NextResponse.json({ error: "bad_request" }, { status: 400 })
   }
@@ -126,7 +131,7 @@ export async function POST(request: Request) {
   const { error: ciErr } = await admin.from("check_ins").insert({
     booking_id: bookingId,
     actor_role: "organizer",
-    method: "manual",
+    method,
     phase,
     verification_quality: "verified",
     latitude: numOrNull(body.latitude),
