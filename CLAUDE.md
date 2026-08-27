@@ -179,6 +179,12 @@ the auth callback, and auth-content; reuse it for every new redirect param.
 referrer policy, permissions policy, HSTS, and a minimal CSP (frame-ancestors/object-src/
 base-uri/form-action only). A full `default-src` CSP is a deliberate non-goal until we adopt
 nonces — Next inline scripts + browser calls to Open-Meteo/Overpass would break.
+`Permissions-Policy` is `camera=(self), microphone=(), geolocation=(), payment=()`. The
+`(self)` on **camera** is load-bearing: the QR check-in scanner (`app/shifts/[id]`) needs
+`getUserMedia`, and a bare `camera=()` blocks it on our OWN origin (silent failure) — any new
+browser-capability feature must widen its directive to `(self)` here or it dies with no error.
+Note **geolocation is still `()`**, so the best-effort geo capture on check-in/self-attest
+currently resolves null every time; flip it to `(self)` if/when that data is actually wanted.
 
 **Resilience:** `app/error.tsx` + `app/global-error.tsx` + `app/not-found.tsx` are the
 branded failure surfaces; external geo fetches carry `AbortSignal.timeout` so a hung
