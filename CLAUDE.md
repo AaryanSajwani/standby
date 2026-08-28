@@ -233,9 +233,15 @@ privileged key to a `NEXT_PUBLIC_` variable. `.env.local` is gitignored — neve
 during onboarding and must never be read back by any marketplace/profile query. All public
 reads of `emt_profiles` go through `EMT_PUBLIC_COLUMNS` in `lib/emt.ts` — an explicit column
 list that excludes credential fields. RLS is row-level, not column-level: the public-read
-policy exposes every column of verified rows, so the column allowlist in code (plus the
-column-level `REVOKE` in the hardening migration) is the defense. The revoke blocks the
-anon AND authenticated roles, so if an owner-facing "edit credentials" view is ever needed,
+policy exposes every ROW column of verified rows, so the defense is the code allowlist PLUS a
+**column-level SELECT grant** enforced in the DB (migration 0023, applied 2026-08-28): the
+table-wide `SELECT` was revoked from `anon`+`authenticated` and re-granted on ONLY the ten
+`EMT_PUBLIC_COLUMNS` — so a raw PostgREST client physically cannot read `license_number`,
+`license_state`, `license_expiry`, or `cert_document_path` (before 0023 the table-level grant
+still exposed them; this was a real, live leak until then). A column-level REVOKE can't override
+a table-level grant, so it MUST be revoke-table-then-grant-columns; if a new public column is
+ever added, extend the grant list in 0023's pattern. Credential fields are read only via the
+service role on gated server surfaces; if an owner-facing "edit credentials" view is ever needed,
 read via a `security definer` RPC that checks `auth.uid()` — never re-grant column select.
 `verified` and `created_at` are client-immutable on UPDATE via column-level grants, and
 `verified` is also blocked at INSERT by a RESTRICTIVE RLS policy (`emt_no_self_verify_insert`,
