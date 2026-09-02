@@ -50,7 +50,7 @@ export function EmergencyAccessForm({ formData, onChange, onNext, onBack }: Emer
                 <select
                   value={formData.accessRoutesClear}
                   onChange={(e) => onChange({ accessRoutesClear: e.target.value })}
-                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
+                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border rounded-lg text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
                 >
                   {ACCESS_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value} className="bg-popover">{o.label}</option>
@@ -68,7 +68,7 @@ export function EmergencyAccessForm({ formData, onChange, onNext, onBack }: Emer
                 <select
                   value={formData.hasSecurityPresence}
                   onChange={(e) => onChange({ hasSecurityPresence: e.target.value })}
-                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
+                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border rounded-lg text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
                 >
                   {SECURITY_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value} className="bg-popover">{o.label}</option>
@@ -87,7 +87,7 @@ export function EmergencyAccessForm({ formData, onChange, onNext, onBack }: Emer
                 onChange={(e) => onChange({ specialConsiderations: e.target.value })}
                 placeholder="Any known hazards, crowd control challenges, or site-specific notes…"
                 rows={4}
-                className="w-full px-5 py-4 bg-input border border-input-border text-foreground placeholder:text-placeholder focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm resize-none"
+                className="w-full px-5 py-4 bg-input border border-input-border rounded-lg text-foreground placeholder:text-placeholder focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm resize-none"
               />
             </div>
           </div>

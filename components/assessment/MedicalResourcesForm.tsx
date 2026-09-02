@@ -70,7 +70,7 @@ export function MedicalResourcesForm({ formData, onChange, onNext, onBack }: Med
         <div className="flex-1 p-10 overflow-auto">
           <div className="grid gap-10">
             {/* §4.3 — nearest-hospital auto-fill */}
-            <div className="border border-border bg-surface px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="border border-border bg-surface px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg">
               <div className="flex flex-col gap-1">
                 <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Hospital distance auto-fill</span>
                 <p className="text-sm text-foreground">
@@ -113,7 +113,7 @@ export function MedicalResourcesForm({ formData, onChange, onNext, onBack }: Med
                 placeholder="e.g., 3.5"
                 min="0"
                 step="0.1"
-                className="w-full h-14 px-5 bg-input border border-input-border text-foreground placeholder:text-placeholder focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-full h-14 px-5 bg-input border border-input-border rounded-lg text-foreground placeholder:text-placeholder focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               {formData.nearestHospitalMiles && parseFloat(formData.nearestHospitalMiles) > 20 && (
                 <div className="text-xs font-mono text-risk-high mt-2">
@@ -130,7 +130,7 @@ export function MedicalResourcesForm({ formData, onChange, onNext, onBack }: Med
                 <select
                   value={formData.hasOnSiteAED}
                   onChange={(e) => onChange({ hasOnSiteAED: e.target.value })}
-                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
+                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border rounded-lg text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
                 >
                   {YES_NO_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value} className="bg-popover">{o.label}</option>
@@ -148,7 +148,7 @@ export function MedicalResourcesForm({ formData, onChange, onNext, onBack }: Med
                 <select
                   value={formData.priorMedicalPlan}
                   onChange={(e) => onChange({ priorMedicalPlan: e.target.value })}
-                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
+                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border rounded-lg text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
                 >
                   {MEDICAL_PLAN_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value} className="bg-popover">{o.label}</option>

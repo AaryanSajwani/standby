@@ -78,7 +78,7 @@ export function WeatherExposureForm({ formData, onChange, onNext, onBack }: Weat
         <div className="flex-1 p-10 overflow-auto">
           <div className="grid gap-10">
             {/* §4.4 — forecast auto-fill */}
-            <div className="border border-border bg-surface px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="border border-border bg-surface px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg">
               <div className="flex flex-col gap-1">
                 <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Forecast auto-fill</span>
                 <p className="text-sm text-foreground">
@@ -115,7 +115,7 @@ export function WeatherExposureForm({ formData, onChange, onNext, onBack }: Weat
                 <select
                   value={formData.expectedWeather}
                   onChange={(e) => onChange({ expectedWeather: e.target.value })}
-                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
+                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border rounded-lg text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
                 >
                   {WEATHER_CONDITIONS.map((w) => (
                     <option key={w.value} value={w.value} className="bg-popover">{w.label}</option>
@@ -136,7 +136,7 @@ export function WeatherExposureForm({ formData, onChange, onNext, onBack }: Weat
                 placeholder="e.g., 85"
                 min="-30"
                 max="130"
-                className="w-full h-14 px-5 bg-input border border-input-border text-foreground placeholder:text-placeholder focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-full h-14 px-5 bg-input border border-input-border rounded-lg text-foreground placeholder:text-placeholder focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               {formData.highTempF && parseInt(formData.highTempF) >= 90 && (
                 <div className="text-xs font-mono text-risk-high mt-2">
@@ -153,7 +153,7 @@ export function WeatherExposureForm({ formData, onChange, onNext, onBack }: Weat
                 <select
                   value={formData.precipitationRisk}
                   onChange={(e) => onChange({ precipitationRisk: e.target.value })}
-                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
+                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border rounded-lg text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
                 >
                   {PRECIP_OPTIONS.map((p) => (
                     <option key={p.value} value={p.value} className="bg-popover">{p.label}</option>

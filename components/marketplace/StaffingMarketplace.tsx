@@ -180,7 +180,7 @@ export default function StaffingMarketplace({
                 <Sliders className="w-3.5 h-3.5" />
                 Filters
                 {countActiveFilters(filters) > 0 && (
-                  <span className="font-mono text-[10px] tabular-nums border border-primary/30 bg-primary/5 text-primary px-1.5 py-0.5">
+                  <span className="font-mono text-[10px] tabular-nums border border-primary/30 bg-primary/5 text-primary px-1.5 py-0.5 rounded-md">
                     {countActiveFilters(filters)}
                   </span>
                 )}
@@ -202,7 +202,7 @@ export default function StaffingMarketplace({
           <div className="flex-1 p-4 md:p-6 bg-background">
             {/* Sample profiles banner — shown only when falling back to mock data */}
             {isMockFallback && (
-              <div className="border border-border bg-surface px-4 py-3 flex items-center gap-3 mb-6">
+              <div className="border border-border bg-surface px-4 py-3 flex items-center gap-3 mb-6 rounded-lg">
                 <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground shrink-0">
                   Sample profiles
                 </span>
@@ -221,7 +221,7 @@ export default function StaffingMarketplace({
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-64 text-center">
-                <div className="w-14 h-14 border border-border bg-surface flex items-center justify-center mb-4">
+                <div className="w-14 h-14 border border-border bg-surface flex items-center justify-center mb-4 rounded-lg">
                   <Activity className="h-7 w-7 text-muted-foreground" />
                 </div>
                 <h3 className="font-semibold text-foreground mb-2">No personnel match these filters</h3>

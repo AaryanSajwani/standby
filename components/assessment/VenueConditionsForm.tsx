@@ -91,7 +91,7 @@ export function VenueConditionsForm({ formData, onChange, onNext, onBack }: Venu
                 <select
                   value={formData.venueType}
                   onChange={(e) => onChange({ venueType: e.target.value })}
-                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
+                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border rounded-lg text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
                 >
                   {VENUE_TYPES.map((t) => (
                     <option key={t.value} value={t.value} className="bg-popover">{t.label}</option>
@@ -109,7 +109,7 @@ export function VenueConditionsForm({ formData, onChange, onNext, onBack }: Venu
                 <select
                   value={formData.isOutdoor}
                   onChange={(e) => onChange({ isOutdoor: e.target.value })}
-                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
+                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border rounded-lg text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
                 >
                   {OUTDOOR_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value} className="bg-popover">{o.label}</option>
@@ -135,10 +135,10 @@ export function VenueConditionsForm({ formData, onChange, onNext, onBack }: Venu
                 onBlur={() => setTimeout(() => setOpen(false), 150)}
                 placeholder="e.g., Zilker Park, Austin TX"
                 autoComplete="off"
-                className="w-full h-14 px-5 bg-input border border-input-border text-foreground placeholder:text-placeholder focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm"
+                className="w-full h-14 px-5 bg-input border border-input-border rounded-lg text-foreground placeholder:text-placeholder focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm"
               />
               {open && (loading || suggestions.length > 0) && (
-                <div className="absolute z-20 left-0 right-0 top-full mt-1 border border-border bg-popover max-h-60 overflow-auto">
+                <div className="absolute z-20 left-0 right-0 top-full mt-1 border border-border bg-popover max-h-60 overflow-auto rounded-lg">
                   {loading && (
                     <div className="px-5 py-3 font-mono text-xs text-muted-foreground">Searching…</div>
                   )}

@@ -60,7 +60,7 @@ export function EventDetailsForm({ formData, onChange, onNext }: EventDetailsFor
                 value={formData.eventName}
                 onChange={(e) => onChange({ eventName: e.target.value })}
                 placeholder="e.g., Summer Music Festival 2024"
-                className="w-full h-14 px-5 bg-input border border-input-border text-foreground placeholder:text-placeholder focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm"
+                className="w-full h-14 px-5 bg-input border border-input-border rounded-lg text-foreground placeholder:text-placeholder focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm"
               />
             </div>
 
@@ -73,7 +73,7 @@ export function EventDetailsForm({ formData, onChange, onNext }: EventDetailsFor
                 <select
                   value={formData.eventType}
                   onChange={(e) => onChange({ eventType: e.target.value })}
-                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
+                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border rounded-lg text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
                 >
                   {EVENT_TYPES.map((type) => (
                     <option key={type.value} value={type.value} className="bg-popover">
@@ -96,7 +96,7 @@ export function EventDetailsForm({ formData, onChange, onNext }: EventDetailsFor
                 onChange={(e) => onChange({ expectedAttendance: e.target.value })}
                 placeholder="e.g., 5000"
                 min="1"
-                className="w-full h-14 px-5 bg-input border border-input-border text-foreground placeholder:text-placeholder focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-full h-14 px-5 bg-input border border-input-border rounded-lg text-foreground placeholder:text-placeholder focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               {formData.expectedAttendance && (
                 <div className="text-xs font-mono text-muted-foreground mt-2">
@@ -115,7 +115,7 @@ export function EventDetailsForm({ formData, onChange, onNext }: EventDetailsFor
                 value={formData.eventDate}
                 onChange={(e) => onChange({ eventDate: e.target.value })}
                 min={new Date().toISOString().split("T")[0]}
-                className="w-full h-14 px-5 bg-input border border-input-border text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm [color-scheme:dark]"
+                className="w-full h-14 px-5 bg-input border border-input-border rounded-lg text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm [color-scheme:dark]"
               />
             </div>
           </div>

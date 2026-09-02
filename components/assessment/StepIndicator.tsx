@@ -12,7 +12,7 @@ export function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
         <div
           key={step}
           className={`
-            w-8 h-1
+            w-8 h-1 rounded-full
             ${step === currentStep
               ? "bg-accent-functional"
               : step < currentStep

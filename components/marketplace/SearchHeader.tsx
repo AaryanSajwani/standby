@@ -42,7 +42,7 @@ export function SearchHeader({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search by name, certification, or specialty…"
-            className="pl-9 rounded-none"
+            className="pl-9"
           />
         </div>
 
