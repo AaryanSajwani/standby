@@ -27,7 +27,7 @@ export function LiveAssessment() {
           Five questions. A real risk score.
         </h2>
         <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-          No black box — every factor is visible and every number traces back to a reason.
+          No black box. Every factor is visible and every number traces back to a reason.
         </p>
       </div>
 
