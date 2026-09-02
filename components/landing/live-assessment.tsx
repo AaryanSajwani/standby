@@ -23,7 +23,6 @@ export function LiveAssessment() {
   return (
     <section className="w-full px-5 flex flex-col items-center gap-8 py-8 md:py-14">
       <div className="flex flex-col items-center gap-4 max-w-[720px] text-center">
-        <span className="font-mono text-xs uppercase tracking-[0.2em] text-primary">See it work</span>
         <h2 className="text-foreground text-3xl md:text-5xl font-semibold leading-tight">
           Five questions. A real risk score.
         </h2>
