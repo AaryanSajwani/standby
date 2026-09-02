@@ -26,9 +26,24 @@ export function FounderBar() {
         <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
           Event medical staffing shouldn&rsquo;t run on spreadsheets and phone trees, it should be
           run by actual people. Built by two Cornell students:{" "}
-          <span className="text-foreground font-medium">Aaryan Sajwani</span>, premed student &amp;
-          certified EMT, and <span className="text-foreground font-medium">Tanay Naik</span>,
-          mechanical engineer.
+          <a
+            href="https://www.linkedin.com/in/aaryan-sajwani-2090142b4/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground font-medium underline underline-offset-2 decoration-border hover:decoration-foreground transition-colors"
+          >
+            Aaryan Sajwani
+          </a>
+          , premed student &amp; certified EMT, and{" "}
+          <a
+            href="https://www.linkedin.com/in/tanay-naik111/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground font-medium underline underline-offset-2 decoration-border hover:decoration-foreground transition-colors"
+          >
+            Tanay Naik
+          </a>
+          , mechanical engineer.
         </p>
       </div>
     </section>
