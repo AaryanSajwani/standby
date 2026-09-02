@@ -21,12 +21,14 @@ export function FounderBar() {
       <div className="w-full max-w-[860px] border border-border bg-card rounded-2xl px-6 py-6 md:px-10 md:py-7 flex flex-col sm:flex-row items-center gap-5 md:gap-7 text-center sm:text-left">
         <div className="flex items-center -space-x-2 shrink-0">
           <FounderAvatar src="/aaryan.jpg" alt="Aaryan Sajwani" />
-          <FounderAvatar src="/tanay.jpg" alt="Tanay" />
+          <FounderAvatar src="/tanay.jpg" alt="Tanay Naik" />
         </div>
         <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-          Built by <span className="text-foreground font-medium">Aaryan Sajwani</span>, certified EMT, and{" "}
-          <span className="text-foreground font-medium">Tanay</span>, Cornell&nbsp;&rsquo;29 — because event medical
-          staffing shouldn&rsquo;t run on spreadsheets and phone trees.
+          Event medical staffing shouldn&rsquo;t run on spreadsheets and phone trees, it should be
+          run by actual people. Built by two Cornell students:{" "}
+          <span className="text-foreground font-medium">Aaryan Sajwani</span>, premed student &amp;
+          certified EMT, and <span className="text-foreground font-medium">Tanay Naik</span>,
+          mechanical engineer.
         </p>
       </div>
     </section>
