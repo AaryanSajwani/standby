@@ -138,7 +138,7 @@ export default async function AdminHomePage() {
               )}
               <Link
                 href="/admin/reviews"
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-xl font-mono text-[10px] uppercase tracking-wider")}
               >
                 Open moderation
               </Link>
@@ -163,7 +163,7 @@ export default async function AdminHomePage() {
               )}
               <Link
                 href="/admin/verifications"
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-xl font-mono text-[10px] uppercase tracking-wider")}
               >
                 Review credentials
               </Link>

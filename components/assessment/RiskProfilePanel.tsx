@@ -82,7 +82,7 @@ export function RiskProfilePanel({ formData }: RiskProfilePanelProps) {
       {/* Content */}
       <div className="flex-1 p-8 overflow-auto">
         {/* Main Score Display */}
-        <div className="border border-border p-8 mb-8 rounded-xl">
+        <div className="border border-border p-8 mb-8 rounded-3xl">
           <div className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
             Live Risk Score
           </div>
@@ -113,7 +113,7 @@ export function RiskProfilePanel({ formData }: RiskProfilePanelProps) {
         </div>
 
         {/* Data Grid - Step 1 snapshot */}
-        <div className="grid grid-cols-2 border border-border rounded-lg overflow-hidden">
+        <div className="grid grid-cols-2 border border-border rounded-2xl overflow-hidden">
           <DataCell label="Event" value={formData.eventName || "—"} truncate />
           <DataCell
             label="Type"
@@ -128,7 +128,7 @@ export function RiskProfilePanel({ formData }: RiskProfilePanelProps) {
         </div>
 
         {/* Risk Factors — the live engine breakdown, filling in per step */}
-        <div className="mt-8 border border-border rounded-lg overflow-hidden">
+        <div className="mt-8 border border-border rounded-2xl overflow-hidden">
           <div className="border-b border-border px-5 py-3">
             <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
               Risk Factors

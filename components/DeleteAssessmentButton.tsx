@@ -49,7 +49,7 @@ export function DeleteAssessmentButton({ ids, eventName }: DeleteAssessmentButto
         disabled={phase === "deleting"}
         className={cn(
           buttonVariants({ variant: "outline", size: "sm" }),
-          "rounded-none font-mono text-[10px] uppercase tracking-wider gap-1.5",
+          "rounded-xl font-mono text-[10px] uppercase tracking-wider gap-1.5",
           "border-risk-high/40 text-risk-high hover:text-risk-high"
         )}
       >
@@ -74,7 +74,7 @@ export function DeleteAssessmentButton({ ids, eventName }: DeleteAssessmentButto
       title={`Delete assessment — ${eventName}`}
       className={cn(
         buttonVariants({ variant: "outline", size: "sm" }),
-        "rounded-none px-2 text-muted-foreground hover:text-risk-high"
+        "rounded-xl px-2 text-muted-foreground hover:text-risk-high"
       )}
     >
       <Trash2 className="w-3.5 h-3.5" />

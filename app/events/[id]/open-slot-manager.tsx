@@ -234,7 +234,7 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
           size="sm"
           variant="outline"
           onClick={() => setOpen((o) => !o)}
-          className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+          className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
         >
           {open ? <><X className="w-3 h-3 mr-1.5" />Cancel</> : <><Plus className="w-3 h-3 mr-1.5" />Post open slot</>}
         </Button>
@@ -261,38 +261,38 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
               <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 Event date <span className="text-primary">*</span>
               </label>
-              <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="rounded-none font-mono text-sm h-10" />
+              <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} className="rounded-xl font-mono text-sm h-10" />
             </div>
             <div className="flex flex-col gap-2">
               <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 Start time <span className="text-muted-foreground/60 normal-case tracking-normal">(optional)</span>
               </label>
-              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="rounded-none font-mono text-sm h-10" />
+              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="rounded-xl font-mono text-sm h-10" />
               <span className="font-mono text-[10px] text-muted-foreground leading-relaxed">Sets the on-site check-in window (opens 60 min before).</span>
             </div>
             <div className="flex flex-col gap-2">
               <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 Location <span className="text-primary">*</span>
               </label>
-              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Chicago, IL" className="rounded-none font-mono text-sm h-10" />
+              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Chicago, IL" className="rounded-xl font-mono text-sm h-10" />
             </div>
             <div className="flex flex-col gap-2">
               <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 Expected attendance <span className="text-primary">*</span>
               </label>
-              <Input type="number" min={1} value={attendance} onChange={(e) => setAttendance(e.target.value)} placeholder="800" className="rounded-none font-mono text-sm h-10" />
+              <Input type="number" min={1} value={attendance} onChange={(e) => setAttendance(e.target.value)} placeholder="800" className="rounded-xl font-mono text-sm h-10" />
             </div>
             <div className="flex flex-col gap-2">
               <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 Duration (hours) <span className="text-primary">*</span>
               </label>
-              <Input type="number" min={0.5} max={72} step={0.5} value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="8" className="rounded-none font-mono text-sm h-10" />
+              <Input type="number" min={0.5} max={72} step={0.5} value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="8" className="rounded-xl font-mono text-sm h-10" />
             </div>
             <div className="flex flex-col gap-2">
               <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 Offered rate ($/hr) <span className="text-primary">*</span>
               </label>
-              <Input type="number" min={1} max={500} value={rate} onChange={(e) => setRate(e.target.value)} placeholder="45" className="rounded-none font-mono text-sm h-10" />
+              <Input type="number" min={1} max={500} value={rate} onChange={(e) => setRate(e.target.value)} placeholder="45" className="rounded-xl font-mono text-sm h-10" />
             </div>
             <div className="flex flex-col gap-2 md:col-span-2">
               <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -309,7 +309,7 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
             </div>
           </div>
           <div className="border-t border-border px-5 py-4 flex justify-end">
-            <Button disabled={!valid || submitting} onClick={post} className="rounded-none font-mono text-xs uppercase tracking-wider">
+            <Button disabled={!valid || submitting} onClick={post} className="rounded-xl font-mono text-xs uppercase tracking-wider">
               {submitting ? "Posting…" : "Post open slot"}
             </Button>
           </div>
@@ -345,7 +345,7 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
                       size="sm"
                       variant="outline"
                       onClick={() => toggleInvitePanel(slot.id)}
-                      className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+                      className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
                     >
                       {invitePanelSlot === slot.id
                         ? <><X className="w-3 h-3 mr-1.5" />Close</>
@@ -375,7 +375,7 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
                       size="sm"
                       disabled={acceptingId !== null}
                       onClick={() => accept(a.applicationId)}
-                      className="rounded-none font-mono text-[10px] uppercase tracking-wider shrink-0"
+                      className="rounded-xl font-mono text-[10px] uppercase tracking-wider shrink-0"
                     >
                       <Check className="w-3.5 h-3.5 mr-1.5" />
                       {acceptingId === a.applicationId ? "Accepting…" : "Accept"}
@@ -431,7 +431,7 @@ export function OpenSlotManager({ eventId, viewerId, event, openSlots }: OpenSlo
                                 size="sm"
                                 disabled={invitingEmtId !== null}
                                 onClick={() => invite(slot.id, m.userId)}
-                                className="rounded-none font-mono text-[10px] uppercase tracking-wider shrink-0"
+                                className="rounded-xl font-mono text-[10px] uppercase tracking-wider shrink-0"
                               >
                                 <UserPlus className="w-3.5 h-3.5 mr-1.5" />
                                 {invitingEmtId === m.userId ? "Inviting…" : "Invite"}

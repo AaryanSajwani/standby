@@ -350,7 +350,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
             <div className="border border-border bg-card px-6 py-8 flex flex-col items-center gap-3 text-center">
               <FileText className="w-5 h-5 text-muted-foreground" />
               <p className="text-sm text-muted-foreground max-w-sm">No personnel requested for this event yet.</p>
-              <Link href="/personnel" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}>
+              <Link href="/personnel" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-xl font-mono text-[10px] uppercase tracking-wider")}>
                 Find staffing
               </Link>
             </div>
@@ -377,7 +377,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                         {(b.status === "accepted" || b.status === "checked_in" || b.status === "completed") && (
                           <Link
                             href={`/shifts/${b.id}`}
-                            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}
+                            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "rounded-xl font-mono text-[10px] uppercase tracking-wider")}
                           >
                             {b.status === "completed" ? "Review" : "Shift page"}
                           </Link>

@@ -216,7 +216,7 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
                 value={eventName}
                 onChange={(e) => setEventName(e.target.value)}
                 placeholder="Lakeview Summer Festival"
-                className="rounded-none font-mono text-sm h-10"
+                className="rounded-xl font-mono text-sm h-10"
               />
             </div>
 
@@ -247,7 +247,7 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
                 type="date"
                 value={eventDate}
                 onChange={(e) => setEventDate(e.target.value)}
-                className="rounded-none font-mono text-sm h-10"
+                className="rounded-xl font-mono text-sm h-10"
               />
             </div>
 
@@ -260,7 +260,7 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="rounded-none font-mono text-sm h-10"
+                className="rounded-xl font-mono text-sm h-10"
               />
               <span className="font-mono text-[10px] text-muted-foreground leading-relaxed">
                 Sets the on-site check-in window (opens 60 min before).
@@ -275,7 +275,7 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Chicago, IL"
-                className="rounded-none font-mono text-sm h-10"
+                className="rounded-xl font-mono text-sm h-10"
               />
             </div>
 
@@ -289,7 +289,7 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
                 value={attendance}
                 onChange={(e) => setAttendance(e.target.value)}
                 placeholder="800"
-                className="rounded-none font-mono text-sm h-10"
+                className="rounded-xl font-mono text-sm h-10"
               />
             </div>
 
@@ -305,7 +305,7 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 placeholder="8"
-                className="rounded-none font-mono text-sm h-10"
+                className="rounded-xl font-mono text-sm h-10"
               />
             </div>
 
@@ -341,7 +341,7 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
             <Button
               disabled={!valid || submitting}
               onClick={handleSubmit}
-              className="rounded-none font-mono text-xs uppercase tracking-wider"
+              className="rounded-xl font-mono text-xs uppercase tracking-wider"
             >
               {submitting ? "Sending…" : "Send request"}
             </Button>

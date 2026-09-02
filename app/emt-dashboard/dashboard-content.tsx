@@ -118,17 +118,17 @@ function RequestCard({
         </div>
         {isPending && (
           <div className="flex flex-col justify-center gap-2 px-5 py-4 md:w-44 shrink-0">
-            <Button className="w-full rounded-none font-mono text-xs uppercase tracking-wider" onClick={() => onAccept(req.id)}>
+            <Button className="w-full rounded-xl font-mono text-xs uppercase tracking-wider" onClick={() => onAccept(req.id)}>
               <Check className="w-3.5 h-3.5 mr-1.5" />Accept shift
             </Button>
-            <Button variant="outline" className="w-full rounded-none font-mono text-xs uppercase tracking-wider" onClick={() => onDecline(req.id)}>
+            <Button variant="outline" className="w-full rounded-xl font-mono text-xs uppercase tracking-wider" onClick={() => onDecline(req.id)}>
               <X className="w-3.5 h-3.5 mr-1.5" />Decline
             </Button>
           </div>
         )}
         {isActive && (
           <div className="flex flex-col justify-center gap-2 px-5 py-4 md:w-44 shrink-0">
-            <Link href={shiftHref} className={cn(buttonVariants(), "w-full rounded-none font-mono text-xs uppercase tracking-wider")}>
+            <Link href={shiftHref} className={cn(buttonVariants(), "w-full rounded-xl font-mono text-xs uppercase tracking-wider")}>
               <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
               {isCheckedIn ? "Check out" : "Check in"}
             </Link>
@@ -144,7 +144,7 @@ function RequestCard({
         )}
         {isCompleted && (
           <div className="flex flex-col justify-center gap-2 px-5 py-4 md:w-44 shrink-0">
-            <Link href={shiftHref} className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-none font-mono text-xs uppercase tracking-wider")}>
+            <Link href={shiftHref} className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-xl font-mono text-xs uppercase tracking-wider")}>
               <Star className="w-3.5 h-3.5 mr-1.5" />
               Review shift
             </Link>
@@ -248,7 +248,7 @@ function InvitationCard({
         <div className="flex flex-col justify-center gap-2 px-5 py-4 md:w-44 shrink-0">
           <Button
             disabled={busy}
-            className="w-full rounded-none font-mono text-xs uppercase tracking-wider"
+            className="w-full rounded-xl font-mono text-xs uppercase tracking-wider"
             onClick={() => onAccept(inv.id)}
           >
             <Check className="w-3.5 h-3.5 mr-1.5" />Accept
@@ -256,7 +256,7 @@ function InvitationCard({
           <Button
             variant="outline"
             disabled={busy}
-            className="w-full rounded-none font-mono text-xs uppercase tracking-wider"
+            className="w-full rounded-xl font-mono text-xs uppercase tracking-wider"
             onClick={() => onDecline(inv.id)}
           >
             <X className="w-3.5 h-3.5 mr-1.5" />Decline
@@ -611,7 +611,7 @@ export function DashboardContent({ displayName, verified, available, certLevel, 
                   />
                 </div>
                 <span className="font-mono text-xs text-muted-foreground">/hr</span>
-                <Button size="sm" disabled={savingRate} onClick={saveRate} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+                <Button size="sm" disabled={savingRate} onClick={saveRate} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
                   {savingRate ? "Saving…" : "Save"}
                 </Button>
                 <Button
@@ -619,7 +619,7 @@ export function DashboardContent({ displayName, verified, available, certLevel, 
                   variant="ghost"
                   disabled={savingRate}
                   onClick={() => { setEditingRate(false); setRateInput(rate != null ? String(rate) : ""); setError(null) }}
-                  className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+                  className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
                 >
                   Cancel
                 </Button>
@@ -639,7 +639,7 @@ export function DashboardContent({ displayName, verified, available, certLevel, 
                   size="sm"
                   variant="outline"
                   onClick={() => { setEditingRate(true); setRateInput(rate != null ? String(rate) : ""); }}
-                  className="rounded-none font-mono text-[10px] uppercase tracking-wider shrink-0"
+                  className="rounded-xl font-mono text-[10px] uppercase tracking-wider shrink-0"
                 >
                   <Pencil className="w-3 h-3 mr-1.5" />Edit rate
                 </Button>

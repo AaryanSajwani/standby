@@ -136,7 +136,7 @@ export default async function OpenShiftsPage() {
             <p className="text-sm text-muted-foreground max-w-sm">
               Complete your EMT profile to browse and request open shifts.
             </p>
-            <Link href="/emt-dashboard" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}>
+            <Link href="/emt-dashboard" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-xl font-mono text-[10px] uppercase tracking-wider")}>
               Go to dashboard
             </Link>
           </div>

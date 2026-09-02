@@ -41,7 +41,7 @@ export default function ErrorBoundary({
           <div className="flex items-center gap-3">
             <Button
               onClick={reset}
-              className="rounded-none font-mono text-xs uppercase tracking-wider"
+              className="rounded-xl font-mono text-xs uppercase tracking-wider"
             >
               Try again
             </Button>
@@ -49,7 +49,7 @@ export default function ErrorBoundary({
               href="/"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "rounded-none font-mono text-xs uppercase tracking-wider"
+                "rounded-xl font-mono text-xs uppercase tracking-wider"
               )}
             >
               Go home

@@ -109,7 +109,7 @@ export function CheckInCodeEntry({
           size="sm"
           variant="outline"
           onClick={() => setOpen(true)}
-          className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+          className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
         >
           <KeyRound className="w-3 h-3 mr-1.5" />
           Enter {label} code
@@ -138,7 +138,7 @@ export function CheckInCodeEntry({
           <Button
             disabled={busy || code.length !== 6}
             onClick={submit}
-            className="rounded-none font-mono text-[10px] uppercase tracking-wider h-11"
+            className="rounded-xl font-mono text-[10px] uppercase tracking-wider h-11"
           >
             <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
             {busy ? "Verifying…" : phase === "check_in" ? "Verify check-in" : "Verify check-out"}
@@ -146,7 +146,7 @@ export function CheckInCodeEntry({
           <Button
             variant="ghost"
             onClick={() => { setOpen(false); setCode(""); setError(null) }}
-            className="rounded-none font-mono text-[10px] uppercase tracking-wider h-11"
+            className="rounded-xl font-mono text-[10px] uppercase tracking-wider h-11"
           >
             <X className="w-3 h-3" />
           </Button>

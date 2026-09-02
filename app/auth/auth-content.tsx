@@ -151,7 +151,7 @@ export function AuthContent() {
             onClick={handleGoogle}
             disabled={googleLoading}
             variant="outline"
-            className="w-full rounded-none font-mono text-xs uppercase tracking-wider gap-2.5"
+            className="w-full rounded-xl font-mono text-xs uppercase tracking-wider gap-2.5"
           >
             <GoogleIcon />
             {googleLoading ? "Redirecting…" : "Continue with Google"}
@@ -183,13 +183,13 @@ export function AuthContent() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="rounded-none font-mono text-sm h-10"
+              className="rounded-xl font-mono text-sm h-10"
             />
           </div>
           <Button
             type="submit"
             disabled={magicLoading || !email || cooldown > 0}
-            className="w-full rounded-none font-mono text-xs uppercase tracking-wider"
+            className="w-full rounded-xl font-mono text-xs uppercase tracking-wider"
           >
             {magicLoading ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Send magic link"}
           </Button>

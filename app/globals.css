@@ -34,7 +34,7 @@
   --chart-3: #10B981;
   --chart-4: #F59E0B;
   --chart-5: #8B5CF6;
-  --radius: 0.5rem;
+  --radius: 1rem; /* bubbly baseline — drives rounded-sm/md/lg/xl app-wide (2026-09-02) */
   --sidebar: #020A1C;
   --sidebar-foreground: #F7F8F9;
   --sidebar-primary: #F04249;
@@ -120,8 +120,12 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-geist), 'Geist', system-ui, sans-serif;
-  --font-mono: var(--font-mono), 'Geist Mono', monospace;
+  /* Raleway everywhere for body + data (font-mono kept as an alias so existing
+     `font-mono tabular-nums` data values stay in Raleway with tabular figures,
+     not a monospace face). Bebas Neue drives display headings via --font-display. */
+  --font-sans: var(--font-raleway), 'Raleway', system-ui, sans-serif;
+  --font-mono: var(--font-raleway), 'Raleway', system-ui, sans-serif;
+  --font-display: var(--font-bebas), 'Bebas Neue', 'Arial Narrow', sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -188,6 +192,14 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Bebas Neue on every heading — condensed display face. It's caps-forward, so
+     a little tracking + tight leading keeps it intentional rather than cramped. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: 0.015em;
+    line-height: 1.05;
   }
 }
 

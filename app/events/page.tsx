@@ -159,7 +159,7 @@ export default async function EventsPage() {
                         </span>
                         <Link
                           href="/personnel"
-                          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}
+                          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-xl font-mono text-[10px] uppercase tracking-wider")}
                         >
                           Find staffing
                         </Link>
@@ -225,7 +225,7 @@ export default async function EventsPage() {
                 EMTs from the personnel marketplace.
               </p>
             </div>
-            <Link href="/assess" className={cn(buttonVariants(), "rounded-none font-mono text-xs uppercase tracking-wider")}>
+            <Link href="/assess" className={cn(buttonVariants(), "rounded-xl font-mono text-xs uppercase tracking-wider")}>
               Run assessment
             </Link>
           </div>

@@ -453,7 +453,7 @@ function SelfAttestPanel({ bookingId, viewerId }: { bookingId: string; viewerId:
           <Button
             disabled={busy || !confirmed}
             onClick={submit}
-            className="rounded-none font-mono text-xs uppercase tracking-wider"
+            className="rounded-xl font-mono text-xs uppercase tracking-wider"
           >
             <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
             {busy ? "Recording…" : "Self-attest check-in"}
@@ -461,7 +461,7 @@ function SelfAttestPanel({ bookingId, viewerId }: { bookingId: string; viewerId:
           <Button
             variant="ghost"
             onClick={() => setOpen(false)}
-            className="rounded-none font-mono text-xs uppercase tracking-wider"
+            className="rounded-xl font-mono text-xs uppercase tracking-wider"
           >
             Cancel
           </Button>
@@ -569,7 +569,7 @@ function VerifyPanel({
               setError(null)
               setScanning(true)
             }}
-            className="rounded-none font-mono text-xs uppercase tracking-wider"
+            className="rounded-xl font-mono text-xs uppercase tracking-wider"
           >
             <Camera className="w-3.5 h-3.5 mr-1.5" />
             Scan QR code
@@ -597,7 +597,7 @@ function VerifyPanel({
           disabled={busy || code.length !== 6}
           onClick={() => submit(code, "manual")}
           variant="outline"
-          className="rounded-none font-mono text-xs uppercase tracking-wider"
+          className="rounded-xl font-mono text-xs uppercase tracking-wider"
         >
           <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
           {busy ? "Verifying…" : phase === "check_in" ? "Verify check-in" : "Verify check-out"}
@@ -668,10 +668,10 @@ function ShiftIssueActions({
             Confirm you want to {label(pending)}. This is recorded and affects the medic&apos;s reliability record.
           </p>
           <div className="flex gap-2">
-            <Button size="sm" disabled={busy} onClick={() => run(pending)} className="rounded-none font-mono text-[10px] uppercase tracking-wider bg-destructive hover:bg-destructive/90">
+            <Button size="sm" disabled={busy} onClick={() => run(pending)} className="rounded-xl font-mono text-[10px] uppercase tracking-wider bg-destructive hover:bg-destructive/90">
               {busy ? "Working…" : "Confirm"}
             </Button>
-            <Button size="sm" variant="ghost" disabled={busy} onClick={() => setPending(null)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+            <Button size="sm" variant="ghost" disabled={busy} onClick={() => setPending(null)} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
               Back
             </Button>
           </div>
@@ -679,7 +679,7 @@ function ShiftIssueActions({
       ) : (
         <div className="flex flex-wrap gap-2">
           {viewerRole === "organizer" && (
-            <Button size="sm" variant="outline" onClick={() => setPending("no_show_emt")} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+            <Button size="sm" variant="outline" onClick={() => setPending("no_show_emt")} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
               Mark no-show
             </Button>
           )}
@@ -687,11 +687,11 @@ function ShiftIssueActions({
             size="sm"
             variant="outline"
             onClick={() => setPending(viewerRole === "organizer" ? "cancelled_organizer" : "cancelled_emt")}
-            className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+            className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
           >
             Cancel shift
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setOpen(false)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+          <Button size="sm" variant="ghost" onClick={() => setOpen(false)} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
             Never mind
           </Button>
         </div>
@@ -811,11 +811,11 @@ function ReviewEditForm({
         </div>
         {error && <p className="font-mono text-xs text-destructive">{error}</p>}
         <div className="flex gap-2">
-          <Button disabled={!allRated || busy} onClick={submit} className="rounded-none font-mono text-xs uppercase tracking-wider">
+          <Button disabled={!allRated || busy} onClick={submit} className="rounded-xl font-mono text-xs uppercase tracking-wider">
             <Check className="w-3.5 h-3.5 mr-1.5" />
             {busy ? "Saving…" : "Save changes"}
           </Button>
-          <Button variant="ghost" onClick={onDone} className="rounded-none font-mono text-xs uppercase tracking-wider">
+          <Button variant="ghost" onClick={onDone} className="rounded-xl font-mono text-xs uppercase tracking-wider">
             Cancel
           </Button>
         </div>
@@ -910,10 +910,10 @@ function ReplyForm({
       />
       {error && <p className="font-mono text-xs text-destructive">{error}</p>}
       <div className="flex gap-2">
-        <Button size="sm" disabled={busy} onClick={submit} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+        <Button size="sm" disabled={busy} onClick={submit} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
           {busy ? "Posting…" : existing ? "Save reply" : "Post reply"}
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => setOpen(false)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+        <Button size="sm" variant="ghost" onClick={() => setOpen(false)} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
           Cancel
         </Button>
       </div>
@@ -1088,10 +1088,10 @@ function ReviewSection({
                   This may describe a patient or care provided. Confirm your review contains no patient information before submitting.
                 </p>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={submit} disabled={busy} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+                  <Button size="sm" onClick={submit} disabled={busy} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
                     It&apos;s clear — submit
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setPhiConfirm(false)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+                  <Button size="sm" variant="ghost" onClick={() => setPhiConfirm(false)} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
                     Edit review
                   </Button>
                 </div>
@@ -1099,7 +1099,7 @@ function ReviewSection({
             )}
 
             {!phiConfirm && (
-              <Button disabled={!allRated || busy} onClick={submit} className="rounded-none font-mono text-xs uppercase tracking-wider self-start">
+              <Button disabled={!allRated || busy} onClick={submit} className="rounded-xl font-mono text-xs uppercase tracking-wider self-start">
                 <Check className="w-3.5 h-3.5 mr-1.5" />
                 {busy ? "Submitting…" : "Submit review"}
               </Button>

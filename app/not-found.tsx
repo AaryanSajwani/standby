@@ -21,7 +21,7 @@ export default function NotFound() {
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className={cn(buttonVariants(), "rounded-none font-mono text-xs uppercase tracking-wider")}
+              className={cn(buttonVariants(), "rounded-xl font-mono text-xs uppercase tracking-wider")}
             >
               Go home
             </Link>
@@ -29,7 +29,7 @@ export default function NotFound() {
               href="/assess"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "rounded-none font-mono text-xs uppercase tracking-wider"
+                "rounded-xl font-mono text-xs uppercase tracking-wider"
               )}
             >
               Run assessment

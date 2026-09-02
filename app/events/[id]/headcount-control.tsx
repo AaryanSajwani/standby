@@ -107,7 +107,7 @@ export function HeadcountControl({ eventId, filled, state, required }: Headcount
               size="sm"
               disabled={busy || (preview.error !== null && preview.error !== "OVERRIDE_REASON_REQUIRED")}
               onClick={apply}
-              className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+              className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
             >
               {busy ? "Updating…" : "Update"}
             </Button>

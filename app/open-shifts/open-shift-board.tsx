@@ -208,7 +208,7 @@ export function OpenShiftBoard({ viewerId, verified, shifts: initial }: OpenShif
                         variant="outline"
                         disabled={busyKey === s.key}
                         onClick={() => withdraw(s)}
-                        className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+                        className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
                       >
                         <X className="w-3.5 h-3.5 mr-1.5" />
                         {busyKey === s.key ? "Withdrawing…" : "Withdraw request"}
@@ -216,21 +216,21 @@ export function OpenShiftBoard({ viewerId, verified, shifts: initial }: OpenShif
                     ) : !terminal && verified ? (
                       composing === s.key ? (
                         <>
-                          <Button size="sm" variant="ghost" onClick={() => { setComposing(null); setMessage("") }} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+                          <Button size="sm" variant="ghost" onClick={() => { setComposing(null); setMessage("") }} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
                             Cancel
                           </Button>
-                          <Button size="sm" disabled={busyKey === s.key} onClick={() => apply(s)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+                          <Button size="sm" disabled={busyKey === s.key} onClick={() => apply(s)} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
                             <Check className="w-3.5 h-3.5 mr-1.5" />
                             {busyKey === s.key ? "Sending…" : "Send request"}
                           </Button>
                         </>
                       ) : (
-                        <Button size="sm" onClick={() => setComposing(s.key)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+                        <Button size="sm" onClick={() => setComposing(s.key)} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
                           Request to fill
                         </Button>
                       )
                     ) : !terminal && !verified ? (
-                      <Link href="/emt-dashboard" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-none font-mono text-[10px] uppercase tracking-wider")}>
+                      <Link href="/emt-dashboard" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-xl font-mono text-[10px] uppercase tracking-wider")}>
                         Finish verification
                       </Link>
                     ) : null}

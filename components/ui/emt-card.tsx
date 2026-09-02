@@ -36,10 +36,10 @@ export function EMTCard({
   verified,
 }: EMTCardProps) {
   return (
-    <div className="group flex flex-col bg-card border border-border hover:border-primary/40 transition-colors rounded-xl overflow-hidden">
+    <div className="group flex flex-col bg-card border border-border hover:border-primary/40 transition-colors rounded-3xl overflow-hidden">
       {/* Header — monogram, name, cert, availability */}
       <div className="flex items-start gap-3 p-4 border-b border-border">
-        <div className="h-12 w-12 shrink-0 rounded-lg border border-border bg-secondary flex items-center justify-center">
+        <div className="h-12 w-12 shrink-0 rounded-full border border-border bg-secondary flex items-center justify-center">
           <span className="font-mono text-sm font-bold text-muted-foreground uppercase">{initialsOf(name)}</span>
         </div>
         <div className="flex-1 min-w-0">
@@ -49,7 +49,7 @@ export function EMTCard({
               {certification}
             </Badge>
             {verified && (
-              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border border-primary/30 bg-primary/5 text-primary px-1.5 py-0.5 rounded-md">
+              <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border border-primary/30 bg-primary/5 text-primary px-1.5 py-0.5 rounded-full">
                 <ShieldCheck className="w-3 h-3" />
                 Verified
               </span>

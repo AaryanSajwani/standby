@@ -1,17 +1,20 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Bebas_Neue, Raleway } from "next/font/google"
 import { ShellWrapper } from "@/components/layout/ShellWrapper"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import "./globals.css"
 
-const geist = Geist({
+// Raleway = body / prose / data (font-sans + font-mono both resolve to it).
+// Bebas Neue = display headings (font-display + the h1–h6 base rule).
+const raleway = Raleway({
   subsets: ["latin"],
-  variable: "--font-geist",
+  variable: "--font-raleway",
 })
 
-const geistMono = Geist_Mono({
+const bebasNeue = Bebas_Neue({
   subsets: ["latin"],
-  variable: "--font-mono",
+  weight: "400", // Bebas Neue ships a single weight; next/font requires it explicit
+  variable: "--font-bebas",
 })
 
 export const metadata: Metadata = {
@@ -28,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geist.variable} ${geistMono.variable} bg-background`}
+      className={`${raleway.variable} ${bebasNeue.variable} bg-background`}
     >
       {/* overflow-x-clip (not -hidden: that breaks the sticky NavBar) stops the
           landing pages' oversized decorative blurs from letting phones pan sideways */}

@@ -94,10 +94,10 @@ export function ReportReviewButton({ reviewId }: { reviewId: string }) {
       />
       {error && <p className="font-mono text-[10px] text-destructive">{error}</p>}
       <div className="flex gap-2">
-        <Button size="sm" disabled={busy} onClick={submit} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+        <Button size="sm" disabled={busy} onClick={submit} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
           {busy ? "Sending…" : "Submit report"}
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => setOpen(false)} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+        <Button size="sm" variant="ghost" onClick={() => setOpen(false)} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
           Cancel
         </Button>
       </div>

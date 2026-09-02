@@ -124,7 +124,7 @@ export function HeldSlots({ slots }: { slots: HeldSlot[] }) {
                 variant="outline"
                 disabled={busyId === s.id}
                 onClick={() => rescind(s.id)}
-                className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+                className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
               >
                 <X className="w-3 h-3 mr-1.5" />
                 {busyId === s.id ? "Rescinding…" : "Rescind"}

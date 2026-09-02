@@ -92,7 +92,7 @@ export function AddToCalendarButton(props: AddToCalendarButtonProps) {
         rel="noopener noreferrer"
         className={cn(
           buttonVariants({ variant: "outline", size: "sm" }),
-          "rounded-none font-mono text-[10px] uppercase tracking-wider gap-1.5 flex-1"
+          "rounded-xl font-mono text-[10px] uppercase tracking-wider gap-1.5 flex-1"
         )}
       >
         <CalendarPlus className="w-3.5 h-3.5" />
@@ -104,7 +104,7 @@ export function AddToCalendarButton(props: AddToCalendarButtonProps) {
         title="Download .ics file (Apple / Outlook)"
         className={cn(
           buttonVariants({ variant: "outline", size: "sm" }),
-          "rounded-none px-2 shrink-0"
+          "rounded-xl px-2 shrink-0"
         )}
       >
         <Download className="w-3.5 h-3.5" />

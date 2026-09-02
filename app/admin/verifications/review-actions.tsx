@@ -64,7 +64,7 @@ export function VerificationActions({
             size="sm"
             disabled={busy !== null}
             onClick={() => run("accept")}
-            className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+            className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
           >
             <Check className="w-3.5 h-3.5 mr-1" />
             {busy === "accept" ? "Approving…" : status === "rejected" ? "Approve (reinstate)" : "Approve"}
@@ -79,7 +79,7 @@ export function VerificationActions({
               variant="outline"
               disabled={busy !== null}
               onClick={() => run("reject", { notify: false, key: "reject" })}
-              className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+              className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
             >
               <X className="w-3.5 h-3.5 mr-1" />
               {busy === "reject" ? "Rejecting…" : rejecting}
@@ -93,7 +93,7 @@ export function VerificationActions({
                 setError(null)
                 setShowReason((s) => !s)
               }}
-              className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+              className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
             >
               <Mail className="w-3.5 h-3.5 mr-1" />
               {rejectingEmail}
@@ -120,7 +120,7 @@ export function VerificationActions({
               size="sm"
               disabled={busy !== null || reason.trim().length === 0}
               onClick={() => run("reject", { notify: true, reason: reason.trim(), key: "reject_email" })}
-              className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+              className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
             >
               <Mail className="w-3.5 h-3.5 mr-1" />
               {busy === "reject_email" ? "Sending…" : "Reject and send email"}

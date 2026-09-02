@@ -36,15 +36,15 @@ export function ModerationActions({ reportId, removed }: { reportId: string; rem
   return (
     <div className="flex items-center gap-2">
       {removed ? (
-        <Button size="sm" variant="outline" disabled={busy} onClick={() => run("restore")} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => run("restore")} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
           Restore review
         </Button>
       ) : (
-        <Button size="sm" variant="outline" disabled={busy} onClick={() => run("remove")} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => run("remove")} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
           Remove review
         </Button>
       )}
-      <Button size="sm" variant="ghost" disabled={busy} onClick={() => run("dismiss")} className="rounded-none font-mono text-[10px] uppercase tracking-wider">
+      <Button size="sm" variant="ghost" disabled={busy} onClick={() => run("dismiss")} className="rounded-xl font-mono text-[10px] uppercase tracking-wider">
         Dismiss report
       </Button>
       {error && <span className="font-mono text-[10px] text-destructive">{error}</span>}

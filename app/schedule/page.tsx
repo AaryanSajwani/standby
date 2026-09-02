@@ -82,7 +82,7 @@ export default async function SchedulePage() {
                 Once you request an EMT and they accept, the shift shows up here on its event date.
               </p>
             </div>
-            <Link href="/assess" className={cn(buttonVariants(), "rounded-none font-mono text-xs uppercase tracking-wider")}>
+            <Link href="/assess" className={cn(buttonVariants(), "rounded-xl font-mono text-xs uppercase tracking-wider")}>
               Run assessment
             </Link>
           </div>

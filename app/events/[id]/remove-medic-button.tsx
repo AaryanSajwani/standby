@@ -49,7 +49,7 @@ export function RemoveMedicButton({ bookingId, medicName }: { bookingId: string;
         size="sm"
         variant="outline"
         onClick={() => setConfirming(true)}
-        className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+        className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
       >
         <UserMinus className="w-3 h-3 mr-1.5" />
         Remove
@@ -65,7 +65,7 @@ export function RemoveMedicButton({ bookingId, medicName }: { bookingId: string;
         variant="outline"
         disabled={busy}
         onClick={() => setConfirming(false)}
-        className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+        className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
       >
         Keep
       </Button>
@@ -73,7 +73,7 @@ export function RemoveMedicButton({ bookingId, medicName }: { bookingId: string;
         size="sm"
         disabled={busy}
         onClick={remove}
-        className="rounded-none font-mono text-[10px] uppercase tracking-wider"
+        className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
       >
         {busy ? "Removing…" : "Confirm"}
       </Button>

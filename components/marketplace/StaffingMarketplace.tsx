@@ -180,7 +180,7 @@ export default function StaffingMarketplace({
                 <Sliders className="w-3.5 h-3.5" />
                 Filters
                 {countActiveFilters(filters) > 0 && (
-                  <span className="font-mono text-[10px] tabular-nums border border-primary/30 bg-primary/5 text-primary px-1.5 py-0.5 rounded-md">
+                  <span className="font-mono text-[10px] tabular-nums border border-primary/30 bg-primary/5 text-primary px-1.5 py-0.5 rounded-full">
                     {countActiveFilters(filters)}
                   </span>
                 )}

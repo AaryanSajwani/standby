@@ -268,7 +268,7 @@ export function OnboardingForm({ userId }: { userId: string }) {
                 value={form.fullName}
                 onChange={(e) => set({ fullName: e.target.value })}
                 placeholder="Jane Smith"
-                className="rounded-none font-mono text-sm h-10"
+                className="rounded-xl font-mono text-sm h-10"
               />
             </div>
 
@@ -281,7 +281,7 @@ export function OnboardingForm({ userId }: { userId: string }) {
                   value={form.city}
                   onChange={(e) => set({ city: e.target.value })}
                   placeholder="Chicago"
-                  className="rounded-none font-mono text-sm h-10"
+                  className="rounded-xl font-mono text-sm h-10"
                 />
               </div>
               <SelectField
@@ -334,7 +334,7 @@ export function OnboardingForm({ userId }: { userId: string }) {
                 value={form.licenseNumber}
                 onChange={(e) => set({ licenseNumber: e.target.value })}
                 placeholder="IL-EMT-123456"
-                className="rounded-none font-mono text-sm h-10"
+                className="rounded-xl font-mono text-sm h-10"
               />
             </div>
 
@@ -354,7 +354,7 @@ export function OnboardingForm({ userId }: { userId: string }) {
                   type="date"
                   value={form.licenseExpiry}
                   onChange={(e) => set({ licenseExpiry: e.target.value })}
-                  className="rounded-none font-mono text-sm h-10"
+                  className="rounded-xl font-mono text-sm h-10"
                 />
               </div>
             </div>
@@ -432,7 +432,7 @@ export function OnboardingForm({ userId }: { userId: string }) {
                     value={form.hourlyRate}
                     onChange={(e) => set({ hourlyRate: e.target.value })}
                     placeholder="25"
-                    className="rounded-none font-mono text-sm h-10 pl-7"
+                    className="rounded-xl font-mono text-sm h-10 pl-7"
                   />
                 </div>
                 <span className="font-mono text-[10px] text-muted-foreground">
@@ -451,7 +451,7 @@ export function OnboardingForm({ userId }: { userId: string }) {
                   value={form.serviceRadius}
                   onChange={(e) => set({ serviceRadius: e.target.value })}
                   placeholder="50"
-                  className="rounded-none font-mono text-sm h-10"
+                  className="rounded-xl font-mono text-sm h-10"
                 />
               </div>
             </div>
@@ -509,7 +509,7 @@ export function OnboardingForm({ userId }: { userId: string }) {
           {step > 1 ? (
             <Button
               variant="outline"
-              className="rounded-none font-mono text-xs uppercase tracking-wider"
+              className="rounded-xl font-mono text-xs uppercase tracking-wider"
               onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}
             >
               Back
@@ -520,7 +520,7 @@ export function OnboardingForm({ userId }: { userId: string }) {
 
           {step < 3 ? (
             <Button
-              className="rounded-none font-mono text-xs uppercase tracking-wider"
+              className="rounded-xl font-mono text-xs uppercase tracking-wider"
               disabled={step === 1 ? !step1Valid : !step2Valid}
               onClick={() => setStep((s) => (s + 1) as 1 | 2 | 3)}
             >
@@ -528,7 +528,7 @@ export function OnboardingForm({ userId }: { userId: string }) {
             </Button>
           ) : (
             <Button
-              className="rounded-none font-mono text-xs uppercase tracking-wider"
+              className="rounded-xl font-mono text-xs uppercase tracking-wider"
               disabled={!step3Valid || submitting}
               onClick={handleSubmit}
             >
