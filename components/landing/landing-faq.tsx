@@ -21,9 +21,19 @@ const FAQ_DATA = [
       "Browse certified EMTs on the Personnel page, filtered by certification level, experience, location, and event-type specialization. Each profile shows the EMT's posted hourly rate, event history, and availability. Send a booking request directly: the EMT keeps 100% of their posted rate, and Standby's service fee is added on top and shown as its own line — never buried in the rate.",
   },
   {
+    question: "How does my EMT check in when they arrive?",
+    answer:
+      "When your booked EMT gets on-site, they check in through Standby — either by scanning the QR code for that shift or entering a short check-in code. That timestamps their arrival, so you and your AHJ record have a verified log of who was on duty and when. Check-in is also what releases payment: the medic is confirmed on-site before any money moves.",
+  },
+  {
     question: "How much does it cost?",
     answer:
       "Assessing your event, getting a staffing recommendation, and browsing matched EMTs is free. When you book, the EMT keeps 100% of their posted hourly rate — typically $20–28/hr for EMRs (first responders) and $20–40/hr for EMT-Basics — and Standby adds a transparent service fee on top, shown as its own line at checkout. AHJ-ready compliance reporting will be part of Standby Premier; it's free to preview during early access.",
+  },
+  {
+    question: "How does payment work, and what if the EMT doesn't show up?",
+    answer:
+      "When you book, the coverage cost is held by Standby rather than paid out right away. It's released to the EMT only after they check in on-site at your event — confirming they actually showed up. If a booked EMT is a no-show, that hold is refunded back to you in full. The EMT always keeps 100% of their posted rate; Standby's service fee is the only thing added, shown as its own line.",
   },
   {
     question: "What's included in the compliance report?",
@@ -34,6 +44,11 @@ const FAQ_DATA = [
     question: "How accurate are the staffing recommendations?",
     answer:
       "Recommendations are grounded in mass-gathering and event-medicine best-practice guidelines, including NAEMSP position statements. Each staffing line references the basis for its ratio, so an AHJ can see the reasoning rather than take a number on faith. Standby is a decision-support tool — every recommendation should be reviewed and signed off by a qualified medical director.",
+  },
+  {
+    question: "Is there feedback after the event?",
+    answer:
+      "Yes — once a shift is complete, both sides leave feedback. Organizers rate and review the EMT's professionalism and performance, which builds that medic's verified track record on Standby. EMTs review the event in return, so other medics know what to expect from a venue or organizer. Reviews are published only after the shift wraps and are moderated to keep them honest and relevant.",
   },
   {
     question: "Is my event data secure?",
