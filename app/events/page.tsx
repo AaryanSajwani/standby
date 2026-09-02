@@ -101,7 +101,6 @@ export default async function EventsPage() {
 
         {/* Page header */}
         <div className="flex flex-col gap-2">
-          <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Events</span>
           <h1 className="text-foreground text-2xl md:text-3xl font-semibold leading-tight">
             Your coverage requests
           </h1>
