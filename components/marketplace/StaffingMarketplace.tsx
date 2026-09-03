@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Activity, ShieldCheck, DollarSign, Clock, Sliders } from "lucide-react"
+import { Activity, Sliders } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { EMTCard, type EMTCardProps } from "@/components/ui/emt-card"
 import { FilterSidebar, DEFAULT_FILTERS, countActiveFilters, type FilterState } from "@/components/marketplace/FilterSidebar"
@@ -132,20 +132,6 @@ export default function StaffingMarketplace({
             Connect with license-verified emergency medical technicians for your event.
             Every profile is checked before it goes live.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-primary" />
-              <span className="text-sm text-foreground">License-verified</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-primary" />
-              <span className="text-sm text-foreground">Transparent posted rates</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              <span className="text-sm text-foreground">Request coverage in minutes</span>
-            </div>
-          </div>
         </div>
       </div>
 
