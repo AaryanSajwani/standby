@@ -11,6 +11,7 @@ import { CertBadge } from "@/components/CertBadge"
 import { isNegativeTerminal, invitationToAcceptedBooking, type Booking, type BookingStatus, type Invitation } from "@/lib/bookings"
 import type { AvailabilityDate } from "@/lib/availability"
 import { AvailabilityCalendar } from "@/components/AvailabilityCalendar"
+import { EditProfileForm, type EmtProfileValues } from "@/components/emt/EditProfileForm"
 import { cn } from "@/lib/utils"
 
 function RequestCard({
@@ -290,13 +291,16 @@ interface DashboardContentProps {
   bookings: Booking[]
   invitations: Invitation[]
   availability: AvailabilityDate[]
+  profile: EmtProfileValues
 }
 
-export function DashboardContent({ displayName, verified, available, certLevel, hourlyRate, userId, bookings, invitations, availability }: DashboardContentProps) {
+export function DashboardContent({ displayName, verified, available, certLevel, hourlyRate, userId, bookings, invitations, availability, profile }: DashboardContentProps) {
   const [requests, setRequests] = useState<Booking[]>(bookings)
   const [invites, setInvites] = useState<Invitation[]>(invitations)
   const [respondingId, setRespondingId] = useState<string | null>(null)
   const [isAvailable, setIsAvailable] = useState(available)
+  // Name is editable via the profile form — keep the header greeting in sync.
+  const [name, setName] = useState(displayName)
   const [error, setError] = useState<string | null>(null)
 
   // Editable posted rate (emt_profiles.hourly_rate — owner-updatable per the
@@ -533,7 +537,7 @@ export function DashboardContent({ displayName, verified, available, certLevel, 
               {certLevel && <CertBadge level={certLevel} />}
             </div>
             <h1 className="text-foreground text-2xl md:text-3xl font-semibold leading-tight">
-              Welcome back, {displayName}.
+              Welcome back, {name}.
             </h1>
             <p className="text-muted-foreground text-sm">
               Review incoming event requests and manage your upcoming shifts.
@@ -591,6 +595,13 @@ export function DashboardContent({ displayName, verified, available, certLevel, 
             </div>
           </section>
         )}
+
+        {/* Profile — owner-editable non-credential fields */}
+        <EditProfileForm
+          userId={userId}
+          initial={profile}
+          onSaved={(v) => { if (v.fullName) setName(v.fullName) }}
+        />
 
         {/* Posted rate — owner-editable */}
         <section className="flex flex-col gap-4">

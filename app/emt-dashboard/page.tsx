@@ -15,14 +15,24 @@ export default async function EMTDashboardPage() {
 
   if (!user) redirect("/auth?role=emt&next=/emt-dashboard")
 
-  // No emt_profiles row → onboarding not complete
+  // No emt_profiles row → onboarding not complete. Also pull the editable
+  // non-credential profile fields (bio/location/radius/specializations) for the
+  // dashboard "Edit profile" surface — all owner-updatable, no credential PII.
   const { data: emtProfile } = await supabase
     .from("emt_profiles")
-    .select("verified, available, cert_level, hourly_rate")
+    .select("verified, available, cert_level, hourly_rate, bio, city, state, service_radius_miles, specializations")
     .eq("user_id", user.id)
     .maybeSingle()
 
   if (!emtProfile) redirect("/onboarding/emt")
+
+  // Canonical display name lives on profiles (onboarding writes it); fall back
+  // to OAuth metadata for legacy rows that predate that write.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle()
 
   const { data: rawBookings, error } = await supabase
     .from("bookings")
@@ -59,6 +69,7 @@ export default async function EMTDashboardPage() {
   const availability = await fetchUpcomingAvailability(supabase, user.id, 730)
 
   const displayName =
+    profile?.full_name ??
     user.user_metadata?.full_name ??
     user.user_metadata?.name ??
     user.email?.split("@")[0] ??
@@ -75,6 +86,14 @@ export default async function EMTDashboardPage() {
       bookings={bookings}
       invitations={invitations}
       availability={availability}
+      profile={{
+        fullName: profile?.full_name ?? "",
+        bio: emtProfile.bio ?? "",
+        city: emtProfile.city ?? "",
+        state: emtProfile.state ?? "",
+        serviceRadius: emtProfile.service_radius_miles != null ? String(emtProfile.service_radius_miles) : "",
+        specializations: emtProfile.specializations ?? [],
+      }}
     />
   )
 }

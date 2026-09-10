@@ -8,6 +8,29 @@ export const CERT_DISPLAY: Record<string, "EMR" | "EMT-B" | "AEMT" | "EMT-P"> = 
   emt_p:           "EMT-P",
 }
 
+// Event specializations an EMT can tag on their profile. Shared by the
+// onboarding form and the dashboard "Edit profile" surface so the two stay in
+// sync — the marketplace filters on these exact strings.
+export const SPECIALIZATIONS = [
+  "Concerts",
+  "Festivals",
+  "Sports",
+  "Corporate",
+  "Film & TV",
+  "Private Events",
+  "Outdoor Events",
+  "High-Risk Events",
+] as const
+
+// US state postal codes for the city/state pickers (onboarding + edit profile).
+export const US_STATES = [
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA",
+  "HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
+  "MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
+  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC",
+  "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
+] as const
+
 // Columns safe to expose on public marketplace surfaces.
 // NEVER add license_number, license_state, license_expiry, or
 // cert_document_path here — credential PII stays server-side and is

@@ -6,31 +6,13 @@ import { ChevronDown, Upload, X, Check } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { SPECIALIZATIONS, US_STATES } from "@/lib/emt"
 
 // BLS tiers only — the supply Standby recruits (2026-07-21). Legacy aemt/emt_p
 // DB rows still display correctly via CERT_DISPLAY; they just can't be created here.
 const CERT_LEVELS = [
   { label: "EMR (First Responder)", value: "first_responder" },
   { label: "EMT-Basic (EMT-B)", value: "emt_b" },
-]
-
-const SPECIALIZATIONS = [
-  "Concerts",
-  "Festivals",
-  "Sports",
-  "Corporate",
-  "Film & TV",
-  "Private Events",
-  "Outdoor Events",
-  "High-Risk Events",
-]
-
-const US_STATES = [
-  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA",
-  "HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
-  "MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
-  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC",
-  "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
 ]
 
 interface FormData {
