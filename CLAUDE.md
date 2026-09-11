@@ -241,7 +241,11 @@ table-wide `SELECT` was revoked from `anon`+`authenticated` and re-granted on ON
 still exposed them; this was a real, live leak until then). A column-level REVOKE can't override
 a table-level grant, so it MUST be revoke-table-then-grant-columns; if a new public column is
 ever added, extend the grant list in 0023's pattern. Credential fields are read only via the
-service role on gated server surfaces; if an owner-facing "edit credentials" view is ever needed,
+service role on gated server surfaces (the admin verification list `/admin/verifications` AND
+its per-applicant detail page `/admin/verifications/[id]`, which reads the full row + the
+applicant's `auth.users` email via `admin.auth.admin.getUserById` — both `isAdminEmail`-gated,
+service-role only, email never returned to the browser); any new credential/PII read surface must
+stay admin-gated + service-role. If an owner-facing "edit credentials" view is ever needed,
 read via a `security definer` RPC that checks `auth.uid()` — never re-grant column select.
 `verified` and `created_at` are client-immutable on UPDATE via column-level grants, and
 `verified` is also blocked at INSERT by a RESTRICTIVE RLS policy (`emt_no_self_verify_insert`,
