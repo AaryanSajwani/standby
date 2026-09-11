@@ -10,9 +10,12 @@ type Status = "pending" | "accepted" | "rejected"
 // Per-applicant decision controls. Actions are contextual:
 //   pending  → Approve · Reject · Reject & email
 //   accepted → Revoke access · Revoke & email   (revoke = reject an accepted one)
-//   rejected → Approve   (reinstate)
-// "Reject" is silent (bots / obvious non-EMTs); "Reject & email" opens a reason
-// field and sends the applicant a templated email with that reason.
+//   rejected → Approve (reinstate) · Send email  (email = re-send the reason to an
+//              already-rejected applicant; server keeps status rejected, no change)
+// "Reject" is silent (bots / obvious non-EMTs); the email variants open a reason
+// field and send the applicant a templated email with that reason. On a rejected
+// profile the email path re-runs reject with notify (status unchanged) so no new
+// server action is needed.
 export function VerificationActions({
   emtProfileId,
   status,
@@ -29,7 +32,8 @@ export function VerificationActions({
   const [reason, setReason] = useState("")
 
   const rejecting = status === "accepted" ? "Revoke access" : "Reject"
-  const rejectingEmail = status === "accepted" ? "Revoke & send email" : "Reject & send email"
+  const emailLabel =
+    status === "accepted" ? "Revoke & send email" : status === "rejected" ? "Send email" : "Reject & send email"
 
   const run = async (action: "accept" | "reject", opts?: { notify?: boolean; reason?: string; key?: "reject" | "reject_email" }) => {
     setBusy(action === "accept" ? "accept" : opts?.key ?? "reject")
@@ -72,40 +76,41 @@ export function VerificationActions({
         )}
 
         {status !== "rejected" && (
-          <>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={busy !== null}
-              onClick={() => run("reject", { notify: false, key: "reject" })}
-              className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
-            >
-              <X className="w-3.5 h-3.5 mr-1" />
-              {busy === "reject" ? "Rejecting…" : rejecting}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={busy !== null}
-              onClick={() => {
-                setError(null)
-                setShowReason((s) => !s)
-              }}
-              className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
-            >
-              <Mail className="w-3.5 h-3.5 mr-1" />
-              {rejectingEmail}
-            </Button>
-          </>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={busy !== null}
+            onClick={() => run("reject", { notify: false, key: "reject" })}
+            className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
+          >
+            <X className="w-3.5 h-3.5 mr-1" />
+            {busy === "reject" ? "Rejecting…" : rejecting}
+          </Button>
         )}
+
+        {/* Email the applicant a reason — available in every tab. On a rejected
+            profile this only sends the message; the status stays rejected. */}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={busy !== null}
+          onClick={() => {
+            setError(null)
+            setShowReason((s) => !s)
+          }}
+          className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
+        >
+          <Mail className="w-3.5 h-3.5 mr-1" />
+          {emailLabel}
+        </Button>
       </div>
 
-      {showReason && status !== "rejected" && (
+      {showReason && (
         <div className="border border-border bg-background/40 p-3 flex flex-col gap-2">
           <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Reason emailed to {name ?? "the applicant"}
+            {status === "rejected" ? "Message emailed to" : "Reason emailed to"} {name ?? "the applicant"}
           </label>
           <textarea
             value={reason}
@@ -123,7 +128,7 @@ export function VerificationActions({
               className="rounded-xl font-mono text-[10px] uppercase tracking-wider"
             >
               <Mail className="w-3.5 h-3.5 mr-1" />
-              {busy === "reject_email" ? "Sending…" : "Reject and send email"}
+              {busy === "reject_email" ? "Sending…" : status === "rejected" ? "Send email" : "Reject and send email"}
             </Button>
             <button
               type="button"

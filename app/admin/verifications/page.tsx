@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { ArrowLeft, ShieldAlert, ShieldCheck, ShieldX } from "lucide-react"
+import { ArrowLeft, ArrowRight, ShieldAlert, ShieldCheck, ShieldX } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { isAdminEmail } from "@/lib/admin"
@@ -214,7 +214,15 @@ export default async function AdminVerificationsPage({
                 <div className="flex-1 p-5 flex flex-col gap-4 min-w-0">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex flex-col gap-1 min-w-0">
-                      <span className="text-foreground font-medium leading-tight truncate">{row.name ?? "Unnamed applicant"}</span>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="text-foreground font-medium leading-tight truncate">{row.name ?? "Unnamed applicant"}</span>
+                        <Link
+                          href={`/admin/verifications/${row.id}?status=${status}`}
+                          className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-primary hover:underline shrink-0"
+                        >
+                          More information <ArrowRight className="w-3 h-3" />
+                        </Link>
+                      </div>
                       <span className="font-mono text-[11px] text-muted-foreground">
                         {row.city}, {row.state} · applied {fmtDate(row.createdAt)}
                       </span>
