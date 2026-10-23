@@ -197,7 +197,7 @@ export function AuthContent() {
 
         {/* Consent — signing in is account creation, so terms must be at the point of entry */}
         <p className="px-6 pb-5 -mt-2 font-mono text-[10px] text-muted-foreground leading-relaxed">
-          By continuing you agree to the{" "}
+          By continuing you confirm you are 18 or older and agree to the{" "}
           <a href="/terms" className="text-foreground hover:text-primary transition-colors">
             Terms of use
           </a>{" "}
