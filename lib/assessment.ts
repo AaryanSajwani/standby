@@ -70,6 +70,116 @@ export interface AssessmentResult {
   recommendedCertLevels: CertLevel[]
   // Guideline basis for each recommendation — what makes the report "defensible" to an AHJ (§4.5)
   staffingBasis: string[]
+  // Derived AFTER riskLevel and never fed back into any score — saved reports
+  // must re-score identically whether or not they carry the transport fields.
+  transport: TransportAssessment
+}
+
+// ── Patient transport ────────────────────────────────────────────────────────
+// Standby staffs on-site BLS providers; it does NOT provide ambulances or
+// patient transport. Default model: medics stabilize, 911 / local EMS transports.
+
+// PROVISIONAL — pending Aaryan / medical-director review. One place to tune.
+// Exported so /methodology documents the same numbers (ACTIVITY_RISK pattern).
+export const TRANSPORT_THRESHOLDS = {
+  attendance: 10_000,     // at/above → dedicated unit recommended
+  hospitalMiles: 10,      // above → dedicated unit recommended (matches the env factor's >10 mi)
+} as const
+
+export type TransportRecommendation = "EMS_911" | "DEDICATED_UNIT"
+export type TransportStatus = "OK" | "GAP" | "ACTION_NEEDED" | "UNSPECIFIED"
+
+export interface TransportAssessment {
+  recommendation: TransportRecommendation
+  triggers: string[]            // human-readable reasons; [] when EMS_911
+  status: TransportStatus
+  hospital: { name: string | null; miles: number | null; erConfirmed: boolean | null }
+  advisories: string[]          // e.g. emergency-vehicle access
+}
+
+// Organizer's answer to "Patient Transport Arrangement" (intake step 4) — one
+// table for every surface (intake select, report card, booking notes) so a new
+// option can't be added to one and silently missed by another.
+export const TRANSPORT_PLANS = {
+  "911": {
+    label:    "911 / local EMS — no dedicated ambulance on site",
+    noteLine: "Transport: 911 / local EMS (no dedicated unit on site)",
+  },
+  "contracted": {
+    label:    "Dedicated ambulance contracted from a licensed provider",
+    noteLine: "Transport: dedicated ambulance contracted by organizer",
+  },
+  "unsure": {
+    label:    "Not arranged yet / not sure",
+    noteLine: "Transport: not yet arranged",
+  },
+} as const
+export type TransportPlan = keyof typeof TRANSPORT_PLANS
+
+// transportPlan comes from user-controlled sessionStorage — own-key lookup only,
+// so "constructor"/"toString" can't resolve to Object.prototype members.
+export function transportPlanInfo(plan: string): (typeof TRANSPORT_PLANS)[TransportPlan] | null {
+  return Object.prototype.hasOwnProperty.call(TRANSPORT_PLANS, plan) ? TRANSPORT_PLANS[plan as TransportPlan] : null
+}
+
+// The booking request form's notes textarea maxLength (app/emt/[id]/request-emt.tsx).
+// bookings.notes has no DB length constraint, so this is the effective cap.
+export const BOOKING_NOTES_MAX = 600
+
+// Booking prefill notes — the organizer's special considerations first, then the
+// transport arrangement so medics know what they're walking into. Fits within
+// BOOKING_NOTES_MAX by truncating the organizer text, never the transport line.
+export function buildBookingNotes(specialConsiderations: string, transportPlan: string, max = BOOKING_NOTES_MAX): string {
+  const organizer = (specialConsiderations ?? "").trim()
+  const line = transportPlanInfo(transportPlan)?.noteLine ?? ""
+  const budget = line ? max - line.length - 2 : max
+  const fitted =
+    organizer.length > budget ? `${organizer.slice(0, Math.max(0, budget - 1)).trimEnd()}…` : organizer
+  if (!line) return fitted
+  return fitted ? `${fitted}\n\n${line}` : line
+}
+
+function assessTransport(form: AssessmentFormData, riskLevel: RiskLevel, attendance: number): TransportAssessment {
+  // Treat parsed miles the same way the environmental factor does (>10 mi → +1)
+  const hospitalMiles = parseFloat(form.nearestHospitalMiles)
+
+  const triggers: string[] = []
+  if (riskLevel === "HIGH" || riskLevel === "CRITICAL") triggers.push(`${riskLevel} risk profile`)
+  if (attendance >= TRANSPORT_THRESHOLDS.attendance) triggers.push(`${attendance.toLocaleString("en-US")} expected attendees`)
+  if ((hospitalMiles || 0) > TRANSPORT_THRESHOLDS.hospitalMiles) triggers.push(`nearest hospital ${hospitalMiles} mi away`)
+
+  const recommendation: TransportRecommendation = triggers.length > 0 ? "DEDICATED_UNIT" : "EMS_911"
+
+  // "" (or any unrecognized/legacy value) reads as not specified
+  const plan = form.transportPlan ?? ""
+  const status: TransportStatus =
+    plan === "contracted" ? "OK" :
+    plan === "911" ? (recommendation === "EMS_911" ? "OK" : "GAP") :
+    plan === "unsure" ? "ACTION_NEEDED" : "UNSPECIFIED"
+
+  const advisories: string[] = []
+  if (form.accessRoutesClear === "no") {
+    advisories.push("Emergency vehicle access is not confirmed. Designate an ambulance staging point and a clear access/egress route before the event, or 911 response will be delayed.")
+  } else if (form.accessRoutesClear === "limited") {
+    advisories.push("Emergency vehicle access is limited. Identify an ambulance staging point and confirm the route with venue security.")
+  }
+  if (form.nearestHospitalHasER === "unconfirmed") {
+    advisories.push("The nearest hospital's emergency department could not be confirmed. Verify the closest ER-capable facility in the medical plan.")
+  }
+
+  return {
+    recommendation,
+    triggers,
+    status,
+    hospital: {
+      name: (form.nearestHospitalName ?? "").trim() || null,
+      miles: Number.isFinite(hospitalMiles) ? hospitalMiles : null,
+      erConfirmed:
+        form.nearestHospitalHasER === "yes" ? true :
+        form.nearestHospitalHasER === "unconfirmed" ? false : null,
+    },
+    advisories,
+  }
 }
 
 // Exported so the public /methodology page documents the exact same weights the engine uses
@@ -166,6 +276,8 @@ export function scoreAssessment(form: AssessmentFormData): AssessmentResult {
     `commonly require ${emtCount} ${certLevel} ${emtCount === 1 ? "professional" : "professionals"} ` +
     `for approximately ${hours} hours of coverage.`
 
+  const transport = assessTransport(form, riskLevel, attendance)
+
   // Each line ties a recommendation to its basis — the paper trail an AHJ can check.
   const staffingBasis = [
     `Risk weighting combines crowd (${crowd}/10), environmental (${environmental}/10), and activity (${activity}/10) exposure — the factor structure used in mass-gathering patient-presentation models (e.g., Arbon, Hartman).`,
@@ -173,6 +285,10 @@ export function scoreAssessment(form: AssessmentFormData): AssessmentResult {
     riskLevel === "HIGH" || riskLevel === "CRITICAL"
       ? "This risk profile typically warrants advanced life support (ALS) capability on site or on rapid standby. Standby staffs BLS-level providers (EMR, EMT-B) — coordinate paramedic/ALS coverage through your local EMS agency as part of medical-director review."
       : "Basic life support coverage is appropriate for this risk profile; escalate to ALS if attendance, acuity, or crowd density increase.",
+    transport.recommendation === "DEDICATED_UNIT"
+      ? `Transport: a dedicated transport unit on site or on standby is recommended (${transport.triggers.join("; ")}). Contract it through a licensed ambulance provider and confirm unit level and staging in medical-director review. Standby does not provide ambulances or patient transport.`
+      : "Transport: on-site providers stabilize; patient transport via 911 / local EMS to the nearest emergency department. Standby does not provide ambulances or patient transport.",
+    // Must stay the LAST line (medical-director disclaimer).
     "This is decision support, not a medical order — review and sign-off by a qualified medical director is required before the event.",
   ]
 
@@ -185,5 +301,6 @@ export function scoreAssessment(form: AssessmentFormData): AssessmentResult {
     staffing: { emtCount, certLevel, hours, estimatedCost },
     recommendedCertLevels,
     staffingBasis,
+    transport,
   }
 }

@@ -30,9 +30,16 @@ export function AssessmentIntakeForm() {
   useEffect(() => {
     try {
       const savedForm = sessionStorage.getItem(ASSESSMENT_FORM_KEY)
-      if (savedForm) setFormData({ ...EMPTY_FORM_DATA, ...JSON.parse(savedForm) })
+      const restored: AssessmentFormData = savedForm
+        ? { ...EMPTY_FORM_DATA, ...JSON.parse(savedForm) }
+        : EMPTY_FORM_DATA
+      if (savedForm) setFormData(restored)
       const savedStep = parseInt(sessionStorage.getItem(ASSESSMENT_STEP_KEY) ?? "")
-      if (savedStep >= 1 && savedStep <= 5) setCurrentStep(savedStep)
+      // A session saved before step 4 required a transport arrangement could
+      // otherwise resume at step 5 and submit without ever answering it.
+      if (savedStep >= 1 && savedStep <= 5) {
+        setCurrentStep(savedStep > 4 && !restored.transportPlan ? 4 : savedStep)
+      }
     } catch {
       // corrupt storage — start fresh
     }
@@ -48,7 +55,18 @@ export function AssessmentIntakeForm() {
   }, [formData, currentStep, hydrated])
 
   const handleFormChange = (data: Partial<AssessmentFormData>) => {
-    setFormData((prev) => ({ ...prev, ...data }))
+    setFormData((prev) => {
+      const next = { ...prev, ...data }
+      // The auto-filled hospital (name, ER flag, distance) was measured from the
+      // old venue — drop all three on a venue change so the report never prints
+      // a hospital for the wrong location. Manually entered distances are kept.
+      if (data.venueAddress !== undefined && data.venueAddress !== prev.venueAddress && prev.nearestHospitalName) {
+        next.nearestHospitalMiles = ""
+        next.nearestHospitalName = ""
+        next.nearestHospitalHasER = ""
+      }
+      return next
+    })
   }
 
   const handleNext = () => {

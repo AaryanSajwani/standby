@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ChevronDown, Check } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import { BOOKING_PREFILL_KEY, type BookingPrefill } from "@/lib/assessment"
+import { BOOKING_NOTES_MAX, BOOKING_PREFILL_KEY, type BookingPrefill } from "@/lib/assessment"
 import { findOrCreateEvent } from "@/lib/events"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -318,7 +318,7 @@ export function RequestEmt({ emtId, emtName, hourlyRate, available, viewerId }: 
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Site details, arrival time, on-site contact, nearest hospital…"
-                maxLength={600}
+                maxLength={BOOKING_NOTES_MAX}
                 rows={3}
                 className="w-full px-3 py-2.5 bg-input border border-input-border text-foreground placeholder:text-placeholder font-mono text-sm resize-none focus:outline-none focus:border-primary"
               />

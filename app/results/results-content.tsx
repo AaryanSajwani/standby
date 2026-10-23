@@ -8,6 +8,7 @@ import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { RiskScore } from "@/components/results/RiskScore"
 import { StaffingCard } from "@/components/results/StaffingCard"
+import { TransportPlanCard } from "@/components/results/TransportPlanCard"
 import { EMTProfileCard } from "@/components/results/EMTProfileCard"
 import { EventSummaryPanel, type SaveState } from "@/components/results/EventSummaryPanel"
 import { EMPTY_FORM_DATA, type AssessmentFormData } from "@/types/assessment"
@@ -17,28 +18,16 @@ import {
   BOOKING_PREFILL_KEY,
   ASSESS_TO_BOOKING_EVENT_TYPE,
   EVENT_TYPE_LABELS,
+  buildBookingNotes,
   isAssessmentComplete,
   scoreAssessment,
   type AssessmentResult,
   type BookingPrefill,
 } from "@/lib/assessment"
 import { findOrCreateEvent } from "@/lib/events"
-
-// Sample shown when no completed assessment exists in this session
-const SAMPLE_FORM: AssessmentFormData = {
-  ...EMPTY_FORM_DATA,
-  eventName: "Coastal Marathon 2026",
-  eventType: "marathon",
-  expectedAttendance: "500",
-  eventDate: "2026-07-15",
-  isOutdoor: "yes",
-  expectedWeather: "heat",
-  highTempF: "92",
-  nearestHospitalMiles: "4",
-  hasOnSiteAED: "yes",
-  accessRoutesClear: "yes",
-  hasSecurityPresence: "yes-venue",
-}
+// Sample shown when no completed assessment exists in this session (shared with
+// the engine tests, which pin its HIGH score and transport GAP state)
+import { SAMPLE_ASSESSMENT_FORM as SAMPLE_FORM } from "@/lib/sample-assessment"
 
 const SAMPLE_EMTS = [
   { id: 1, name: "Sarah Mitchell",  certLevel: "EMT-B", yearsExperience: 4, radiusMiles: 15, available: true  },
@@ -145,7 +134,9 @@ export function ResultsContent() {
       location: form.venueAddress,
       attendance: form.expectedAttendance,
       durationHours: String(result.staffing.hours),
-      notes: form.specialConsiderations,
+      // Organizer's considerations first, then the transport arrangement so the
+      // medic knows what they're walking into (fits the notes field's cap).
+      notes: buildBookingNotes(form.specialConsiderations, form.transportPlan),
       // Carry the canonical event id when Save Report already created it, so the
       // booking links by id with zero string-matching. Omitted → request-emt
       // find-or-creates the event at booking time (cold path).
@@ -221,6 +212,8 @@ export function ResultsContent() {
               hours={result.staffing.hours}
               estimatedCost={result.staffing.estimatedCost}
             />
+
+            <TransportPlanCard transport={result.transport} transportPlan={form.transportPlan} />
 
             {/* Guideline basis — the paper trail that makes the report defensible to an AHJ (§4.5) */}
             <section className="border border-border bg-card p-6">

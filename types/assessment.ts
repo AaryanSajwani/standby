@@ -14,8 +14,11 @@ export interface AssessmentFormData {
   precipitationRisk: string
   // Step 4 — Medical Resources
   nearestHospitalMiles: string
+  nearestHospitalName: string   // from auto-fill; "" if entered manually
+  nearestHospitalHasER: string  // "yes" | "unconfirmed" | "" (manual entry)
   hasOnSiteAED: string
   priorMedicalPlan: string
+  transportPlan: string         // "911" | "contracted" | "unsure"
   // Step 5 — Emergency Access
   accessRoutesClear: string
   hasSecurityPresence: string
@@ -26,6 +29,7 @@ export const EMPTY_FORM_DATA: AssessmentFormData = {
   eventName: "", eventType: "", expectedAttendance: "", eventDate: "",
   venueType: "", isOutdoor: "", venueAddress: "",
   expectedWeather: "", highTempF: "", precipitationRisk: "",
-  nearestHospitalMiles: "", hasOnSiteAED: "", priorMedicalPlan: "",
+  nearestHospitalMiles: "", nearestHospitalName: "", nearestHospitalHasER: "",
+  hasOnSiteAED: "", priorMedicalPlan: "", transportPlan: "",
   accessRoutesClear: "", hasSecurityPresence: "", specialConsiderations: "",
 }

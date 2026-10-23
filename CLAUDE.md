@@ -53,7 +53,7 @@ components/
   AddToCalendarButton.tsx  Client .ics generator for confirmed shifts (provider-free)
   assessment/      StepIndicator, AssessmentIntakeForm, per-step form components
   marketplace/     FilterSidebar, SearchHeader, StaffingMarketplace
-  results/         RiskScore, StaffingCard, EMTProfileCard, EventSummaryPanel
+  results/         RiskScore, StaffingCard, TransportPlanCard, EMTProfileCard, EventSummaryPanel
   layout/          NavBar, ShellWrapper (wraps every page in root layout.tsx)
   landing/         Marketing landing page sections
   ui/              shadcn-generated components (base-nova / Base UI style)
@@ -65,7 +65,9 @@ lib/
     server.ts      Server/RSC client (createServerClient, reads Next.js cookies())
   supabase.ts      Legacy anon client — unused, kept for reference
   notifications.ts Server-only Resend sender + booking email templates (never import client-side)
-  assessment.ts    Risk scoring engine, sessionStorage keys, BookingPrefill type
+  assessment.ts    Risk scoring engine (+ derived transport block, TRANSPORT_THRESHOLDS), sessionStorage
+                   keys, BookingPrefill type, buildBookingNotes (+ assessment.test.ts)
+  sample-assessment.ts  SAMPLE_ASSESSMENT_FORM — the /results sample report (HIGH → transport GAP)
   bookings.ts      BOOKING_COLUMNS allowlist, Booking mapper, date formatting
   emt.ts           CERT_DISPLAY, EMT_PUBLIC_COLUMNS allowlist, joinedFullName
   geo.ts           Free keyless geo: Open-Meteo geocoding + weather, Overpass/OSM nearest-hospital
@@ -84,7 +86,8 @@ pointer-ai-landing-page/  Separate Next.js sub-project, own lockfile, not a work
 ```bash
 pnpm dev        # dev server at localhost:3000
 pnpm build      # production build
-npm run lint    # ESLint
+pnpm test       # vitest — pure lib/**/*.test.ts (engine, state machine, fees…); "@/" alias wired in vitest.config.ts
+npm run lint    # ESLint — NOTE: eslint is not installed and there is no config; this currently fails
 ```
 
 ## Auth System
@@ -144,6 +147,23 @@ the EMT recruiting promise while supply is the bottleneck; revisit a seller-side
 **Copy/static only** until billing is decided — no Stripe, no commission-split logic, no Premier
 gating, and never mock a checkout with hardcoded dollar amounts. Premier CTA stays disabled/"coming
 soon." Full copy rules in the `ui-conventions` skill → "Pricing model."
+
+**Transport (2026-10-22).** Standby staffs on-site BLS personnel and does **not** provide ambulances
+or patient transport — default model is medics stabilize, 911 / local EMS transports. `scoreAssessment`
+emits a derived `transport` block (recommendation `EMS_911 | DEDICATED_UNIT`, triggers, status
+`OK | GAP | ACTION_NEEDED | UNSPECIFIED`, nearest-ER, advisories) computed AFTER `riskLevel`; it must
+**never** feed `riskScore`/`riskLevel`/factors/`penalty`/staffing — `lib/assessment.test.ts` pins
+pre-transport baseline outputs to catch leaks. `TRANSPORT_THRESHOLDS` (≥10,000 attendees, >10 mi) is
+**provisional pending Aaryan / medical-director review**; `/methodology` imports it, so tune it in one
+place. The transport `staffingBasis` line is second-to-last — the medical-director disclaimer stays
+last. New form fields (`nearestHospitalName`, `nearestHospitalHasER`, `transportPlan`) ride in
+`assessments.form_data` (no migration); legacy rows default to `""` → `UNSPECIFIED`. A manual
+hospital-distance edit must clear the auto-filled name/ER flag, and a venue change clears all three
+auto-filled hospital fields (`AssessmentIntakeForm.handleFormChange`); a restored session past step 4
+with no `transportPlan` resumes at step 4. Look plans up via `transportPlanInfo()` (own-key only —
+the value is user-controlled sessionStorage), never by indexing `TRANSPORT_PLANS` directly. Copy: say "licensed ambulance
+provider" and "recommended"; never "ambulance included", "we provide transport", "required by law",
+"AHJ-approved", or real provider names. No ambulance marketplace/pricing (Phase 2, out of scope).
 
 ## Security & Abuse Layers (2026-07-20)
 

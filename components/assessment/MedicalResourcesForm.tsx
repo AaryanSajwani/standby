@@ -4,7 +4,8 @@ import { useState } from "react"
 import { ChevronDown, MapPin } from "lucide-react"
 import type { AssessmentFormData } from "@/types/assessment"
 import { Button } from "@/components/ui/button"
-import { geocodePlace, fetchNearestHospital, type HospitalResult } from "@/lib/geo"
+import { geocodePlace, fetchNearestHospital } from "@/lib/geo"
+import { TRANSPORT_PLANS } from "@/lib/assessment"
 
 interface MedicalResourcesFormProps {
   formData: AssessmentFormData
@@ -28,11 +29,16 @@ const MEDICAL_PLAN_OPTIONS = [
   { value: "no", label: "No — none in place" },
 ]
 
+const TRANSPORT_PLAN_OPTIONS = [
+  { value: "", label: "Select…" },
+  ...Object.entries(TRANSPORT_PLANS).map(([value, p]) => ({ value, label: p.label })),
+]
+
 export function MedicalResourcesForm({ formData, onChange, onNext, onBack }: MedicalResourcesFormProps) {
-  const isValid = formData.nearestHospitalMiles && formData.hasOnSiteAED && formData.priorMedicalPlan
+  const isValid =
+    formData.nearestHospitalMiles && formData.hasOnSiteAED && formData.priorMedicalPlan && formData.transportPlan
 
   const [autofill, setAutofill] = useState<AutofillState>("idle")
-  const [hospital, setHospital] = useState<HospitalResult | null>(null)
   const canAutofill = formData.venueAddress.trim().length >= 3
 
   // §4.3 — compute transport distance from the venue instead of asking the
@@ -50,8 +56,13 @@ export function MedicalResourcesForm({ formData, onChange, onNext, onBack }: Med
       setAutofill("none")
       return
     }
-    setHospital(nearest)
-    onChange({ nearestHospitalMiles: String(nearest.distanceMiles) })
+    // Persist name + ER flag in form state (not local state) so they survive the
+    // auth bounce via sessionStorage and reach the report's transport card.
+    onChange({
+      nearestHospitalMiles: String(nearest.distanceMiles),
+      nearestHospitalName: nearest.name,
+      nearestHospitalHasER: nearest.hasEmergency ? "yes" : "unconfirmed",
+    })
     setAutofill("filled")
   }
 
@@ -78,10 +89,12 @@ export function MedicalResourcesForm({ formData, onChange, onNext, onBack }: Med
                     ? `Find the nearest hospital to ${formData.venueAddress}`
                     : "Add a venue (step 2) to find the nearest hospital automatically"}
                 </p>
-                {autofill === "filled" && hospital && (
+                {/* Driven by form state, so it reappears after a reload and vanishes
+                    the moment a manual distance edit clears the auto-filled name */}
+                {formData.nearestHospitalName && (
                   <span className="text-xs font-mono text-risk-low">
-                    Nearest: {hospital.name} — {hospital.distanceMiles} mi straight-line
-                    {hospital.hasEmergency ? "" : " (ER not confirmed)"}. Review and adjust below.
+                    Nearest: {formData.nearestHospitalName} — {formData.nearestHospitalMiles} mi straight-line
+                    {formData.nearestHospitalHasER === "unconfirmed" ? " (ER not confirmed)" : ""}. Review and adjust below.
                   </span>
                 )}
                 {autofill === "none" && (
@@ -109,7 +122,12 @@ export function MedicalResourcesForm({ formData, onChange, onNext, onBack }: Med
               <input
                 type="number"
                 value={formData.nearestHospitalMiles}
-                onChange={(e) => onChange({ nearestHospitalMiles: e.target.value })}
+                // A manual edit means the distance no longer belongs to the auto-filled
+                // hospital — clear its name/ER flag so a stale name never sits next
+                // to a different distance.
+                onChange={(e) =>
+                  onChange({ nearestHospitalMiles: e.target.value, nearestHospitalName: "", nearestHospitalHasER: "" })
+                }
                 placeholder="e.g., 3.5"
                 min="0"
                 step="0.1"
@@ -156,6 +174,28 @@ export function MedicalResourcesForm({ formData, onChange, onNext, onBack }: Med
                 </select>
                 <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+                Patient Transport Arrangement <span className="text-risk-high">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  value={formData.transportPlan}
+                  onChange={(e) => onChange({ transportPlan: e.target.value })}
+                  className="w-full h-14 px-5 pr-12 bg-input border border-input-border rounded-lg text-foreground focus:outline-none focus:border-accent-functional focus:ring-1 focus:ring-accent-functional font-mono text-sm appearance-none cursor-pointer"
+                >
+                  {TRANSPORT_PLAN_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value} className="bg-popover">{o.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Standby staffs on-site medical personnel. Ambulances and patient transport are arranged
+                separately through 911 or a licensed ambulance provider.
+              </p>
             </div>
           </div>
         </div>

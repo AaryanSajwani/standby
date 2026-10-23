@@ -50,6 +50,14 @@ export function RiskProfilePanel({ formData }: RiskProfilePanelProps) {
 
   const level = result ? LEVEL_COLOR[result.riskLevel] : "text-muted-foreground"
 
+  const transportLabel = !result
+    ? null
+    : result.transport.recommendation === "DEDICATED_UNIT"
+      ? "Dedicated unit recommended"
+      : formData.nearestHospitalMiles
+        ? "911 / EMS"
+        : null
+
   const [assessmentId, setAssessmentId] = useState("STB-000000")
   useEffect(() => {
     setAssessmentId(`STB-${Date.now().toString(36).toUpperCase().slice(-6)}`)
@@ -160,6 +168,18 @@ export function RiskProfilePanel({ formData }: RiskProfilePanelProps) {
               active={readyActive}
             />
           </div>
+        </div>
+
+        {/* Transport — derived from the same engine output; never affects the score.
+            A fired trigger shows as soon as it fires, but "911 / EMS" waits for the
+            hospital distance (step 4) so it never reads as settled before it is. */}
+        <div className="mt-4 border border-border rounded-2xl px-5 py-3 flex items-center justify-between gap-4">
+          <span className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+            Transport
+          </span>
+          <span className={`font-mono text-sm ${transportLabel ? "text-foreground" : "text-muted-foreground/30"}`}>
+            {transportLabel ?? "—"}
+          </span>
         </div>
       </div>
 

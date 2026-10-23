@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { ACTIVITY_RISK, EVENT_TYPE_LABELS } from "@/lib/assessment"
+import { ACTIVITY_RISK, EVENT_TYPE_LABELS, TRANSPORT_THRESHOLDS } from "@/lib/assessment"
 
 export const metadata = {
   title: "Methodology — Standby",
@@ -162,7 +162,36 @@ export default function MethodologyPage() {
             </ul>
           </Section>
 
-          <Section n="08" title="Guideline basis">
+          <Section n="08" title="Patient transport">
+            <p className="text-foreground/80 leading-relaxed">
+              Standby staffs on-site basic life support (BLS) providers. By default, they assess, treat, and
+              stabilize patients, and transport to hospital is handled by 911 / your local EMS agency. Every
+              report states this plan along with the nearest-hospital distance — and, when auto-filled
+              from the venue, the facility and whether its emergency department could be confirmed.
+            </p>
+            <p className="text-foreground/80 leading-relaxed">
+              The report recommends a dedicated transport unit, contracted by the organizer from a licensed
+              ambulance provider, when any of these apply:
+            </p>
+            <div className="border border-border bg-card">
+              <StatRow label="Risk level" value="High or Critical" />
+              <StatRow
+                label="Expected attendance"
+                value={`≥ ${TRANSPORT_THRESHOLDS.attendance.toLocaleString("en-US")}`}
+              />
+              <StatRow label="Nearest hospital" value={`> ${TRANSPORT_THRESHOLDS.hospitalMiles} mi`} />
+            </div>
+            <p className="text-foreground/80 leading-relaxed">
+              If a dedicated unit is recommended but only 911 is planned, the report flags it as a gap.
+              These thresholds are decision support, not regulation. Your local Authority Having
+              Jurisdiction (AHJ) and medical-director requirements take precedence.
+            </p>
+            <p className="text-sm font-medium text-foreground">
+              Standby does not provide ambulances or patient transport.
+            </p>
+          </Section>
+
+          <Section n="09" title="Guideline basis">
             <p className="text-foreground/80 leading-relaxed">
               The factor structure and thresholds are grounded in published mass-gathering and
               event-medicine guidance:
